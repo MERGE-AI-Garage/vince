@@ -1,0 +1,131 @@
+// ABOUTME: Shared helper to register AI-generated images in the media library for discoverability.
+// ABOUTME: Provides ensureFolderPath (get-or-create folder hierarchy) and registerMediaImage (insert into media table).
+
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+
+interface RegisterMediaImageParams {
+  supabase: SupabaseClient;
+  url: string;
+  storagePath: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  folderPath: string;
+  title?: string;
+  description?: string;
+  createdBy?: string | null;
+  autoTags?: string[];
+  customMetadata?: Record<string, unknown>;
+}
+
+/**
+ * Resolves a folder path like "/AI Generated/Labs" to a folder ID,
+ * creating any missing segments along the way.
+ */
+async function ensureFolderPath(
+  supabase: SupabaseClient,
+  folderPath: string,
+): Promise<string | null> {
+  const segments = folderPath.split('/').filter(Boolean);
+  if (segments.length === 0) return null;
+
+  let parentId: string | null = null;
+  let currentPath = '';
+
+  for (const segment of segments) {
+    currentPath += '/' + segment;
+
+    // Try to find existing folder by path
+    const { data: existing } = await supabase
+      .from('media_folders')
+      .select('id')
+      .eq('path', currentPath)
+      .single();
+
+    if (existing) {
+      parentId = existing.id;
+      continue;
+    }
+
+    // Create the folder segment
+    const { data: created, error } = await supabase
+      .from('media_folders')
+      .insert({
+        name: segment,
+        parent_id: parentId,
+        description: parentId ? null : 'Images created by AI generators across the platform',
+        color: '#10b981',
+        icon: parentId ? 'folder' : 'sparkles',
+      })
+      .select('id')
+      .single();
+
+    if (created) {
+      parentId = created.id;
+    } else if (error) {
+      // Race condition: another request created it between our select and insert.
+      // Re-query to get the existing row.
+      const { data: raceWinner } = await supabase
+        .from('media_folders')
+        .select('id')
+        .eq('path', currentPath)
+        .single();
+
+      if (raceWinner) {
+        parentId = raceWinner.id;
+      } else {
+        console.error(`[registerMediaImage] Failed to create folder "${currentPath}":`, error);
+        return null;
+      }
+    }
+  }
+
+  return parentId;
+}
+
+/**
+ * Registers an image in the media library for discoverability via the media picker.
+ * Non-blocking by design — errors are logged but never thrown.
+ */
+export async function registerMediaImage(
+  params: RegisterMediaImageParams,
+): Promise<{ mediaId: string | null; error?: string }> {
+  try {
+    const folderId = await ensureFolderPath(params.supabase, params.folderPath);
+
+    const { data, error } = await params.supabase
+      .from('media')
+      .insert({
+        filename: params.filename,
+        title: params.title || params.filename,
+        description: params.description || null,
+        url: params.url,
+        storage_path: params.storagePath,
+        thumbnail_url: params.url,
+        mime_type: params.mimeType,
+        file_type: 'image',
+        size_bytes: params.sizeBytes,
+        folder_id: folderId,
+        created_by: params.createdBy || null,
+        auto_tags: params.autoTags || [],
+        custom_metadata: {
+          source: 'ai-generated',
+          ...params.customMetadata,
+        },
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('[registerMediaImage] Insert failed:', error);
+      return { mediaId: null, error: error.message };
+    }
+
+    console.log(`[registerMediaImage] Registered in "${params.folderPath}": ${params.filename}`);
+    return { mediaId: data.id };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[registerMediaImage] Unexpected error:', message);
+    return { mediaId: null, error: message };
+  }
+}
