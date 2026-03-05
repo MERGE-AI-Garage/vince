@@ -1,0 +1,223 @@
+/* ABOUTME: Global CSS with design system tokens. */
+/* ABOUTME: Includes light/dark mode, Creative Studio surface system, and utility classes. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 97%;
+    --card-foreground: 222.2 84% 4.9%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --border: 214.3 31.8% 91.4%;
+    --ring: 142 76% 36%;
+    --accent: 142 100% 50%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --input: 214.3 31.8% 91.4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 0%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --radius: 0.75rem;
+    --border-width: 1px;
+    --shadow-intensity: 0.5;
+
+    --chart-1: 170 100% 26%;
+    --chart-2: 138 85% 49%;
+    --chart-3: 155 100% 32%;
+    --chart-4: 188 85% 38%;
+    --chart-5: 188 85% 29%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--success)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-foreground) / 0.1));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--primary)), hsl(var(--success)));
+
+    --elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.24);
+    --elevation-2: 0 3px 6px 0 rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.23);
+    --elevation-3: 0 10px 20px 0 rgba(0, 0, 0, 0.19), 0 6px 6px 0 rgba(0, 0, 0, 0.23);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Creative Studio Surface System */
+    --cs-surface-0: 45 8% 93%;
+    --cs-surface-1: 45 10% 95%;
+    --cs-surface-2: 40 6% 99%;
+    --cs-surface-3: 45 8% 89%;
+    --cs-border-subtle: 45 6% 78%;
+    --cs-border-mid: 45 6% 68%;
+  }
+
+  .creative-studio {
+    --background: 40 6% 99%;
+    --foreground: 160 20% 8%;
+    --card: 42 8% 96%;
+    --card-foreground: 160 20% 8%;
+    --secondary: 44 6% 88%;
+    --secondary-foreground: 160 20% 8%;
+    --muted: 44 7% 90%;
+    --muted-foreground: 160 8% 35%;
+    --accent: 142 76% 36%;
+    --accent-foreground: 160 20% 8%;
+    --popover: 40 6% 99%;
+    --popover-foreground: 160 20% 8%;
+    --input: 45 8% 80%;
+    --input-bg: 40 6% 99%;
+    --border: 45 6% 82%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 11%;
+    --card-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --popover: 222.2 84% 11%;
+    --popover-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --accent-foreground: 210 40% 98%;
+
+    --elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.24), 0 1px 2px 0 rgba(0, 0, 0, 0.36);
+    --elevation-2: 0 3px 6px 0 rgba(0, 0, 0, 0.28), 0 3px 6px 0 rgba(0, 0, 0, 0.35);
+    --elevation-3: 0 10px 20px 0 rgba(0, 0, 0, 0.32), 0 6px 6px 0 rgba(0, 0, 0, 0.35);
+
+    --sidebar-background: 165 48% 12%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 165 48% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 165 30% 20%;
+    --sidebar-ring: 142 76% 36%;
+
+    --cs-surface-0: 165 35% 7%;
+    --cs-surface-1: 165 30% 10%;
+    --cs-surface-2: 165 25% 13%;
+    --cs-surface-3: 165 35% 5%;
+    --cs-border-subtle: 165 20% 18%;
+    --cs-border-mid: 165 18% 25%;
+  }
+
+  .dark .creative-studio {
+    --background: 165 35% 7%;
+    --foreground: 140 10% 92%;
+    --card: 165 30% 10%;
+    --card-foreground: 140 10% 92%;
+    --secondary: 165 14% 16%;
+    --secondary-foreground: 140 10% 92%;
+    --muted: 165 14% 14%;
+    --muted-foreground: 150 10% 65%;
+    --accent-foreground: 140 10% 92%;
+    --popover: 165 30% 10%;
+    --popover-foreground: 140 10% 92%;
+    --input: 165 18% 22%;
+    --input-bg: 165 35% 7%;
+    --border: 165 16% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+    min-height: 100vh;
+    overflow-x: auto;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass {
+    background: rgba(19, 59, 52, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .card-elevated {
+    box-shadow: var(--elevation-1);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  .card-elevated:hover {
+    box-shadow: var(--elevation-2);
+    transform: translateY(-2px);
+  }
+
+  .text-gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--success)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+.border {
+  border-width: var(--border-width, 1px) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
