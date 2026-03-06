@@ -1,5 +1,5 @@
-// ABOUTME: Scout visualizer switcher component that renders the selected visualizer style
-// ABOUTME: Supports multiple visualizer presets selected via admin settings
+// ABOUTME: Voice visualizer switcher that renders the selected visualizer style.
+// ABOUTME: Supports multiple visualizer presets selected via admin settings.
 
 import React from 'react';
 import { VisualizerProps, VisualizerStyle, LightPillarSettings, ClassicWaveSettings, Codrops3DOrbSettings } from './types';

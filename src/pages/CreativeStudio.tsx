@@ -2,7 +2,6 @@
 // ABOUTME: Three-column layout: history sidebar, canvas + prompt bar, settings sidebar
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditorCanvas } from '@/components/creative-studio/EditorCanvas';
 import { HistoryPanel } from '@/components/creative-studio/HistoryPanel';
@@ -20,8 +19,6 @@ import { ProductRecontextPanel } from '@/components/creative-studio/ProductRecon
 import { VirtualTryOnPanel } from '@/components/creative-studio/VirtualTryOnPanel';
 import { BrandAgentApp } from '@/components/creative-studio/BrandAgentApp';
 import { PromptLibraryPanel } from '@/components/creative-studio/PromptLibraryPanel';
-import { LabGuidePanel } from '@/components/creative-studio/LabGuidePanel';
-import { LabTutorPanel } from '@/components/creative-studio/LabTutorPanel';
 import { SaveAsTemplateDialog } from '@/components/creative-studio/SaveAsTemplateDialog';
 import { BrandShopTopBar } from '@/components/creative-studio/BrandShopTopBar';
 import { BrandDNADialog } from '@/components/creative-studio/BrandDNADialog';
@@ -44,9 +41,6 @@ import { useCameraOptions } from '@/hooks/useCreativeStudioCameraOptions';
 import { buildCameraPromptSegment } from '@/components/creative-studio/CameraControlsPanel';
 import { useMyGenerations, useInvalidateGenerations } from '@/hooks/useCreativeStudioGenerations';
 import { useCreativeStudioQuota } from '@/hooks/useCreativeStudioQuota';
-import { useLabContext } from '@/hooks/useLabContext';
-import { useLabQuota } from '@/hooks/useLabQuota';
-import { usePersistLabSelection, useRetryLab } from '@/hooks/useLabSubmissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchImageAsBase64 } from '@/lib/image-utils';
@@ -82,14 +76,6 @@ export default function CreativeStudio() {
   const [conversationTurns, setConversationTurns] = useState<ConversationTurn[]>([]);
   const [currentThoughtSignature, setCurrentThoughtSignature] = useState<string | undefined>();
 
-  // Lab context (URL-driven — null when not in lab mode)
-  const labContext = useLabContext();
-  const [labGuideOpen, setLabGuideOpen] = useState(false);
-  const [labSelectedGenerationId, setLabSelectedGenerationId] = useState<string | null>(null);
-  const persistLabSelection = usePersistLabSelection();
-  const retryLab = useRetryLab();
-
-  // Open lab guide automatically on first render when in lab mode
   // Scope warm theme tokens to body so portaled panels (sheets, popovers, dropdowns) inherit them
   useEffect(() => {
     document.body.classList.add('creative-studio');
@@ -108,29 +94,9 @@ export default function CreativeStudio() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (labContext?.isLabMode) setLabGuideOpen(true);
-  }, [labContext?.isLabMode]);
-
-  // Restore persisted selection from server state
-  useEffect(() => {
-    if (labContext?.labSubmission?.selected_generation_id && !labSelectedGenerationId) {
-      setLabSelectedGenerationId(labContext.labSubmission.selected_generation_id);
-    }
-  }, [labContext?.labSubmission?.selected_generation_id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleSelectForSubmission = useCallback((generationId: string) => {
-    setLabSelectedGenerationId(generationId);
-    if (labContext?.labSubmission?.id) {
-      persistLabSelection.mutate({
-        submissionId: labContext.labSubmission.id,
-        generationId,
-      });
-    }
-  }, [labContext?.labSubmission?.id, persistLabSelection]);
 
   // Panel state
-  type RightSidebarMode = 'settings' | 'vince' | 'mitch';
+  type RightSidebarMode = 'settings' | 'vince';
   const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>('settings');
   const [promptLibraryOpen, setPromptLibraryOpen] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -161,7 +127,6 @@ export default function CreativeStudio() {
   const queryClient = useQueryClient();
   const quotaType = generationType === 'video' ? 'text_to_video' as const : 'text_to_image' as const;
   const { data: quota } = useCreativeStudioQuota(quotaType);
-  const { data: labQuota } = useLabQuota(!!labContext?.isLabMode);
   const [selectedGeneration, setSelectedGeneration] = useState<GenerationWithDetails | null>(null);
   const lastGenerationIdRef = useRef<string | null>(null);
 
@@ -244,57 +209,6 @@ export default function CreativeStudio() {
     setTheme(newTheme, { skipPersist: true });
     localStorage.setItem('creative-studio-theme', newTheme);
   }, [theme, setTheme]);
-
-  const handleToggleMitch = useCallback(() => {
-    if (rightSidebarMode === 'mitch') {
-      setRightSidebarMode('settings');
-    } else {
-      setRightSidebarMode('mitch');
-      if (!settingsDrawerOpen) setSettingsDrawerOpen(true);
-    }
-  }, [rightSidebarMode, settingsDrawerOpen]);
-
-  // Auto-select generation mode, brand, and model from lab config
-  useEffect(() => {
-    if (!labContext?.isLabMode) return;
-    const { labConfig } = labContext;
-    // Route to the correct tab based on lab type
-    const modeMap: Record<string, GenerationMode> = {
-      video_generation: 'video',
-      image_generation: 'image',
-      image_edit: 'edit',
-    };
-    const targetMode = modeMap[labConfig.lab_type];
-    if (targetMode && generationType !== targetMode) setGenerationType(targetMode);
-    if (labConfig.suggested_brand_id && brands?.length) {
-      const match = brands.find(b => b.id === labConfig.suggested_brand_id);
-      if (match && selectedBrandId !== match.id) setSelectedBrandId(match.id);
-    }
-    if (labConfig.suggested_model_id && imageModels?.length) {
-      const match = imageModels.find(m => m.model_id === labConfig.suggested_model_id);
-      if (match && selectedImageModel !== match.model_id) setImageModel(match.model_id);
-    }
-  }, [labContext?.isLabMode]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleLabSubmit = useCallback(() => {
-    if (!labSelectedGenerationId || !labContext) return;
-    labContext.submitLab(labSelectedGenerationId);
-  }, [labSelectedGenerationId, labContext]);
-
-  const handleLabRetry = useCallback(() => {
-    if (!labContext?.labSubmission) return;
-    const sub = labContext.labSubmission;
-    retryLab.mutate({
-      submissionId: sub.id,
-      currentAttempt: sub.attempt_number,
-      currentScore: sub.score,
-      currentEvaluation: sub.evaluation || {},
-      currentSubmittedAt: sub.submitted_at,
-      currentEvaluatedAt: sub.evaluated_at,
-    }, {
-      onSuccess: () => setLabSelectedGenerationId(null),
-    });
-  }, [labContext?.labSubmission, retryLab]);
 
   // Derived model info
   const isGemini = selectedImageModel.startsWith('gemini-');
@@ -530,13 +444,7 @@ export default function CreativeStudio() {
       return;
     }
 
-    // Check appropriate quota (lab vs regular)
-    if (labContext?.isLabMode) {
-      if (labQuota && !labQuota.can_generate) {
-        toast.error('Lab generation quota reached. Resets Monday.');
-        return;
-      }
-    } else if (quota && !quota.can_generate) {
+    if (quota && !quota.can_generate) {
       const type = generationType === 'video' ? 'video' : 'image';
       toast.error(`Weekly ${type} quota reached. Resets Monday.`);
       return;
@@ -634,12 +542,6 @@ export default function CreativeStudio() {
         if (videoParams.referenceImages && videoParams.referenceImages.length > 0) {
           videoRequest.reference_images = videoParams.referenceImages.map((ref: { image: string }) => ref.image);
         }
-        // Tag lab generations for tracking
-        if (labContext?.isLabMode) {
-          videoRequest.lab_module_id = labContext.labModuleId;
-          videoRequest.lab_program_id = labContext.labProgramId;
-        }
-
         if (videoParams.directorMode) videoRequest.json_prompt = true;
         if (videoParams.cameraControlsEnabled && videoParams.cameraPreset) {
           videoRequest.camera_preset = videoParams.cameraPreset;
@@ -692,12 +594,6 @@ export default function CreativeStudio() {
 
         if (imageParams.cameraControlsEnabled && imageParams.cameraPreset) {
           imageRequest.camera_preset = imageParams.cameraPreset;
-        }
-
-        // Tag lab generations for tracking
-        if (labContext?.isLabMode) {
-          imageRequest.lab_module_id = labContext.labModuleId;
-          imageRequest.lab_program_id = labContext.labProgramId;
         }
 
         // Tag template source if user applied a prompt template
@@ -829,11 +725,6 @@ export default function CreativeStudio() {
       setAppliedTemplate(null);
       invalidateGenerations();
       queryClient.invalidateQueries({ queryKey: ['creative-studio-quota'] });
-      if (labContext?.isLabMode) {
-        queryClient.invalidateQueries({ queryKey: ['lab-generations'] });
-        queryClient.invalidateQueries({ queryKey: ['lab-submission'] });
-        queryClient.invalidateQueries({ queryKey: ['lab-quota'] });
-      }
 
       if (data.output_urls?.length > 0 && !isVideo) {
         setCurrentImage(data.output_urls[0]);
@@ -1101,8 +992,6 @@ export default function CreativeStudio() {
         onOpenPromptLibrary={() => setPromptLibraryOpen(true)}
         onToggleVince={handleToggleVince}
         vinceActive={rightSidebarMode === 'vince'}
-        onToggleMitch={labContext?.isLabMode ? handleToggleMitch : undefined}
-        mitchActive={rightSidebarMode === 'mitch'}
         onOpenBrandDNA={() => setBrandDNAOpen(true)}
         onOpenCorporateDNA={() => setCorporateDNAOpen(true)}
         onOpenBrandStandards={() => setStandardsDialogOpen(true)}
@@ -1110,9 +999,6 @@ export default function CreativeStudio() {
         onOpenMediaLibrary={() => setShowLibrary(true)}
         studioTheme={theme as 'light' | 'dark'}
         onToggleTheme={handleToggleStudioTheme}
-        labMode={!!labContext?.isLabMode}
-        labTitle={labContext?.labConfig.title}
-        onExitLab={labContext?.exitLab}
         statusText={status.text}
         statusColor={status.color}
         statusPulse={status.pulse}
@@ -1140,25 +1026,6 @@ export default function CreativeStudio() {
             </motion.aside>
           )}
         </AnimatePresence>
-
-        {/* Lab Guide sidebar (persistent, between history and canvas) */}
-        {labContext?.isLabMode && (
-          <LabGuidePanel
-            open={labGuideOpen}
-            onToggle={() => setLabGuideOpen(prev => !prev)}
-            labConfig={labContext.labConfig}
-            labSubmission={labContext.labSubmission}
-            generations={labContext.labGenerations}
-            onSelectForSubmission={handleSelectForSubmission}
-            selectedGenerationId={labSelectedGenerationId}
-            onSubmit={handleLabSubmit}
-            isSubmitting={labContext.isSubmitting}
-            onExitLab={labContext.exitLab}
-            passingScore={labContext.labModule.passing_score ?? 60}
-            onRetry={handleLabRetry}
-            isRetrying={retryLab.isPending}
-          />
-        )}
 
         {/* Center — Canvas + Prompt Bar */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
@@ -1322,13 +1189,10 @@ export default function CreativeStudio() {
             onToggleSettings={() => setSettingsDrawerOpen(prev => !prev)}
             settingsOpen={settingsDrawerOpen}
             vinceActive={rightSidebarMode === 'vince'}
-            quotaExhausted={labContext?.isLabMode
-              ? (labQuota ? !labQuota.can_generate : false)
-              : (quota ? !quota.can_generate : false)
-            }
-            labMode={!!labContext?.isLabMode}
-            onToggleLabGuide={labContext?.isLabMode ? () => setLabGuideOpen(prev => !prev) : undefined}
-            labGuideOpen={labGuideOpen}
+            quotaExhausted={quota ? !quota.can_generate : false}
+            labMode={false}
+            onToggleLabGuide={undefined}
+            labGuideOpen={false}
           />
         </div>
 
@@ -1343,19 +1207,7 @@ export default function CreativeStudio() {
               className="h-full border-l overflow-hidden flex-shrink-0 shadow-[-2px_0_8px_rgba(0,0,0,0.04)]"
               style={{ backgroundColor: 'hsl(var(--cs-surface-1))', borderLeftColor: 'hsl(var(--cs-border-subtle))' }}
             >
-              {rightSidebarMode === 'mitch' && labContext?.isLabMode ? (
-                <div className="flex flex-col h-full">
-                  <LabTutorPanel
-                    module={labContext.labModule}
-                    program={labContext.labProgram}
-                    labConfig={labContext.labConfig}
-                    onClose={() => setRightSidebarMode('settings')}
-                    generationCount={labContext.labGenerationCount}
-                    evaluationScore={labContext.labSubmission?.score}
-                    evaluationFeedback={labContext.labSubmission?.feedback_summary}
-                  />
-                </div>
-              ) : rightSidebarMode === 'vince' ? (
+              {rightSidebarMode === 'vince' ? (
                 <div className="flex flex-col h-full">
                   <div className="px-3 py-2 border-b border-border/50 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-2">
@@ -1460,7 +1312,7 @@ export default function CreativeStudio() {
                     )}
 
                     <div className="border-t pt-3">
-                      <QuotaDisplay labMode={!!labContext?.isLabMode} />
+                      <QuotaDisplay labMode={false} />
                     </div>
                   </div>
                 </ScrollArea>
@@ -1517,8 +1369,6 @@ export default function CreativeStudio() {
           }
         }}
       />
-
-      {/* Lab Guide Panel is now an inline sidebar — see three-column workspace */}
 
       {/* Save as Template Dialog */}
       <SaveAsTemplateDialog
