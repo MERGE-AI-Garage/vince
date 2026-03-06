@@ -404,7 +404,7 @@ function SystemWelcome({
               <Shield className="w-6 h-6 text-[#00D26A]" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-fraunces text-base font-semibold text-white mb-1">MERGE AI Guidelines</h3>
+              <h3 className="font-fraunces text-base font-semibold text-white mb-1">Brand AI Guidelines</h3>
               <p className="font-epilogue text-xs text-white/50 leading-relaxed">
                 AI usage policies, tool approvals, and compliance guidance.
                 Select a brand above for brand-specific approvals.

@@ -207,18 +207,14 @@ const VINCE_TOOLS = [
   },
   {
     name: 'create_brand',
-    description: 'Create a new brand in the system. Use when the user asks to set up a new brand, onboard a new client, or create a brand from scratch. Returns the new brand ID so subsequent tools can reference it.',
+    description: 'Create a new brand in the system. Requires a name and website URL. For well-known brands, infer the URL (e.g., "Google" → "google.com"). Call this immediately after the user provides a brand name — do not ask for additional details beyond the website.',
     parameters: {
       type: 'object',
       properties: {
         name: { type: 'string', description: 'Brand name (e.g., "Google", "Nike")' },
-        website_url: { type: 'string', description: 'Brand website URL (e.g., "google.com")' },
-        primary_color: { type: 'string', description: 'Primary brand color as hex (e.g., "#4285F4")' },
-        secondary_color: { type: 'string', description: 'Secondary brand color as hex' },
-        brand_category: { type: 'string', description: 'Category (e.g., "Technology", "Food & Beverage", "Retail")' },
-        description: { type: 'string', description: 'Brief brand description' },
+        website_url: { type: 'string', description: 'Brand website URL (e.g., "google.com"). Required — infer for well-known brands, ask the user if unknown.' },
       },
-      required: ['name'],
+      required: ['name', 'website_url'],
     },
   },
   {
@@ -644,7 +640,7 @@ async function createBrand(
       name,
       slug: finalSlug,
       website_url: normalizedUrl || null,
-      primary_color: (params.primary_color as string) || '#00856C',
+      primary_color: (params.primary_color as string) || null,
       secondary_color: (params.secondary_color as string) || null,
       brand_category: (params.brand_category as string) || null,
       description: (params.description as string) || null,
@@ -672,16 +668,14 @@ async function analyzeBrandWebsite(
   context: { brand_id: string; user_id: string },
   supabase: ReturnType<typeof createClient>,
 ) {
-  // Get the brand's website URL if not provided
-  let url = params.url as string | undefined;
-  if (!url) {
-    const { data: brand } = await supabase
-      .from('creative_studio_brands')
-      .select('website_url')
-      .eq('id', context.brand_id)
-      .single();
-    url = brand?.website_url;
-  }
+  // Always prefer the brand's stored website_url over what Gemini passes
+  // (Gemini sometimes hallucinates wrong URLs from system prompt examples)
+  const { data: brand } = await supabase
+    .from('creative_studio_brands')
+    .select('website_url')
+    .eq('id', context.brand_id)
+    .single();
+  let url = brand?.website_url || (params.url as string | undefined);
 
   if (!url) throw new Error('No website URL provided and no website_url stored on the brand. Pass a url parameter.');
 
@@ -811,9 +805,10 @@ You have tools to take real actions:
 - list_brand_references: List available reference image collections for the brand (products, characters, styles, environments).
 
 BRAND ONBOARDING FLOW:
-When a user asks to set up a new brand, follow this sequence:
-1. Call create_brand with the name, website URL, and primary color they provide.
-2. If they gave a website URL, immediately call analyze_brand_website to populate the visual DNA.
+When a user asks to set up a new brand, you need TWO things: the brand name and the website URL.
+1. If the user gives you a brand name WITHOUT a website URL, infer it for well-known brands (e.g., "Google" → "google.com", "Nike" → "nike.com"). If you can't infer it, ask for the website URL — it's required.
+2. Call create_brand with both the name and website_url. Do NOT call it without a website URL.
+3. ALWAYS call analyze_brand_website immediately after creating the brand. Website analysis extracts colors, fonts, imagery style, and messaging automatically — this is the foundation of the brand profile.
 3. If they provide documents (PDFs, brand guidelines), use import_brand_document for each one.
 4. After onboarding, summarize what was extracted and suggest next steps (uploading reference images, creating prompt templates).
 
@@ -1003,7 +998,8 @@ serve(async (req) => {
     }
 
     // ── Standard chat mode ───────────────────────────────────────────────
-    const { brand_id, user_message, parts, conversation_id, user_context } = body;
+    let { brand_id } = body;
+    const { user_message, parts, conversation_id, user_context } = body;
 
     if (!user_message && !parts) {
       return new Response(JSON.stringify({ success: false, error: 'user_message is required' }), {
@@ -1134,6 +1130,11 @@ serve(async (req) => {
         );
         toolCalls.push({ toolName, parameters, result: toolResult, success: true });
         toolCallsCount++;
+
+        // After create_brand, update brand_id so subsequent tools target the new brand
+        if (toolName === 'create_brand' && toolResult?.brand_id) {
+          brand_id = toolResult.brand_id;
+        }
 
         result = await chat.sendMessage([{
           functionResponse: { name: toolName, response: toolResult },
@@ -1274,6 +1275,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       message: assistantContent || '',
+      brand_id,
       prompt: extractedPrompt,
       camera_preset: extractedCameraPreset,
       recommended_model: extractedModel,

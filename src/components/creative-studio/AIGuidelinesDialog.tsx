@@ -205,7 +205,7 @@ export function AIGuidelinesDialog({ brand, open, onOpenChange }: AIGuidelinesDi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[900px] max-h-[88vh] p-0 gap-0 overflow-hidden">
-        <DialogTitle className="sr-only">MERGE AI Guidelines — {brand.name}</DialogTitle>
+        <DialogTitle className="sr-only">Brand AI Guidelines — {brand.name}</DialogTitle>
         <DialogDescription className="sr-only">
           AI tool approval status and compliance guidelines for {brand.name} client work
         </DialogDescription>
@@ -221,7 +221,7 @@ export function AIGuidelinesDialog({ brand, open, onOpenChange }: AIGuidelinesDi
             </div>
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/60">
-                MERGE AI Guidelines
+                Brand AI Guidelines
               </p>
               <h2 className="text-lg font-semibold text-white">
                 AI Guidelines for {brand.name} Client Work

@@ -872,15 +872,25 @@ serve(async (req) => {
     const promptData = await getPromptWithModel(supabase, 'brand-website-analysis');
     const brandAnalysisPrompt = promptData?.prompt.prompt_text || FALLBACK_BRAND_ANALYSIS_PROMPT;
 
-    // Verify auth
+    // Verify auth — accept service_role JWTs (from internal edge function calls) or user tokens
     const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    let user: { id: string; email?: string } | null = null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.role === 'service_role') {
+        user = { id: 'service_role', email: 'system@internal' };
+      }
+    } catch { /* not a valid JWT, try user auth */ }
+    if (!user) {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !authUser) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      user = authUser;
     }
 
     const body: AnalyzeWebsiteRequest = await req.json();
@@ -1211,6 +1221,39 @@ serve(async (req) => {
       .update({ website_url: normalizedUrl })
       .eq('id', brand_id)
       .is('website_url', null);
+
+    // Write colors back to brand record from analysis (only if not already set)
+    const colorPalette = (analysis as Record<string, unknown>)?.color_palette;
+    let primaryFromAnalysis: string | null = null;
+    let secondaryFromAnalysis: string | null = null;
+    if (Array.isArray(colorPalette) && colorPalette.length >= 2) {
+      // Gemini sometimes returns a flat array of hex strings
+      primaryFromAnalysis = colorPalette[0] as string;
+      secondaryFromAnalysis = colorPalette[1] as string;
+    } else if (colorPalette && typeof colorPalette === 'object') {
+      const cp = colorPalette as Record<string, unknown>;
+      if (typeof cp.primary === 'string') primaryFromAnalysis = cp.primary;
+      if (typeof cp.secondary === 'string') secondaryFromAnalysis = cp.secondary;
+    }
+    if (primaryFromAnalysis || secondaryFromAnalysis) {
+      const brandUpdates: Record<string, string> = {};
+      if (primaryFromAnalysis) brandUpdates.primary_color = primaryFromAnalysis;
+      if (secondaryFromAnalysis) brandUpdates.secondary_color = secondaryFromAnalysis;
+      if (Object.keys(brandUpdates).length > 0) {
+        const { data: currentBrand } = await supabase
+          .from('creative_studio_brands')
+          .select('primary_color, secondary_color')
+          .eq('id', brand_id)
+          .single();
+        const colorUpdates: Record<string, string> = {};
+        if (brandUpdates.primary_color && !currentBrand?.primary_color) colorUpdates.primary_color = brandUpdates.primary_color;
+        if (brandUpdates.secondary_color && !currentBrand?.secondary_color) colorUpdates.secondary_color = brandUpdates.secondary_color;
+        if (Object.keys(colorUpdates).length > 0) {
+          await supabase.from('creative_studio_brands').update(colorUpdates).eq('id', brand_id);
+          console.log(`[Website Analyzer] Wrote colors to brand: ${JSON.stringify(colorUpdates)}`);
+        }
+      }
+    }
 
     // Set logo URLs from analysis or extraction if not already set
     const analysisLogoUrl = (analysis as Record<string, unknown>)?.logo_url as string | undefined;

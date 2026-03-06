@@ -22,6 +22,7 @@ interface BrandAgentPanelProps {
   onApplyPrompt?: (prompt: string) => void;
   onApplyCameraPreset?: (preset: CameraPreset) => void;
   onApplyModel?: (modelId: string) => void;
+  onBrandCreated?: (brandId: string) => void;
 }
 
 export function BrandAgentPanel({
@@ -32,6 +33,7 @@ export function BrandAgentPanel({
   onApplyPrompt,
   onApplyCameraPreset,
   onApplyModel,
+  onBrandCreated,
 }: BrandAgentPanelProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -60,6 +62,7 @@ export function BrandAgentPanel({
                 onApplyCameraPreset={onApplyCameraPreset}
                 onApplyModel={onApplyModel}
                 onClose={() => onOpenChange(false)}
+                onBrandCreated={onBrandCreated}
               />
             )}
             <Button

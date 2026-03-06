@@ -1246,6 +1246,10 @@ export default function CreativeStudio() {
                       }}
                       onGenerate={handleGenerate}
                       onClose={() => setRightSidebarMode('settings')}
+                      onBrandCreated={(newBrandId) => {
+                        setSelectedBrandId(newBrandId);
+                        toast.success('Brand created — switched to new brand');
+                      }}
                     />
                   </div>
                 </div>

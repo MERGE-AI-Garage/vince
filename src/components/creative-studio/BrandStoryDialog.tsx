@@ -21,7 +21,8 @@ import { BrandDialogNav, type BrandDialogView } from './BrandDialogNav';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function darkenHex(hex: string, amount: number): string {
+function darkenHex(hex: string | null | undefined, amount: number): string {
+  if (!hex) return `rgb(51, 51, 51)`;
   const clean = hex.replace('#', '');
   const r = Math.round(parseInt(clean.slice(0, 2), 16) * (1 - amount));
   const g = Math.round(parseInt(clean.slice(2, 4), 16) * (1 - amount));
@@ -29,7 +30,8 @@ function darkenHex(hex: string, amount: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-function isLightColor(hex: string): boolean {
+function isLightColor(hex: string | null | undefined): boolean {
+  if (!hex) return false;
   const clean = hex.replace('#', '');
   const r = parseInt(clean.slice(0, 2), 16);
   const g = parseInt(clean.slice(2, 4), 16);
@@ -37,7 +39,8 @@ function isLightColor(hex: string): boolean {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55;
 }
 
-function hexToRgba(hex: string, alpha: number): string {
+function hexToRgba(hex: string | null | undefined, alpha: number): string {
+  if (!hex) return `rgba(51, 51, 51, ${alpha})`;
   const clean = hex.replace('#', '');
   const r = parseInt(clean.slice(0, 2), 16);
   const g = parseInt(clean.slice(2, 4), 16);

@@ -93,7 +93,7 @@ export function BrandEditorAdminControls({ form, updateField }: BrandFormProps) 
               {(form.color_palette.length > 0
                 ? form.color_palette
                 : [form.primary_color, form.secondary_color]
-              ).map((color, i) => {
+              ).filter(Boolean).map((color, i) => {
                 const isSelected = form.animated_border_colors.includes(color);
                 return (
                   <button
@@ -168,7 +168,7 @@ export function BrandEditorAdminControls({ form, updateField }: BrandFormProps) 
           ].map(({ label, icon: Icon }, idx) => {
             const autoColors = form.color_palette.length >= 3
               ? form.color_palette.slice(0, 3)
-              : [form.primary_color, form.secondary_color, form.primary_color];
+              : [form.primary_color || '#333333', form.secondary_color || '#666666', form.primary_color || '#333333'];
             const color = form.showcase_button_colors[idx] || autoColors[idx];
             return (
               <div key={label} className="flex items-center gap-2">

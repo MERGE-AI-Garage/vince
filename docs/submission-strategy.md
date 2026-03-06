@@ -222,7 +222,16 @@ Key elements to highlight:
 
 ## Remaining Action Items
 
-1. Google Developer Group signup — easy bonus, should just do it
-2. Architecture diagram — need a clean visual (not ASCII art) for submission
-3. README with spin-up instructions
+1. Google Developer Group signup — DONE
+2. Architecture diagram — after code is complete
+3. README with spin-up instructions — after code is complete
 4. Cloud Run deploy script (counts as bonus: "automation scripts for cloud deployment")
+5. **PRE-SUBMISSION: Squash git history before making repo public.** Current commits reference "extraction from AI Garage," removing other agents by name, and rebranding. Squash into clean feature-oriented commits that describe what was built, not where it came from. Example history:
+   - `feat: Creative Studio with brand-intelligent image generation`
+   - `feat: interleaved creative package generation (Gemini text+image output)`
+   - `feat: Vince voice mode with Gemini Live API and tool calling`
+   - `feat: brand intelligence pipeline (website crawl, document import, synthesis)`
+   - `feat: 11-tab admin panel with analytics and audit trail`
+   - `feat: Chrome extension side panel`
+   - `feat: Cloud Run deployment`
+6. Judge's quick guide PDF — upload to "Additional Info" file slot on DevPost

@@ -136,6 +136,11 @@ export default {
 					'0%': { backgroundPosition: '300% 300%' },
 					'100%': { backgroundPosition: '0% 0%' }
 				},
+				'shine-pulse': {
+					'0%': { backgroundPosition: '0% 0%' },
+					'50%': { backgroundPosition: '100% 100%' },
+					'100%': { backgroundPosition: '0% 0%' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -143,6 +148,7 @@ export default {
 				'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
 				'shimmer-slide': 'shimmer-slide var(--speed) ease-in-out infinite alternate',
 				'shine': 'shine var(--duration) infinite linear',
+				'shine-pulse': 'shine-pulse var(--duration) infinite linear',
 			}
 		}
 	},

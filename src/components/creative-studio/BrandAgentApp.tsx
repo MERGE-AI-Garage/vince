@@ -82,6 +82,7 @@ interface BrandAgentAppProps {
   onApplyModel?: (modelId: string) => void;
   onGenerate?: () => void;
   onClose?: () => void;
+  onBrandCreated?: (brandId: string) => void;
 }
 
 interface CreativePackageResult {
@@ -109,6 +110,7 @@ export function BrandAgentApp({
   onApplyModel,
   onGenerate,
   onClose,
+  onBrandCreated,
 }: BrandAgentAppProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -356,6 +358,15 @@ export function BrandAgentApp({
             creative_package: creativePackage,
           },
         }));
+      }
+
+      // If a brand was created, notify the parent so it can switch to the new brand
+      const createAction = response.tool_actions?.find(
+        (a: ToolAction) => a.toolName === 'create_brand' && a.success
+      );
+      if (createAction?.result && onBrandCreated) {
+        const newBrandId = (createAction.result as Record<string, unknown>).brand_id as string;
+        if (newBrandId) onBrandCreated(newBrandId);
       }
 
       // Auto-apply prompt, camera preset, and model to Creative Studio

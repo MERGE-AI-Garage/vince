@@ -461,7 +461,7 @@ export function DirectorModePanel({
         <textarea
           value={value.scene_description}
           onChange={(e) => update('scene_description', e.target.value)}
-          placeholder="A busy Italian restaurant kitchen at dinner rush..."
+          placeholder="A sunlit rooftop terrace overlooking a city skyline..."
           className="w-full min-h-[56px] px-2.5 py-1.5 bg-background border rounded-lg resize-y focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground text-xs"
           disabled={enhancing}
         />
@@ -526,7 +526,7 @@ export function DirectorModePanel({
         <textarea
           value={value.subject_attributes}
           onChange={(e) => update('subject_attributes', e.target.value)}
-          placeholder="Professional chef in white coat, intense focus..."
+          placeholder="A confident woman mid-stride, tailored blazer, warm smile..."
           rows={2}
           className="w-full min-h-[32px] px-2.5 py-1.5 bg-background border rounded-lg resize-y focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground text-xs"
           disabled={enhancing}
