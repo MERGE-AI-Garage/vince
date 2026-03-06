@@ -8,7 +8,7 @@
     "https://foolpmhiedplyftbiocb.supabase.co/*"
   ],
   "side_panel": {
-    "default_path": "dist/sidepanel.html"
+    "default_path": "sidepanel.html"
   },
   "action": {
     "default_icon": "icons/icon-48.png",
