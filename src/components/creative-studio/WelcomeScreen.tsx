@@ -246,7 +246,7 @@ export function WelcomeScreen({
 
 // ── State A: No brand — System Capabilities ──────────────────────────────────
 
-const SYSTEM_HERO_IMAGE = '';
+const SYSTEM_HERO_IMAGE = '/images/studio-hero.jpeg';
 
 function SystemWelcome({
   onUploadClick,

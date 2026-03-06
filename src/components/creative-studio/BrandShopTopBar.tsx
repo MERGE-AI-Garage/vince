@@ -6,7 +6,7 @@ import {
   FolderOpen,
   BookOpen,
   Bot,
-  ChevronLeft,
+  Settings,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -74,29 +74,17 @@ export function BrandShopTopBar({
         borderBottomColor: 'hsl(var(--cs-border-subtle))',
       }}
     >
-      {/* Left: Logo + Back */}
+      {/* Left: Brand name + status */}
       <div className="flex items-center gap-2 shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => navigate('/')}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <img
-          src="/mergelogos/Merge_Logo_Primary_Viridian-Green_RGB.png"
-          alt="MERGE"
-          className="h-4 w-auto select-none"
-        />
+        <span className="text-sm font-semibold tracking-tight select-none" style={{ color: 'hsl(var(--cs-text-primary))' }}>
+          Brand Lens
+        </span>
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-muted/50 rounded-full select-none">
           <div className={`w-1.5 h-1.5 ${statusColor} rounded-full ${statusPulse ? 'animate-pulse' : ''}`} />
           <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap tracking-tight">
-            {statusText === 'Ready' ? 'Creative Studio' : statusText}
+            {statusText}
           </span>
         </div>
-
-
       </div>
 
       {/* Center: Brand Context */}
@@ -117,6 +105,23 @@ export function BrandShopTopBar({
       {/* Right: Actions */}
       <div className="flex items-center gap-1.5 shrink-0">
         <TooltipProvider delayDuration={200}>
+          {/* Admin */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => navigate('/admin')}
+              >
+                <Settings className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p className="text-xs">Admin</p>
+            </TooltipContent>
+          </Tooltip>
+
           {/* Library */}
           <Tooltip>
             <TooltipTrigger asChild>

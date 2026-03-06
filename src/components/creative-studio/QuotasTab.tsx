@@ -172,7 +172,7 @@ function UserDetailDialog({
                     <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-primary font-bold text-lg">
-                      {user.full_name
+                      {(user.full_name || user.email || '?')
                         .split(' ')
                         .map((n) => n[0])
                         .join('')
@@ -182,7 +182,7 @@ function UserDetailDialog({
                   )}
                 </div>
                 <div className="flex-1">
-                  <DialogTitle className="text-xl">{user.full_name}</DialogTitle>
+                  <DialogTitle className="text-xl">{user.full_name || user.email || 'Unknown User'}</DialogTitle>
                   <DialogDescription>Weekly generation activity and cost breakdown</DialogDescription>
                 </div>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>

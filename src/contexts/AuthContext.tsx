@@ -1,4 +1,4 @@
-// ABOUTME: Simplified auth context for Brand Lens.
+// ABOUTME: Auth context for Brand Lens.
 // ABOUTME: Provides user session, profile, and authentication state.
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -35,60 +35,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
 
-  const fetchUserRole = async (userId: string): Promise<UserRole> => {
-    const { data } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .maybeSingle();
-    return (data?.role as UserRole) || 'user';
-  };
-
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-    return data;
-  };
-
+  // Effect 1: Listen to auth state changes — ONLY set session/user, no async DB calls
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const [role, prof] = await Promise.all([
-          fetchUserRole(session.user.id),
-          fetchProfile(session.user.id),
-        ]);
-        setUserRole(role);
-        setProfile(prof);
-      }
-      setLoading(false);
-    });
+    let mounted = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        if (!mounted) return;
+        console.log('[Auth] event:', _event, 'session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
-        if (session?.user) {
-          const [role, prof] = await Promise.all([
-            fetchUserRole(session.user.id),
-            fetchProfile(session.user.id),
-          ]);
-          setUserRole(role);
-          setProfile(prof);
-        } else {
+
+        // If no session, we're done loading — no data to fetch
+        if (!session) {
           setUserRole(null);
           setProfile(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    // Safety timeout — if onAuthStateChange never fires, unblock the app
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('[Auth] Safety timeout — unblocking app');
+        setLoading(false);
+      }
+    }, 3000);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Effect 2: When user changes, fetch role and profile in a SEPARATE tick
+  // This avoids the Supabase gotcha of making DB calls inside onAuthStateChange
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        const [roleResult, profileResult] = await Promise.all([
+          supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle(),
+        ]);
+
+        if (cancelled) return;
+
+        setUserRole((roleResult.data?.role as UserRole) || 'user');
+        setProfile(profileResult.data || null);
+      } catch (err) {
+        console.error('[Auth] Failed to fetch user data:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });

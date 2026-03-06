@@ -401,14 +401,10 @@ export function ExtensionTab() {
           >
             <Chrome className="w-12 h-12 text-[#1ED75F] mb-4" />
             <h3 className="font-epilogue text-base font-semibold text-white mb-1">
-              MERGE AI Brand Guidelines
+              Brand Lens
             </h3>
-            <span className="inline-block font-epilogue text-[11px] text-white/40 mb-6">
-              v{EXTENSION_VERSION}
-            </span>
-            <DownloadButton size="sm" />
             <p className="font-epilogue text-[11px] text-white/40 mt-4">
-              Free for all Brand Lens users
+              AI-powered brand intelligence
             </p>
           </motion.div>
         </div>
