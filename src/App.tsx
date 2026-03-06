@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { UnifiedThemeProvider } from '@/components/UnifiedThemeProvider';
 import Login from '@/pages/Login';
 import { lazy, Suspense } from 'react';
 
@@ -42,11 +43,13 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <TooltipProvider>
-        <AppRoutes />
-        <Toaster position="bottom-right" />
-      </TooltipProvider>
-    </AuthProvider>
+    <UnifiedThemeProvider defaultTheme="dark">
+      <AuthProvider>
+        <TooltipProvider>
+          <AppRoutes />
+          <Toaster position="bottom-right" />
+        </TooltipProvider>
+      </AuthProvider>
+    </UnifiedThemeProvider>
   );
 }

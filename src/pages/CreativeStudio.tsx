@@ -103,7 +103,7 @@ export default function CreativeStudio() {
       setTheme(studioTheme, { skipPersist: true });
     }
     return () => {
-      const globalTheme = (localStorage.getItem('ai-garage-theme') || 'light') as 'light' | 'dark';
+      const globalTheme = (localStorage.getItem('brand-lens-theme') || 'dark') as 'light' | 'dark';
       setTheme(globalTheme);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
