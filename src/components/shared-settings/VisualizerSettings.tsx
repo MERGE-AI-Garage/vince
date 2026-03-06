@@ -21,8 +21,12 @@ import {
   type ClassicWaveSettings,
   type HyperspeedSettings,
   type Codrops3DOrbSettings,
-  type VrmAvatarSettings,
-} from '@/services/scout/scoutSettings';
+} from '@/services/brand-agent/brandAgentSettings';
+
+export interface VrmAvatarSettings {
+  filePath: string; mouthIntensity: number; lipSensitivity: number;
+  attackSpeed: number; decaySpeed: number; idleIntensity: number; backgroundColor: string;
+}
 
 type VisualizerStyle = 'classic_wave' | 'codrops_3d_orb' | 'light_pillar' | 'hyperspeed' | 'vrm_avatar';
 

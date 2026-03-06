@@ -2,18 +2,36 @@
 // ABOUTME: Provides centralized settings access for voice, chat, visualizer, and brand context config
 
 import { supabase } from '@/integrations/supabase/client';
-import type { GeminiVoice } from '@/services/eddie/eddieSettings';
-import type {
-  VisualizerStyle,
-  LightPillarSettings,
-  ClassicWaveSettings,
-  HyperspeedSettings,
-  Codrops3DOrbSettings,
-} from '@/services/axel/axelSettings';
 
-// Re-export shared types
-export type { GeminiVoice, VisualizerStyle, LightPillarSettings, ClassicWaveSettings, HyperspeedSettings, Codrops3DOrbSettings };
-export { GEMINI_VOICES, GEMINI_LIVE_MODELS, GEMINI_TEXT_MODELS } from '@/services/eddie/eddieSettings';
+// Voice and visualizer types (previously shared with other agents)
+export type GeminiVoice = 'Puck' | 'Charon' | 'Kore' | 'Fenrir' | 'Aoede' | 'Leda' | 'Orus' | 'Zephyr';
+export type VisualizerStyle = 'classic_wave' | 'light_pillar' | 'hyperspeed' | 'codrops_3d_orb';
+
+export interface LightPillarSettings {
+  topColor: string; bottomColor: string; intensity: number; rotationSpeed: number;
+  glowAmount: number; pillarWidth: number; pillarHeight: number; noiseIntensity: number; pillarRotation: number;
+}
+export interface ClassicWaveSettings {
+  color1: string; color2: string; color3: string; speed: number; amplitude: number;
+  lineWidth1: number; lineWidth2: number; lineWidth3: number;
+  backgroundColor: string; showTexture: boolean; textureOpacity: number;
+  frequency1: number; frequency2: number; frequency3: number;
+}
+export interface HyperspeedSettings { preset: string; baseSpeed: number; bloomStrength: number; }
+export interface Codrops3DOrbSettings {
+  backgroundColor: string; color1: string; color2: string;
+  glowColor: string; speakingGlowColor: string; distortion: number;
+}
+
+export const GEMINI_VOICES: GeminiVoice[] = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Zephyr'];
+export const GEMINI_LIVE_MODELS = [
+  { id: 'gemini-2.5-flash-native-audio-preview-12-2025', name: 'Gemini 2.5 Flash (Native Audio)' },
+  { id: 'gemini-2.0-flash-live-001', name: 'Gemini 2.0 Flash Live' },
+];
+export const GEMINI_TEXT_MODELS = [
+  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+];
 
 export interface BrandAgentSettings {
   // Text/Chat
@@ -119,7 +137,14 @@ BEHAVIORAL RULES:
 6. Keep prompts detailed but readable — a photographer should be able to follow them
 7. Suggest aspect ratios appropriate for the intended platform (Instagram=1:1/4:5, Story=9:16, etc.)`;
 
-const DEFAULT_LIGHT_PILLAR_SETTINGS: LightPillarSettings = {
+export type HyperspeedPreset = 'deep' | 'cosmic' | 'neon' | 'ocean';
+
+export const DEFAULT_VRM_AVATAR_SETTINGS = {
+  filePath: '', mouthIntensity: 1.0, lipSensitivity: 0.5,
+  attackSpeed: 0.3, decaySpeed: 0.2, idleIntensity: 0.02, backgroundColor: '#0f0326',
+};
+
+export const DEFAULT_LIGHT_PILLAR_SETTINGS: LightPillarSettings = {
   topColor: '#a855f7',
   bottomColor: '#7c3aed',
   intensity: 1.0,
@@ -131,7 +156,7 @@ const DEFAULT_LIGHT_PILLAR_SETTINGS: LightPillarSettings = {
   pillarRotation: 0,
 };
 
-const DEFAULT_CLASSIC_WAVE_SETTINGS: ClassicWaveSettings = {
+export const DEFAULT_CLASSIC_WAVE_SETTINGS: ClassicWaveSettings = {
   color1: '#a855f7',
   color2: '#7c3aed',
   color3: '#c084fc',
@@ -148,13 +173,13 @@ const DEFAULT_CLASSIC_WAVE_SETTINGS: ClassicWaveSettings = {
   frequency3: 0.06,
 };
 
-const DEFAULT_HYPERSPEED_SETTINGS: HyperspeedSettings = {
+export const DEFAULT_HYPERSPEED_SETTINGS: HyperspeedSettings = {
   preset: 'deep',
   baseSpeed: 1.0,
   bloomStrength: 1.5,
 };
 
-const DEFAULT_CODROPS_3D_ORB_SETTINGS: Codrops3DOrbSettings = {
+export const DEFAULT_CODROPS_3D_ORB_SETTINGS: Codrops3DOrbSettings = {
   backgroundColor: '#0f0326',
   color1: '#1a0533',
   color2: '#2d0a4e',

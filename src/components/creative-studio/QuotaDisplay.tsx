@@ -1,12 +1,11 @@
-// ABOUTME: Displays user's Creative Studio generation quota status
-// ABOUTME: Shows remaining image, video, and lab generations with progress bars; clickable to open receipt
+// ABOUTME: Displays user's Creative Studio generation quota status.
+// ABOUTME: Shows remaining image and video generations with progress bars; clickable to open receipt.
 
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Clock, Image, Video, Sparkles, FlaskConical } from 'lucide-react';
+import { Clock, Image, Video, Sparkles } from 'lucide-react';
 import { useCreativeStudioFullQuota } from '@/hooks/useCreativeStudioQuota';
-import { useLabQuota } from '@/hooks/useLabQuota';
 import { QuotaReceiptDialog } from './QuotaReceiptDialog';
 
 interface QuotaDisplayProps {
@@ -14,9 +13,8 @@ interface QuotaDisplayProps {
   labMode?: boolean;
 }
 
-export function QuotaDisplay({ compact = false, labMode = false }: QuotaDisplayProps) {
+export function QuotaDisplay({ compact = false }: QuotaDisplayProps) {
   const { data: quota, isLoading } = useCreativeStudioFullQuota();
-  const { data: labQuota, isLoading: labLoading } = useLabQuota(labMode);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
   if (isLoading || !quota) {
@@ -45,10 +43,6 @@ export function QuotaDisplay({ compact = false, labMode = false }: QuotaDisplayP
     ? ((quota.video.limit_value - quota.video.remaining) / quota.video.limit_value) * 100
     : 0;
 
-  const labPercent = labQuota && labQuota.limit_value > 0
-    ? ((labQuota.limit_value - labQuota.remaining) / labQuota.limit_value) * 100
-    : 0;
-
   const getColorClass = (remaining: number, limit: number) => {
     const percent = remaining / limit;
     if (percent === 0) return 'text-red-600 border-red-500/30 bg-red-500/10';
@@ -68,12 +62,6 @@ export function QuotaDisplay({ compact = false, labMode = false }: QuotaDisplayP
             <Video className="h-3 w-3 mr-1" />
             {quota.video.remaining}/{quota.video.limit_value}
           </Badge>
-          {labMode && labQuota && (
-            <Badge variant="outline" className={getColorClass(labQuota.remaining, labQuota.limit_value)}>
-              <FlaskConical className="h-3 w-3 mr-1" />
-              {labQuota.remaining}/{labQuota.limit_value}
-            </Badge>
-          )}
         </div>
         <QuotaReceiptDialog open={receiptOpen} onOpenChange={setReceiptOpen} />
       </>
@@ -105,22 +93,6 @@ export function QuotaDisplay({ compact = false, labMode = false }: QuotaDisplayP
             Resets in {daysUntilReset} day{daysUntilReset !== 1 ? 's' : ''}
           </span>
         </div>
-
-        {/* Lab quota (shown first when in lab mode) */}
-        {labMode && labQuota && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-1.5">
-                <FlaskConical className="h-4 w-4 text-amber-500" />
-                Lab Generations
-              </span>
-              <span className="font-medium">
-                {labQuota.remaining} / {labQuota.limit_value}
-              </span>
-            </div>
-            <Progress value={labPercent} className={`h-2 ${labPercent >= 100 ? '[&>div]:bg-red-500' : labPercent >= 80 ? '[&>div]:bg-orange-500' : '[&>div]:bg-amber-500'}`} />
-          </div>
-        )}
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
