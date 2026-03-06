@@ -115,7 +115,7 @@ const VinceControlPanel = () => {
             icon={Camera}
             title="Vince Control Panel"
             description="Creative director configuration: voice, chat, greetings, and brand intelligence"
-            backTo={{ path: '/admin', label: 'Back to Mission Control' }}
+            backTo={{ path: '/admin', label: 'Back to Admin' }}
             actions={
               <Badge variant="outline" className="text-xs">
                 AI Agent

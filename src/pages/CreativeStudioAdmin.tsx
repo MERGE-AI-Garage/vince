@@ -1,5 +1,5 @@
-// ABOUTME: Admin dashboard for Creative Studio management
-// ABOUTME: Tabs for models, brands, generations, analytics, and settings
+// ABOUTME: Admin dashboard for Brand Lens platform management.
+// ABOUTME: Tabs for models, brands, generations, analytics, and settings.
 
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -448,9 +448,9 @@ export default function CreativeStudioAdmin() {
       {/* Full-bleed cinematic hero — outside container for edge-to-edge layout */}
       <AdminHeroHeader
         icon={Sparkles}
-        title="Creative Studio"
+        title="Brand Lens Admin"
         description="Brand-aware AI generation across image and video — multi-model pipelines, creative governance, and real-time cost analytics"
-        backTo={{ path: '/admin', label: 'Back to Mission Control' }}
+        backTo={{ path: '/', label: 'Back to Studio' }}
         backgroundImages={HERO_IMAGES}
         cinematic
         actions={
@@ -1184,7 +1184,7 @@ export default function CreativeStudioAdmin() {
                 {editingModelId ? 'Edit Model' : 'Add Model'}
               </DialogTitle>
               <DialogDescription>
-                Configure AI model settings for Creative Studio
+                Configure AI model settings for Brand Lens
               </DialogDescription>
             </DialogHeader>
 

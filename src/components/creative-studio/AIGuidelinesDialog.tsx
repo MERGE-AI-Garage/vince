@@ -319,12 +319,12 @@ export function AIGuidelinesDialog({ brand, open, onOpenChange }: AIGuidelinesDi
                   </div>
                   <p className="text-xs text-muted-foreground pt-1">
                     <strong>Questions?</strong> Contact the{' '}
-                    <a href="/innovation-lab" className="text-primary hover:underline inline-flex items-center gap-0.5">
-                      AI Garage team <ExternalLink className="w-3 h-3" />
+                    <a href="/admin" className="text-primary hover:underline inline-flex items-center gap-0.5">
+                      Brand Lens team <ExternalLink className="w-3 h-3" />
                     </a>{' '}
                     or check the{' '}
-                    <a href="/guidelines" className="text-primary hover:underline inline-flex items-center gap-0.5">
-                      AI Guidelines Center <ExternalLink className="w-3 h-3" />
+                    <a href="/admin" className="text-primary hover:underline inline-flex items-center gap-0.5">
+                      Brand Guidelines <ExternalLink className="w-3 h-3" />
                     </a>
                   </p>
                 </div>

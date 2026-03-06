@@ -1,5 +1,5 @@
-// ABOUTME: Simplified auth context for Brand Lens demo.
-// ABOUTME: Maintains the same API as AI Garage AuthContext so extracted components work unchanged.
+// ABOUTME: Simplified auth context for Brand Lens.
+// ABOUTME: Provides user session, profile, and authentication state.
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';

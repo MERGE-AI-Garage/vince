@@ -1,5 +1,5 @@
-// ABOUTME: React Query hooks for managing theme presets (MERGE, AI Garage, custom themes)
-// ABOUTME: Provides enterprise-grade multi-theme support with light/dark mode per theme
+// ABOUTME: React Query hooks for managing theme presets.
+// ABOUTME: Provides multi-theme support with light/dark mode per theme.
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'

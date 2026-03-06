@@ -191,12 +191,12 @@ export const useBrandingSettings = () => {
 
   // Transform the data to provide individual properties
   const settings = query.data || [];
-  const siteTitle = settings.find(s => s.key === 'site_title')?.value || 'AI Garage';
-  const siteTagline = settings.find(s => s.key === 'site_tagline')?.value || 'Built Different';
+  const siteTitle = settings.find(s => s.key === 'site_title')?.value || 'Brand Lens';
+  const siteTagline = settings.find(s => s.key === 'site_tagline')?.value || 'See Your Brand Clearly';
   const logoUrl = settings.find(s => s.key === 'logo_url')?.value || '';
-  const logoAltText = settings.find(s => s.key === 'logo_alt_text')?.value || 'AI Garage Logo';
+  const logoAltText = settings.find(s => s.key === 'logo_alt_text')?.value || 'Brand Lens Logo';
   const footerLogoUrl = settings.find(s => s.key === 'footer_logo_url')?.value || '';
-  const footerLogoAltText = settings.find(s => s.key === 'footer_logo_alt_text')?.value || 'AI Garage Footer Logo';
+  const footerLogoAltText = settings.find(s => s.key === 'footer_logo_alt_text')?.value || 'Brand Lens Footer Logo';
 
   return {
     ...query,

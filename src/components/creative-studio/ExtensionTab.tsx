@@ -205,7 +205,7 @@ export function ExtensionTab() {
           </div>
 
           <p className="font-epilogue text-[11px] text-white/40 mt-6">
-            Version {EXTENSION_VERSION} · Chrome · Requires AI Garage account
+            Version {EXTENSION_VERSION} · Chrome · Requires Brand Lens account
           </p>
         </motion.div>
       </section>
@@ -352,7 +352,7 @@ export function ExtensionTab() {
           <div className="border-t border-border/40 bg-muted/30 px-5 py-4">
             <p className="font-epilogue text-xs text-muted-foreground leading-relaxed">
               Once installed, click the extension icon to open the sidebar on any AI tool.
-              Sign in with your AI Garage credentials to load your brands.
+              Sign in with your Brand Lens credentials to load your brands.
             </p>
           </div>
         </motion.div>
@@ -408,7 +408,7 @@ export function ExtensionTab() {
             </span>
             <DownloadButton size="sm" />
             <p className="font-epilogue text-[11px] text-white/40 mt-4">
-              Free for all AI Garage users
+              Free for all Brand Lens users
             </p>
           </motion.div>
         </div>
