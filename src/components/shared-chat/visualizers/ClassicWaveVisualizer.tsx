@@ -1,5 +1,5 @@
 // ABOUTME: Classic wave visualizer with 3-wave sine animation in circular orb
-// ABOUTME: Original Scout voice mode visualization with configurable waveforms
+// ABOUTME: Voice mode visualization with configurable waveforms
 
 import React, { useEffect, useRef } from 'react';
 import { VisualizerProps, ClassicWaveSettings } from './types';

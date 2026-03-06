@@ -1,4 +1,4 @@
-// ABOUTME: Exports for Scout visualizer components
+// ABOUTME: Exports for voice mode visualizer components
 // ABOUTME: Central export point for all visualizer-related types and components
 
 export * from './types';

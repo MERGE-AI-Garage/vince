@@ -1,4 +1,4 @@
-// ABOUTME: Type definitions for Scout visualizer components
+// ABOUTME: Type definitions for voice mode visualizer components
 // ABOUTME: Defines the common interface all visualizers must implement
 
 import React from 'react';

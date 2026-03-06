@@ -85,7 +85,7 @@ export function getInternalUsageGuidance(accessTier: string | null, _clientAppro
       icon: XCircle,
       iconColor: 'text-red-600',
       text: 'Restricted - special approval required',
-      detail: 'This tool requires legal and compliance review before use. Contact the AI Garage team if you have a business case.',
+      detail: 'This tool requires legal and compliance review before use. Contact the Brand Lens team if you have a business case.',
     };
   }
 
@@ -93,8 +93,8 @@ export function getInternalUsageGuidance(accessTier: string | null, _clientAppro
     allowed: false,
     icon: AlertTriangle,
     iconColor: 'text-gray-600',
-    text: 'Pending review - check with AI Garage',
-    detail: 'This tool is under review. Contact the AI Garage for current status and guidance.',
+    text: 'Pending review - check with Brand Lens',
+    detail: 'This tool is under review. Contact the Brand Lens for current status and guidance.',
   };
 }
 
@@ -132,7 +132,7 @@ export function getClientWorkGuidance(accessTier: string | null, clientApprovalR
     icon: AlertTriangle,
     iconColor: 'text-gray-600',
     text: 'Check with your account lead first',
-    detail: 'Guidance pending - consult your account lead and the AI Garage team before using for client work.',
+    detail: 'Guidance pending - consult your account lead and the Brand Lens team before using for client work.',
   };
 }
 

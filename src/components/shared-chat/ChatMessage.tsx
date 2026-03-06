@@ -1,4 +1,4 @@
-// ABOUTME: Reusable chat message bubble component for Scout and Eddie
+// ABOUTME: Reusable chat message bubble component for AI assistants
 // ABOUTME: Supports configurable agent name, icon, and styling via props
 
 import React from 'react';

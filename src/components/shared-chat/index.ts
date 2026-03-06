@@ -1,5 +1,5 @@
 // ABOUTME: Shared chat components barrel export
-// ABOUTME: Used by Scout, Eddie, and other AI assistants
+// ABOUTME: Used by Vince and other AI assistants
 
 export { ChatMessage } from './ChatMessage';
 export { InputArea } from './InputArea';

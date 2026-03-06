@@ -1,4 +1,4 @@
-// ABOUTME: Shared types for chat components used by Scout and Eddie
+// ABOUTME: Shared types for chat components used by AI assistants
 // ABOUTME: Defines message structure, attachments, and agent configuration
 
 import { LucideIcon } from 'lucide-react';

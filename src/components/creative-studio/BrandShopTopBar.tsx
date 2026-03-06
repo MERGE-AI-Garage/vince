@@ -7,9 +7,6 @@ import {
   BookOpen,
   Bot,
   ChevronLeft,
-  GraduationCap,
-  FlaskConical,
-  ArrowLeft,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -34,17 +31,11 @@ interface BrandShopTopBarProps {
   onOpenPromptLibrary: () => void;
   onToggleVince: () => void;
   vinceActive: boolean;
-  onToggleMitch?: () => void;
-  mitchActive?: boolean;
   onOpenBrandDNA?: () => void;
   onOpenCorporateDNA?: () => void;
   onOpenBrandStandards?: () => void;
   onOpenGuidelines?: () => void;
   onOpenMediaLibrary: () => void;
-  // Lab mode
-  labMode?: boolean;
-  labTitle?: string;
-  onExitLab?: () => void;
   // Theme
   studioTheme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -62,8 +53,6 @@ export function BrandShopTopBar({
   onOpenPromptLibrary,
   onToggleVince,
   vinceActive,
-  onToggleMitch,
-  mitchActive,
   onOpenBrandDNA,
   onOpenCorporateDNA,
   onOpenBrandStandards,
@@ -71,9 +60,6 @@ export function BrandShopTopBar({
   onOpenMediaLibrary,
   studioTheme,
   onToggleTheme,
-  labMode,
-  labTitle,
-  onExitLab,
   statusText,
   statusColor,
   statusPulse,
@@ -110,28 +96,7 @@ export function BrandShopTopBar({
           </span>
         </div>
 
-        {/* Lab mode indicator + Back to Course */}
-        {labMode && (
-          <>
-            <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full ml-1">
-              <FlaskConical className="w-3 h-3 text-amber-600" />
-              <span className="text-[10px] font-medium text-amber-700 dark:text-amber-400 whitespace-nowrap">
-                {labTitle || 'Lab Exercise'}
-              </span>
-            </div>
-            {onExitLab && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 text-[10px] gap-1 text-muted-foreground ml-1"
-                onClick={onExitLab}
-              >
-                <ArrowLeft className="w-3 h-3" />
-                Back to Course
-              </Button>
-            )}
-          </>
-        )}
+
       </div>
 
       {/* Center: Brand Context */}
@@ -221,24 +186,6 @@ export function BrandShopTopBar({
             </TooltipContent>
           </Tooltip>
 
-          {/* MITCH (lab mode only) */}
-          {onToggleMitch && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={mitchActive ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className={cn('h-7 w-7', mitchActive && 'text-emerald-500')}
-                  onClick={onToggleMitch}
-                >
-                  <GraduationCap className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p className="text-xs">{mitchActive ? 'MITCH (active)' : 'MITCH Tutor'}</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
 
         </TooltipProvider>
       </div>
