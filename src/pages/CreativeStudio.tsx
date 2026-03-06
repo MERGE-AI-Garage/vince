@@ -29,6 +29,7 @@ import type { BrandDialogView } from '@/components/creative-studio/BrandDialogNa
 import { BrandShopPromptBar, type GenerationMode } from '@/components/creative-studio/BrandShopPromptBar';
 import { ModeInfoPanel } from '@/components/creative-studio/ModeInfoPanel';
 import { ModelCostPanel } from '@/components/creative-studio/ModelCostPanel';
+import { ModelSelector } from '@/components/creative-studio/ModelSelector';
 import { useCreativeStudioStore } from '@/store/creative-studio-store';
 import { useCreativeStudioModels } from '@/hooks/useCreativeStudioModels';
 import { useCreativeStudioEditStore } from '@/store/creative-studio-edit-store';
@@ -1267,6 +1268,16 @@ export default function CreativeStudio() {
                       const active = models?.find(m => m.model_id === selectedId);
                       return active ? <ModelCostPanel activeModel={active} allModels={models} /> : null;
                     })()}
+
+                    {/* Model selector — between cost and reference images */}
+                    {generationType !== 'video' && generationType !== 'upscale' && generationType !== 'recontext' && generationType !== 'tryon' && (
+                      <ModelSelector
+                        models={imageModels}
+                        selectedModelId={selectedImageModel}
+                        onModelChange={setImageModel}
+                        label="Image Model"
+                      />
+                    )}
 
                     {/* Gemini Multi-Image Reference Staging */}
                     {isGemini && (generationType === 'image' || generationType === 'conversation') && (

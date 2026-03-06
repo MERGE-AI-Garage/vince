@@ -24,7 +24,6 @@ import {
   type EditMode,
 } from '@/store/creative-studio-store';
 import { useCreativeStudioModels } from '@/hooks/useCreativeStudioModels';
-import { ModelSelector } from '@/components/creative-studio/ModelSelector';
 import { CameraControlsPanel } from '@/components/creative-studio/CameraControlsPanel';
 import { useCreativeStudioEditStore, type ExpansionDirection, type EditTool } from '@/store/creative-studio-edit-store';
 import { Switch } from '@/components/ui/switch';
@@ -382,15 +381,7 @@ export function ParametersPanel({ mode = 'image', brandId, brandName, brandQuick
 
   return (
     <div className="space-y-4">
-      {/* Model selector with educational hover card */}
-      <ModelSelector
-        models={imageModels}
-        selectedModelId={selectedImageModel}
-        onModelChange={setImageModel}
-        label="Image Model"
-      />
-
-      <div className="flex items-center gap-2 text-sm font-medium border-t pt-3">
+      <div className="flex items-center gap-2 text-sm font-medium">
         <Settings2 className="w-4 h-4 text-primary" />
         <span>Parameters</span>
       </div>

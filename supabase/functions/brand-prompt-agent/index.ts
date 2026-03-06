@@ -245,6 +245,30 @@ const VINCE_TOOLS = [
       required: ['document_url', 'filename', 'content_type'],
     },
   },
+  {
+    name: 'generate_brand_header',
+    description: 'Generate the brand header/hero image using the brand\'s visual DNA, colors, and identity. This is a brand-building tool — use it as the final step of brand setup, or when the user asks to generate/regenerate the brand header image. The image is saved as the brand\'s header_image_url automatically.',
+    parameters: {
+      type: 'object',
+      properties: {
+        custom_prompt: { type: 'string', description: 'Optional custom prompt override. If omitted, uses the brand\'s stored hero image template with brand DNA interpolated.' },
+      },
+    },
+  },
+  {
+    name: 'generate_brand_cards',
+    description: 'Generate the brand card images — the 5 stylized 3D icons (Brand DNA, AI Guidelines, Generation Prompt, Templates, Brand Agent) using the brand\'s primary and secondary colors. This is a brand-building tool — use it as the final step of brand setup after DNA is loaded, or when the user asks to generate/regenerate card images. Card keys: brand_dna, ai_guidelines, generation_prompt, templates, brand_agent.',
+    parameters: {
+      type: 'object',
+      properties: {
+        card_keys: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Specific card keys to generate. If omitted, generates all 5 cards.',
+        },
+      },
+    },
+  },
 ];
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -297,6 +321,10 @@ async function executeTool(
       return await analyzeBrandWebsite(parameters, context, supabase);
     case 'import_brand_document':
       return await importBrandDocument(parameters, context, supabase);
+    case 'generate_brand_header':
+      return await generateBrandHeader(parameters, context, supabase);
+    case 'generate_brand_cards':
+      return await generateBrandCards(parameters, context, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
@@ -772,6 +800,123 @@ async function importBrandDocument(
   };
 }
 
+async function generateBrandHeader(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  // Fetch brand data for the prompt
+  const { data: brand, error: brandErr } = await supabase
+    .from('creative_studio_brands')
+    .select('name, primary_color, secondary_color, brand_category, visual_identity')
+    .eq('id', context.brand_id)
+    .single();
+
+  if (brandErr || !brand) throw new Error(`Brand not found: ${brandErr?.message}`);
+
+  // Build prompt — use custom override or construct from brand DNA
+  let prompt = params.custom_prompt as string | undefined;
+  if (!prompt) {
+    // Try to load the stored hero image template
+    const { data: template } = await supabase
+      .from('ai_prompt_templates')
+      .select('content')
+      .eq('slug', 'brand-hero-image')
+      .eq('is_active', true)
+      .single();
+
+    if (template?.content) {
+      prompt = template.content
+        .replace(/\{\{brand_name\}\}/g, brand.name || '')
+        .replace(/\{\{brand_category\}\}/g, brand.brand_category || '')
+        .replace(/\{\{primary_color\}\}/g, brand.primary_color || '')
+        .replace(/\{\{secondary_color\}\}/g, brand.secondary_color || '')
+        .replace(/\{\{visual_identity\}\}/g, brand.visual_identity || '');
+    } else {
+      prompt = `Professional editorial photograph for ${brand.name}. Modern, premium brand header image. Color palette: ${brand.primary_color || '#333'} and ${brand.secondary_color || '#666'}. ${brand.visual_identity || 'Clean, sophisticated aesthetic.'}. Wide cinematic composition, no text, no logos.`;
+    }
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/generate-header-image`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      prompt,
+      aspectRatio: '16:9',
+      style: 'cinematic',
+      contentType: 'custom',
+      brand_id: context.brand_id,
+      title: brand.name,
+      description: brand.visual_identity || brand.brand_category || '',
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.error) {
+    throw new Error(result.error || `Header image generation failed (${response.status})`);
+  }
+
+  // Update brand's header_image_url
+  const imageUrl = result.imageUrl || result.url || result.publicUrl;
+  if (imageUrl) {
+    await supabase
+      .from('creative_studio_brands')
+      .update({ header_image_url: imageUrl })
+      .eq('id', context.brand_id);
+  }
+
+  return {
+    success: true,
+    url: imageUrl,
+    message: `Brand header image generated and saved for ${brand.name}.`,
+  };
+}
+
+async function generateBrandCards(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/generate-brand-card-images`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      brand_id: context.brand_id,
+      card_keys: params.card_keys || undefined,
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.error) {
+    throw new Error(result.error || `Card image generation failed (${response.status})`);
+  }
+
+  const results = result.results || {};
+  const succeeded = Object.entries(results).filter(([, r]: [string, any]) => r.status === 'success');
+  const failed = Object.entries(results).filter(([, r]: [string, any]) => r.status !== 'success');
+
+  return {
+    success: succeeded.length > 0,
+    generated: succeeded.length,
+    failed: failed.length,
+    cards: Object.fromEntries(succeeded.map(([k, r]: [string, any]) => [k, r.url])),
+    errors: failed.length > 0 ? Object.fromEntries(failed.map(([k, r]: [string, any]) => [k, r.error])) : undefined,
+    message: `Generated ${succeeded.length} of ${succeeded.length + failed.length} brand card images.`,
+  };
+}
+
 // ── System Prompt Builder ───────────────────────────────────────────────────
 
 function buildSystemPrompt(
@@ -803,14 +948,24 @@ You have tools to take real actions:
 - check_generation_quota: Check if the user has quota remaining before generating.
 - generate_image: Generate an image using the Creative Studio pipeline. Images are saved to the user's library automatically. Pass reference_collections to include brand reference images.
 - list_brand_references: List available reference image collections for the brand (products, characters, styles, environments).
+- generate_brand_header: Generate the brand's hero/header image using its visual DNA and colors. Saves directly to the brand record.
+- generate_brand_cards: Generate the 5 brand card icons (DNA, Guidelines, Prompts, Templates, Agent) using the brand's color palette.
 
 BRAND ONBOARDING FLOW:
 When a user asks to set up a new brand, you need TWO things: the brand name and the website URL.
 1. If the user gives you a brand name WITHOUT a website URL, infer it for well-known brands (e.g., "Google" → "google.com", "Nike" → "nike.com"). If you can't infer it, ask for the website URL — it's required.
 2. Call create_brand with both the name and website_url. Do NOT call it without a website URL.
 3. ALWAYS call analyze_brand_website immediately after creating the brand. Website analysis extracts colors, fonts, imagery style, and messaging automatically — this is the foundation of the brand profile.
-3. If they provide documents (PDFs, brand guidelines), use import_brand_document for each one.
-4. After onboarding, summarize what was extracted and suggest next steps (uploading reference images, creating prompt templates).
+4. If they provide documents (PDFs, brand guidelines), use import_brand_document for each one.
+5. After DNA is loaded and profile looks solid, offer to generate the brand visuals: "Want me to build out the brand visuals? I'll generate the header image and card icons using your brand colors."
+6. When the user confirms (or says "build it out", "finish the brand", "generate the brand images"), call generate_brand_header and generate_brand_cards to complete the brand setup.
+
+BRAND VISUAL BUILDOUT:
+- generate_brand_header creates a cinematic 16:9 hero image using the brand's color palette and visual identity. It pulls the stored hero image prompt template and interpolates brand variables.
+- generate_brand_cards creates the 5 stylized 3D icons that represent brand sections. Each icon uses the brand's primary and secondary colors.
+- Both tools save results directly to the brand record — no manual linking needed.
+- If the user asks to regenerate specific cards, pass the card_keys parameter (e.g., ["brand_dna", "templates"]).
+- These are brand-building tools, NOT creative studio image generation. Use them for brand setup and maintenance.
 
 BEHAVIORAL RULES:
 1. When generating a prompt, always include recommended camera settings.
