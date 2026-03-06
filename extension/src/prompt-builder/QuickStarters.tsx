@@ -144,7 +144,7 @@ function VariableForm({
                 display: 'block',
                 fontSize: '9px',
                 fontWeight: 600,
-                color: '#636466',
+                color: '#8fa89e',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
                 marginBottom: '3px',
@@ -160,7 +160,7 @@ function VariableForm({
                     padding: '7px 8px',
                     borderRadius: '6px',
                     border: `1px solid ${hexToRgba(accents.dark, 0.15)}`,
-                    background: '#fff',
+                    background: '#1a3a32',
                     fontSize: '11px',
                     fontFamily: 'Epilogue, system-ui, sans-serif',
                     color: accents.dark,
@@ -183,7 +183,7 @@ function VariableForm({
                     padding: '7px 8px',
                     borderRadius: '6px',
                     border: `1px solid ${hexToRgba(accents.dark, 0.15)}`,
-                    background: '#fff',
+                    background: '#1a3a32',
                     fontSize: '11px',
                     fontFamily: 'Epilogue, system-ui, sans-serif',
                     color: accents.dark,
@@ -230,8 +230,8 @@ function VariableForm({
             padding: '8px 12px',
             borderRadius: '6px',
             border: `1px solid ${hexToRgba(accents.dark, 0.1)}`,
-            background: '#fff',
-            color: '#636466',
+            background: '#1a3a32',
+            color: '#8fa89e',
             cursor: 'pointer',
             fontSize: '10px',
             fontWeight: 600,
@@ -289,8 +289,8 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
   if (isLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 0' }}>
-        <Loader2 size={16} style={{ color: '#636466', animation: 'spin 1s linear infinite' }} />
-        <span style={{ fontSize: '11px', color: '#636466', marginLeft: '8px' }}>Loading presets...</span>
+        <Loader2 size={16} style={{ color: '#8fa89e', animation: 'spin 1s linear infinite' }} />
+        <span style={{ fontSize: '11px', color: '#8fa89e', marginLeft: '8px' }}>Loading presets...</span>
       </div>
     );
   }
@@ -353,7 +353,7 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
                 {cat.label}
               </div>
               <ChevronDown size={10} style={{
-                color: '#636466',
+                color: '#8fa89e',
                 transition: 'transform 0.15s ease',
                 transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
               }} />
@@ -449,7 +449,7 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '10px', color: '#636466', lineHeight: 1.4, marginTop: '2px' }}>
+                    <div style={{ fontSize: '10px', color: '#8fa89e', lineHeight: 1.4, marginTop: '2px' }}>
                       {preset.description.length > 120
                         ? preset.description.slice(0, 120) + '...'
                         : preset.description}

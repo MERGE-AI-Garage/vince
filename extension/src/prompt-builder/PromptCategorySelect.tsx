@@ -23,7 +23,7 @@ export function PromptCategorySelect({ value, onChange }: PromptCategorySelectPr
         display: 'block',
         fontSize: '10px',
         fontWeight: 600,
-        color: '#636466',
+        color: '#8fa89e',
         marginBottom: '6px',
         textTransform: 'uppercase',
         letterSpacing: '0.06em',
@@ -34,7 +34,7 @@ export function PromptCategorySelect({ value, onChange }: PromptCategorySelectPr
         display: 'flex',
         borderRadius: '10px',
         border: '1px solid rgba(19, 59, 52, 0.1)',
-        background: '#f5f4f0',
+        background: '#142e28',
         padding: '3px',
         gap: '2px',
       }}>

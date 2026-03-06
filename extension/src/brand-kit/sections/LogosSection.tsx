@@ -10,14 +10,14 @@ export function LogosSection() {
   const { logos } = mergeBrandGuidelines;
 
   return (
-    <section id="logos" style={{ padding: '20px 16px', background: '#f5f4f0', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
+    <section id="logos" style={{ padding: '20px 16px', background: '#142e28', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
       <SectionHeading>Logos</SectionHeading>
 
       {/* Primary Logos */}
-      <p style={{ fontSize: '12px', color: '#636466', marginTop: '8px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: '12px', color: '#8fa89e', marginTop: '8px', lineHeight: 1.5 }}>
         {logos.primary.description}
       </p>
-      <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5 }}>
         {logos.primary.usage}
       </p>
 
@@ -80,7 +80,7 @@ export function LogosSection() {
               <img src="./images/brand-guidelines/Merge_Logo_Clear_Space.png" alt="Clear Space Diagram" style={{ maxWidth: '100%', height: 'auto' }} />
             </div>
             <div style={{ fontSize: '13px', fontWeight: 600, color: '#00856C' }}>{logos.primary.clearSpace.title}</div>
-            <p style={{ fontSize: '11px', color: '#636466', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
               {logos.primary.clearSpace.description}
             </p>
           </div>
@@ -99,7 +99,7 @@ export function LogosSection() {
               <img src="./images/brand-guidelines/Merge_Logo.png" alt="Minimum Size" style={{ height: '12px', maxWidth: '90px' }} />
             </div>
             <div style={{ fontSize: '13px', fontWeight: 600, color: '#00856C' }}>{logos.primary.minimumSize.title}</div>
-            <p style={{ fontSize: '11px', color: '#636466', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
               {logos.primary.minimumSize.description}
             </p>
           </div>
@@ -109,7 +109,7 @@ export function LogosSection() {
       {/* Secondary Logos */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>{logos.secondary.title}</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5 }}>
           {logos.secondary.description}
         </p>
 

@@ -23,7 +23,7 @@ export function PromptInput({ value, onChange, placeholder }: PromptInputProps) 
         <label style={{
           fontSize: '10px',
           fontWeight: 600,
-          color: '#636466',
+          color: '#8fa89e',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
         }}>
@@ -32,7 +32,7 @@ export function PromptInput({ value, onChange, placeholder }: PromptInputProps) 
         {charCount > 0 && (
           <span style={{
             fontSize: '9px',
-            color: '#636466',
+            color: '#8fa89e',
             opacity: 0.6,
             fontFamily: 'monospace',
           }}>
@@ -51,10 +51,10 @@ export function PromptInput({ value, onChange, placeholder }: PromptInputProps) 
             padding: '12px 32px 12px 12px',
             borderRadius: '10px',
             border: '1.5px solid rgba(19, 59, 52, 0.1)',
-            background: '#fff',
+            background: '#1a3a32',
             fontSize: '13px',
             fontFamily: 'Epilogue, system-ui, sans-serif',
-            color: '#133B34',
+            color: '#e0ded9',
             lineHeight: 1.6,
             resize: 'vertical',
             minHeight: '80px',
@@ -83,7 +83,7 @@ export function PromptInput({ value, onChange, placeholder }: PromptInputProps) 
               background: 'rgba(19, 59, 52, 0.06)',
               border: 'none',
               cursor: 'pointer',
-              color: '#636466',
+              color: '#8fa89e',
               borderRadius: '5px',
               display: 'flex',
               alignItems: 'center',

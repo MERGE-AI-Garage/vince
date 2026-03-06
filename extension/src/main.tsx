@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import './dark-theme.css';
 import { BrandApp } from './BrandApp';
 
 const root = document.getElementById('root');

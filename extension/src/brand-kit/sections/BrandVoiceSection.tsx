@@ -25,7 +25,7 @@ export function BrandVoiceSection() {
             <div style={{ fontFamily: 'Fraunces, serif', fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>
               {voice.title}
             </div>
-            <p style={{ fontSize: '11px', color: '#636466', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
               {voice.description}
             </p>
           </div>

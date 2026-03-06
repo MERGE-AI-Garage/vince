@@ -68,7 +68,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
         <p style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, margin: '0 0 4px', fontFamily: 'Epilogue, system-ui, sans-serif' }}>
           Generation failed
         </p>
-        <p style={{ fontSize: '11px', color: '#636466', margin: '0 0 10px', lineHeight: 1.4, fontFamily: 'Epilogue, system-ui, sans-serif' }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', margin: '0 0 10px', lineHeight: 1.4, fontFamily: 'Epilogue, system-ui, sans-serif' }}>
           {error}
         </p>
         <button
@@ -80,12 +80,12 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
             padding: '6px 12px',
             borderRadius: '8px',
             border: '1px solid rgba(19, 59, 52, 0.1)',
-            background: '#fff',
+            background: '#1a3a32',
             cursor: 'pointer',
             fontSize: '11px',
             fontWeight: 600,
             fontFamily: 'Epilogue, system-ui, sans-serif',
-            color: '#133B34',
+            color: '#e0ded9',
           }}
         >
           <RefreshCw size={12} />
@@ -113,7 +113,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
     <div style={{
       borderRadius: '12px',
       border: '1px solid rgba(0, 133, 108, 0.15)',
-      background: '#fff',
+      background: '#1a3a32',
       overflow: 'hidden',
       boxShadow: '0 2px 8px rgba(19, 59, 52, 0.06)',
     }}>
@@ -147,7 +147,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
           <span style={{
             fontSize: '9px',
             fontWeight: 600,
-            color: '#636466',
+            color: '#8fa89e',
             padding: '2px 8px',
             borderRadius: '10px',
             background: 'rgba(19, 59, 52, 0.05)',
@@ -162,7 +162,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
         padding: '14px',
         fontSize: '12px',
         lineHeight: 1.7,
-        color: '#133B34',
+        color: '#e0ded9',
         whiteSpace: 'pre-wrap',
         maxHeight: '300px',
         overflowY: 'auto',
@@ -233,9 +233,9 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
             padding: '9px 12px',
             borderRadius: '8px',
             border: '1px solid rgba(19, 59, 52, 0.08)',
-            background: '#fff',
+            background: '#1a3a32',
             cursor: 'pointer',
-            color: '#636466',
+            color: '#8fa89e',
             transition: 'all 0.2s ease',
           }}
         >

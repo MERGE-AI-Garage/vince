@@ -48,10 +48,10 @@ export default defineConfig({
   root: __dirname,
   plugins: [react(), copyBrandAssets()],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, '../src'),
-      '@/integrations/supabase/client': path.resolve(__dirname, 'src/supabaseExtClient.ts'),
-    },
+    alias: [
+      { find: '@/integrations/supabase/client', replacement: path.resolve(__dirname, 'src/supabaseExtClient.ts') },
+      { find: '@', replacement: path.resolve(__dirname, '../src') },
+    ],
   },
   publicDir: false,
   base: './',

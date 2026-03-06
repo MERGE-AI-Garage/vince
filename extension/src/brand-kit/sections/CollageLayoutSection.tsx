@@ -26,14 +26,14 @@ export function CollageLayoutSection() {
         </div>
         <p style={{ fontSize: '11px', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.description}</p>
         <p style={{ fontSize: '11px', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.purpose}</p>
-        <p style={{ fontSize: '11px', color: '#636466', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.details}</p>
-        <p style={{ fontSize: '10px', color: '#636466', fontStyle: 'italic' }}>{collagePersonas.note}</p>
+        <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.details}</p>
+        <p style={{ fontSize: '10px', color: '#8fa89e', fontStyle: 'italic' }}>{collagePersonas.note}</p>
       </div>
 
       {/* Taglines */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>Taglines</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', lineHeight: 1.5, marginBottom: '12px' }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '12px' }}>
           "Built Different" can be used as a featured message or as a tagline. When featured, use Fraunces. As support, use Epilogue Small Caps.
         </p>
 
@@ -69,7 +69,7 @@ export function CollageLayoutSection() {
           <div style={{ fontFamily: 'Epilogue, sans-serif', fontSize: '18px', fontWeight: 600, fontVariant: 'small-caps', letterSpacing: '0.2em' }}>
             BUILT DIFFERENT
           </div>
-          <p style={{ fontSize: '10px', color: '#636466', marginTop: '4px' }}>
+          <p style={{ fontSize: '10px', color: '#8fa89e', marginTop: '4px' }}>
             Dyad | Epilogue SemiBold Small Caps
           </p>
         </div>
@@ -88,7 +88,7 @@ export function CollageLayoutSection() {
       {/* Layout Structure */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>{layoutStructure.title}</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', lineHeight: 1.5, marginBottom: '10px' }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '10px' }}>
           {layoutStructure.intro}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -97,11 +97,11 @@ export function CollageLayoutSection() {
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#00856C' }}>
                 {el.number}. {el.title}
               </div>
-              <p style={{ fontSize: '11px', color: '#636466', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
                 {el.spec}
               </p>
               {el.note && (
-                <p style={{ fontSize: '10px', color: '#636466', fontStyle: 'italic', marginTop: '2px' }}>
+                <p style={{ fontSize: '10px', color: '#8fa89e', fontStyle: 'italic', marginTop: '2px' }}>
                   Note: {el.note}
                 </p>
               )}
@@ -113,7 +113,7 @@ export function CollageLayoutSection() {
       {/* Print Production */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>{printProduction.title}</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', lineHeight: 1.5, marginBottom: '8px' }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '8px' }}>
           {printProduction.intro}
         </p>
         <div
@@ -130,7 +130,7 @@ export function CollageLayoutSection() {
             </p>
           ))}
         </div>
-        <p style={{ fontSize: '10px', color: '#636466', marginTop: '6px', textAlign: 'center' }}>
+        <p style={{ fontSize: '10px', color: '#8fa89e', marginTop: '6px', textAlign: 'center' }}>
           {printProduction.contact}
         </p>
       </div>

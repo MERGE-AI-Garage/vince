@@ -140,7 +140,7 @@ function TabLayout() {
   const accentAlpha = (a: number) => `rgba(${accentRgb}, ${a})`;
 
   return (
-    <div style={{ fontFamily: 'Epilogue, system-ui, sans-serif', minHeight: '100vh', background: '#EAE8E3' }}>
+    <div style={{ fontFamily: 'Epilogue, system-ui, sans-serif', minHeight: '100vh', background: '#0f2820', color: '#e0ded9' }}>
       {/* Header bar themed to the selected brand */}
       <div style={{
         position: 'sticky',

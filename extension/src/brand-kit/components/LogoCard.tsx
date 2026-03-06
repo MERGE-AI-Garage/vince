@@ -14,7 +14,7 @@ export function LogoCard({ src, alt, label, bgColor }: LogoCardProps) {
       <div style={{ backgroundColor: bgColor, padding: '20px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <img src={src} alt={alt} style={{ height: '36px', maxWidth: '100%', objectFit: 'contain' }} />
       </div>
-      <div style={{ padding: '6px 10px', textAlign: 'center', fontSize: '11px', color: '#636466', borderTop: '1px solid rgba(19,59,52,0.08)', background: '#fff' }}>
+      <div style={{ padding: '6px 10px', textAlign: 'center', fontSize: '11px', color: '#8fa89e', borderTop: '1px solid rgba(19,59,52,0.08)', background: '#1a3a32' }}>
         {label}
       </div>
     </div>

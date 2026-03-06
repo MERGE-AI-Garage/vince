@@ -12,13 +12,13 @@ export function ColorsSection() {
   return (
     <section id="colors" style={{ padding: '20px 16px', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
       <SectionHeading>Color</SectionHeading>
-      <p style={{ fontSize: '11px', color: '#636466', marginTop: '6px', lineHeight: 1.5, marginBottom: '14px' }}>
+      <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '6px', lineHeight: 1.5, marginBottom: '14px' }}>
         {colors.intro}
       </p>
 
       {/* Primary Colors */}
       <SectionHeading sub>Primary Colors</SectionHeading>
-      <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', marginBottom: '8px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', marginBottom: '8px', lineHeight: 1.5 }}>
         Main brand colors that should dominate all brand designs.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -28,7 +28,7 @@ export function ColorsSection() {
       {/* Secondary Colors */}
       <div style={{ marginTop: '16px' }}>
         <SectionHeading sub>Secondary Colors</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', marginBottom: '8px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', marginBottom: '8px', lineHeight: 1.5 }}>
           Used sparingly when more colors are necessary. Electrolight Green fails WCAG on white but passes on Dark Green.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -39,7 +39,7 @@ export function ColorsSection() {
       {/* Tertiary Colors */}
       <div style={{ marginTop: '16px' }}>
         <SectionHeading sub>Tertiary Colors</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', marginBottom: '8px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', marginBottom: '8px', lineHeight: 1.5 }}>
           Reserved for charts, graphs, and illustrations. Never by themselves as a palette.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -56,7 +56,7 @@ export function ColorsSection() {
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#00856C' }}>
                 {item.number}. {item.title}
               </div>
-              <p style={{ fontSize: '11px', color: '#636466', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
                 {item.description}
               </p>
             </div>
@@ -72,25 +72,25 @@ export function ColorsSection() {
       {/* Gradients */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>Gradients</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '4px', lineHeight: 1.5, marginBottom: '10px' }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '10px' }}>
           {colors.gradients.description}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div>
             <div style={{ height: '48px', borderRadius: '6px', background: 'linear-gradient(135deg, rgba(19,59,52,0.15) 0%, rgba(19,59,52,0.25) 100%), #EAE8E3' }} />
-            <p style={{ fontSize: '10px', color: '#636466', textAlign: 'center', marginTop: '4px' }}>
+            <p style={{ fontSize: '10px', color: '#8fa89e', textAlign: 'center', marginTop: '4px' }}>
               Dark Green Vignette (15-25%) on Warm Gray
             </p>
           </div>
           <div>
             <div style={{ height: '48px', borderRadius: '6px', background: 'linear-gradient(135deg, #133B34 0%, #00524F 100%)' }} />
-            <p style={{ fontSize: '10px', color: '#636466', textAlign: 'center', marginTop: '4px' }}>
+            <p style={{ fontSize: '10px', color: '#8fa89e', textAlign: 'center', marginTop: '4px' }}>
               Dark Green to Forest Green
             </p>
           </div>
           <div>
             <div style={{ height: '48px', borderRadius: '6px', background: 'linear-gradient(135deg, #133B34 0%, #00524F 50%, #00856C 100%)' }} />
-            <p style={{ fontSize: '10px', color: '#636466', textAlign: 'center', marginTop: '4px' }}>
+            <p style={{ fontSize: '10px', color: '#8fa89e', textAlign: 'center', marginTop: '4px' }}>
               Dark Green to Forest Green to Viridian
             </p>
           </div>
@@ -100,7 +100,7 @@ export function ColorsSection() {
       {/* ADA Compliance */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>{adaCompliance.title}</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#636466', marginTop: '6px', lineHeight: 1.5, marginBottom: '10px' }}>
+        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '6px', lineHeight: 1.5, marginBottom: '10px' }}>
           WCAG 2.0 minimum contrast: 4.5:1 for normal text, 3:1 for larger text (18px+).
         </p>
         <div>

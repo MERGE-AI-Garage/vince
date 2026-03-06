@@ -16,7 +16,7 @@ function Heading({ children, sub }: { children: React.ReactNode; sub?: boolean }
       fontFamily: 'Epilogue, system-ui, sans-serif',
       fontSize: sub ? '14px' : '18px',
       fontWeight: sub ? 600 : 700,
-      color: sub ? '#333' : '#133B34',
+      color: sub ? '#8fa89e' : '#e0ded9',
       margin: 0,
       lineHeight: 1.3,
     }}>
@@ -31,8 +31,8 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
     <div style={{
       padding: '12px',
       borderRadius: '8px',
-      border: '1px solid rgba(0,0,0,0.08)',
-      background: '#fff',
+      border: '1px solid rgba(255,255,255,0.1)',
+      background: '#1a3a32',
       ...style,
     }}>
       {children}
@@ -69,13 +69,13 @@ function SectionHeader({ icon: Icon, label }: { icon: typeof Palette; label: str
         width: '28px',
         height: '28px',
         borderRadius: '6px',
-        background: 'rgba(0,0,0,0.04)',
+        background: 'rgba(255,255,255,0.05)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
       }}>
-        <Icon size={14} style={{ color: '#636466' }} />
+        <Icon size={14} style={{ color: '#8fa89e' }} />
       </div>
       <Heading>{label}</Heading>
     </div>
@@ -139,11 +139,11 @@ function ColorSwatch({ hex, label, size = 'normal' }: { hex: string; label?: str
         )}
       </div>
       {label && (
-        <div style={{ fontSize: '10px', color: '#636466', textAlign: 'center' }}>
+        <div style={{ fontSize: '10px', color: '#8fa89e', textAlign: 'center' }}>
           {label}
         </div>
       )}
-      <div style={{ fontFamily: 'monospace', fontSize: isLarge ? '9px' : '8px', color: '#999' }}>{hex}</div>
+      <div style={{ fontFamily: 'monospace', fontSize: isLarge ? '9px' : '8px', color: '#5e7a70' }}>{hex}</div>
     </button>
   );
 }
@@ -254,36 +254,36 @@ function CorporateProfileSection({ data }: DynamicBrandKitProps) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         {categoryLabel && (
           <Card>
-            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#636466', marginBottom: '3px' }}>Category</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#133B34' }}>{categoryLabel}</div>
+            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#8fa89e', marginBottom: '3px' }}>Category</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#e0ded9' }}>{categoryLabel}</div>
           </Card>
         )}
         <Card>
-          <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#636466', marginBottom: '3px' }}>Confidence</div>
+          <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#8fa89e', marginBottom: '3px' }}>Confidence</div>
           <div style={{ fontSize: '12px', fontWeight: 600, color: confidenceColor }}>{confidenceLabel}</div>
         </Card>
         {totalAnalyses > 0 && (
           <Card>
-            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#636466', marginBottom: '3px' }}>Sources</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#133B34' }}>{totalAnalyses} analyzed</div>
+            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#8fa89e', marginBottom: '3px' }}>Sources</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#e0ded9' }}>{totalAnalyses} analyzed</div>
           </Card>
         )}
         {(websiteAnalyses > 0 || documentAnalyses > 0 || imageAnalyses > 0) && (
           <Card>
-            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#636466', marginBottom: '3px' }}>Source Types</div>
+            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#8fa89e', marginBottom: '3px' }}>Source Types</div>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
               {websiteAnalyses > 0 && (
-                <span style={{ fontSize: '9px', fontWeight: 600, background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px', color: '#333' }}>
+                <span style={{ fontSize: '9px', fontWeight: 600, background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px', color: '#e0ded9' }}>
                   {websiteAnalyses} web
                 </span>
               )}
               {documentAnalyses > 0 && (
-                <span style={{ fontSize: '9px', fontWeight: 600, background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px', color: '#333' }}>
+                <span style={{ fontSize: '9px', fontWeight: 600, background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px', color: '#e0ded9' }}>
                   {documentAnalyses} doc
                 </span>
               )}
               {imageAnalyses > 0 && (
-                <span style={{ fontSize: '9px', fontWeight: 600, background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px', color: '#333' }}>
+                <span style={{ fontSize: '9px', fontWeight: 600, background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px', color: '#e0ded9' }}>
                   {imageAnalyses} img
                 </span>
               )}
@@ -310,10 +310,10 @@ function BrandIdentitySection({ data }: DynamicBrandKitProps) {
       {/* Positioning */}
       {identity.positioning && (
         <Card style={{ marginBottom: '10px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Positioning
           </div>
-          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#133B34', margin: 0 }}>
+          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>
             {identity.positioning}
           </p>
         </Card>
@@ -322,10 +322,10 @@ function BrandIdentitySection({ data }: DynamicBrandKitProps) {
       {/* Brand Aesthetic */}
       {identity.brand_aesthetic && (
         <Card style={{ marginBottom: '10px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Aesthetic
           </div>
-          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#133B34', margin: 0 }}>
+          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>
             {identity.brand_aesthetic}
           </p>
         </Card>
@@ -346,10 +346,10 @@ function BrandIdentitySection({ data }: DynamicBrandKitProps) {
       {/* Target Audience */}
       {identity.target_audience && (
         <Card style={{ marginTop: '12px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Target Audience
           </div>
-          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#133B34', margin: 0 }}>
+          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>
             {identity.target_audience}
           </p>
         </Card>
@@ -362,7 +362,7 @@ function BrandIdentitySection({ data }: DynamicBrandKitProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
             {identity.messaging!.map((msg, i) => (
               <Card key={i} style={{ borderLeft: `3px solid ${primaryColor}`, padding: '10px 12px' }}>
-                <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: 0 }}>{msg}</p>
+                <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>{msg}</p>
               </Card>
             ))}
           </div>
@@ -372,10 +372,10 @@ function BrandIdentitySection({ data }: DynamicBrandKitProps) {
       {/* Logo Description */}
       {identity.logo_description && (
         <Card style={{ marginTop: '12px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Logo
           </div>
-          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#133B34', margin: 0 }}>
+          <p style={{ fontSize: '12px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>
             {identity.logo_description}
           </p>
         </Card>
@@ -396,7 +396,7 @@ function BrandVoiceSection({ data }: DynamicBrandKitProps) {
       {/* Voice personality summary */}
       {voiceText && (
         <Card style={{ marginBottom: '10px' }}>
-          <p style={{ fontSize: '12px', lineHeight: 1.6, color: '#333', margin: 0 }}>
+          <p style={{ fontSize: '12px', lineHeight: 1.6, color: '#e0ded9', margin: 0 }}>
             {voiceText}
           </p>
         </Card>
@@ -407,20 +407,20 @@ function BrandVoiceSection({ data }: DynamicBrandKitProps) {
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
           {tov.personality && (
             <Card style={{ flex: '1 1 100px' }}>
-              <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#636466', marginBottom: '3px' }}>Personality</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#133B34' }}>{tov.personality}</div>
+              <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#8fa89e', marginBottom: '3px' }}>Personality</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#e0ded9' }}>{tov.personality}</div>
             </Card>
           )}
           {tov.formality && (
             <Card style={{ flex: '1 1 80px' }}>
-              <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#636466', marginBottom: '3px' }}>Formality</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#133B34', textTransform: 'capitalize' }}>{tov.formality}</div>
+              <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#8fa89e', marginBottom: '3px' }}>Formality</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#e0ded9', textTransform: 'capitalize' }}>{tov.formality}</div>
             </Card>
           )}
           {tov.energy && (
             <Card style={{ flex: '1 1 80px' }}>
-              <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#636466', marginBottom: '3px' }}>Energy</div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#133B34', textTransform: 'capitalize' }}>{tov.energy}</div>
+              <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', color: '#8fa89e', marginBottom: '3px' }}>Energy</div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#e0ded9', textTransform: 'capitalize' }}>{tov.energy}</div>
             </Card>
           )}
         </div>
@@ -433,7 +433,7 @@ function BrandVoiceSection({ data }: DynamicBrandKitProps) {
             <Card style={{ borderLeft: '3px solid #22c55e' }}>
               <div style={{ fontSize: '10px', fontWeight: 700, color: '#22c55e', textTransform: 'uppercase', marginBottom: '6px' }}>Do</div>
               {tov.dos.map((d, i) => (
-                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
+                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
               ))}
             </Card>
           )}
@@ -441,7 +441,7 @@ function BrandVoiceSection({ data }: DynamicBrandKitProps) {
             <Card style={{ borderLeft: '3px solid #ef4444' }}>
               <div style={{ fontSize: '10px', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', marginBottom: '6px' }}>Don't</div>
               {tov.donts.map((d, i) => (
-                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
+                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
               ))}
             </Card>
           )}
@@ -469,10 +469,10 @@ function VisualDNASection({ data }: DynamicBrandKitProps) {
       {/* Signature Style */}
       {signatureStyle && (
         <Card style={{ marginBottom: '12px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Signature Style
           </div>
-          <p style={{ fontSize: '12px', lineHeight: 1.6, color: '#333', margin: 0 }}>
+          <p style={{ fontSize: '12px', lineHeight: 1.6, color: '#e0ded9', margin: 0 }}>
             {signatureStyle}
           </p>
         </Card>
@@ -485,7 +485,7 @@ function VisualDNASection({ data }: DynamicBrandKitProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
             {visualPrinciples.map((p, i) => (
               <Card key={i} style={{ borderLeft: `3px solid ${primaryColor}`, padding: '10px 12px' }}>
-                <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: 0 }}>{p}</p>
+                <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>{p}</p>
               </Card>
             ))}
           </div>
@@ -521,7 +521,7 @@ function VisualDNASection({ data }: DynamicBrandKitProps) {
                 }}>
                   {i + 1}
                 </div>
-                <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: 0 }}>{d}</p>
+                <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>{d}</p>
               </Card>
             ))}
           </div>
@@ -535,7 +535,7 @@ function VisualDNASection({ data }: DynamicBrandKitProps) {
             <Card style={{ borderLeft: '3px solid #22c55e' }}>
               <div style={{ fontSize: '10px', fontWeight: 700, color: '#22c55e', textTransform: 'uppercase', marginBottom: '6px' }}>Do</div>
               {dos.map((d, i) => (
-                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
+                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
               ))}
             </Card>
           )}
@@ -543,7 +543,7 @@ function VisualDNASection({ data }: DynamicBrandKitProps) {
             <Card style={{ borderLeft: '3px solid #ef4444' }}>
               <div style={{ fontSize: '10px', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', marginBottom: '6px' }}>Don't</div>
               {donts.map((d, i) => (
-                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
+                <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: i > 0 ? '4px 0 0' : 0 }}>{d}</p>
               ))}
             </Card>
           )}
@@ -562,7 +562,7 @@ function ColorsSection({ data }: DynamicBrandKitProps) {
   return (
     <section style={{ padding: '20px 16px' }}>
       <SectionHeader icon={Palette} label="Colors" />
-      <p style={{ fontSize: '10px', color: '#999', marginTop: '-8px', marginBottom: '12px' }}>Tap a swatch to copy its hex code</p>
+      <p style={{ fontSize: '10px', color: '#5e7a70', marginTop: '-8px', marginBottom: '12px' }}>Tap a swatch to copy its hex code</p>
 
       {/* Brand colors */}
       {(primaryColor || secondaryColor) && (
@@ -590,10 +590,10 @@ function ColorsSection({ data }: DynamicBrandKitProps) {
       {/* Palette Relationships */}
       {cp.palette_relationships && (
         <Card style={{ marginBottom: '10px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Palette Relationships
           </div>
-          <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: 0 }}>
+          <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>
             {cp.palette_relationships}
           </p>
         </Card>
@@ -602,10 +602,10 @@ function ColorsSection({ data }: DynamicBrandKitProps) {
       {/* Overall Tone */}
       {cp.overall_tone && (
         <Card style={{ marginBottom: '10px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Overall Tone
           </div>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#133B34', textTransform: 'capitalize' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#e0ded9', textTransform: 'capitalize' }}>
             {cp.overall_tone}
           </div>
         </Card>
@@ -618,7 +618,7 @@ function ColorsSection({ data }: DynamicBrandKitProps) {
             Forbidden Colors
           </div>
           {cp.forbidden_colors.map((c, i) => (
-            <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: i > 0 ? '4px 0 0' : 0 }}>{c}</p>
+            <p key={i} style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: i > 0 ? '4px 0 0' : 0 }}>{c}</p>
           ))}
         </Card>
       )}
@@ -631,7 +631,7 @@ function TypographySection({ data }: DynamicBrandKitProps) {
   if (!typo) return null;
 
   return (
-    <section style={{ padding: '20px 16px', background: '#f8f8f6' }}>
+    <section style={{ padding: '20px 16px', background: '#142e28' }}>
       <SectionHeader icon={Type} label="Typography" />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -641,14 +641,14 @@ function TypographySection({ data }: DynamicBrandKitProps) {
               <span style={{ fontSize: '9px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: data.brand.primary_color || '#636466', color: '#fff' }}>
                 Heading
               </span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#333', letterSpacing: '0.01em' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#e0ded9', letterSpacing: '0.01em' }}>
                 {typo.heading_font}
               </span>
             </div>
-            <div style={{ fontSize: '32px', fontWeight: 600, marginTop: '8px', fontFamily: `${typo.heading_font}, system-ui, sans-serif`, color: '#222', lineHeight: 1.1 }}>
+            <div style={{ fontSize: '32px', fontWeight: 600, marginTop: '8px', fontFamily: `${typo.heading_font}, system-ui, sans-serif`, color: '#c8c6c1', lineHeight: 1.1 }}>
               Aa Bb Cc
             </div>
-            <div style={{ fontSize: '11px', marginTop: '6px', fontFamily: `${typo.heading_font}, system-ui, sans-serif`, color: '#666', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '11px', marginTop: '6px', fontFamily: `${typo.heading_font}, system-ui, sans-serif`, color: '#8fa89e', lineHeight: 1.4 }}>
               ABCDEFGHIJKLMNOPQRSTUVWXYZ
             </div>
           </Card>
@@ -660,14 +660,14 @@ function TypographySection({ data }: DynamicBrandKitProps) {
               <span style={{ fontSize: '9px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: '#636466', color: '#fff' }}>
                 Body
               </span>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#333', letterSpacing: '0.01em' }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#e0ded9', letterSpacing: '0.01em' }}>
                 {typo.body_font}
               </span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 400, marginTop: '8px', fontFamily: `${typo.body_font}, system-ui, sans-serif`, color: '#222', lineHeight: 1.1 }}>
+            <div style={{ fontSize: '28px', fontWeight: 400, marginTop: '8px', fontFamily: `${typo.body_font}, system-ui, sans-serif`, color: '#c8c6c1', lineHeight: 1.1 }}>
               Aa Bb Cc
             </div>
-            <div style={{ fontSize: '11px', marginTop: '6px', fontFamily: `${typo.body_font}, system-ui, sans-serif`, color: '#666', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '11px', marginTop: '6px', fontFamily: `${typo.body_font}, system-ui, sans-serif`, color: '#8fa89e', lineHeight: 1.4 }}>
               abcdefghijklmnopqrstuvwxyz 0123456789
             </div>
           </Card>
@@ -676,10 +676,10 @@ function TypographySection({ data }: DynamicBrandKitProps) {
 
       {typo.style_description && (
         <Card style={{ marginTop: '10px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '4px' }}>
             Style Notes
           </div>
-          <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#333', margin: 0 }}>
+          <p style={{ fontSize: '11px', lineHeight: 1.5, color: '#e0ded9', margin: 0 }}>
             {typo.style_description}
           </p>
         </Card>
@@ -710,10 +710,10 @@ function PhotographySection({ data }: DynamicBrandKitProps) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
         {specs.map(({ label, value }) => (
           <Card key={label}>
-            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '3px' }}>
+            <div style={{ fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '3px' }}>
               {label}
             </div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#133B34', textTransform: 'capitalize' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#e0ded9', textTransform: 'capitalize' }}>
               {value.replace(/_/g, ' ')}
             </div>
           </Card>
@@ -733,10 +733,10 @@ function CompositionSection({ data }: DynamicBrandKitProps) {
 
       {comp.aspect_ratio_preference && (
         <Card style={{ marginBottom: '10px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '3px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '3px' }}>
             Preferred Aspect Ratio
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#133B34' }}>{comp.aspect_ratio_preference}</div>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: '#e0ded9' }}>{comp.aspect_ratio_preference}</div>
         </Card>
       )}
 
@@ -748,11 +748,11 @@ function CompositionSection({ data }: DynamicBrandKitProps) {
               <span key={l} style={{
                 padding: '4px 10px',
                 borderRadius: '6px',
-                background: 'rgba(0,0,0,0.04)',
-                border: '1px solid rgba(0,0,0,0.08)',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
                 fontSize: '11px',
                 fontWeight: 500,
-                color: '#333',
+                color: '#e0ded9',
                 textTransform: 'capitalize',
               }}>
                 {l.replace(/_/g, ' ')}
@@ -767,7 +767,7 @@ function CompositionSection({ data }: DynamicBrandKitProps) {
           <Heading sub>Framing</Heading>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
             {comp.framing_conventions.map((f, i) => (
-              <div key={i} style={{ fontSize: '11px', color: '#333', lineHeight: 1.5, paddingLeft: '8px', borderLeft: '2px solid rgba(0,0,0,0.08)' }}>
+              <div key={i} style={{ fontSize: '11px', color: '#e0ded9', lineHeight: 1.5, paddingLeft: '8px', borderLeft: '2px solid rgba(0,0,0,0.08)' }}>
                 {f}
               </div>
             ))}
@@ -798,7 +798,7 @@ function ProductCatalogSection({ data }: DynamicBrandKitProps) {
   });
 
   return (
-    <section style={{ padding: '20px 16px', background: '#f8f8f6' }}>
+    <section style={{ padding: '20px 16px', background: '#142e28' }}>
       <SectionHeader icon={Package} label="Product Catalog" />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -859,11 +859,11 @@ function ProductCategoryCard({ name, description, items, primaryColor }: {
         }}
       >
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#133B34', textTransform: 'capitalize' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#e0ded9', textTransform: 'capitalize' }}>
             {name}
           </div>
           {description && (
-            <p style={{ fontSize: '10px', lineHeight: 1.4, color: '#636466', margin: '3px 0 0' }}>
+            <p style={{ fontSize: '10px', lineHeight: 1.4, color: '#8fa89e', margin: '3px 0 0' }}>
               {expanded ? description : (description.length > 120 ? description.slice(0, 120) + '...' : description)}
             </p>
           )}
@@ -883,7 +883,7 @@ function ProductCategoryCard({ name, description, items, primaryColor }: {
             <ChevronDown
               size={14}
               style={{
-                color: '#636466',
+                color: '#8fa89e',
                 transform: expanded ? 'rotate(180deg)' : 'rotate(0)',
                 transition: 'transform 0.2s ease',
               }}
@@ -942,7 +942,7 @@ function CompactProductGrid({ items, primaryColor }: { items: Array<Record<strin
                 padding: '6px 8px',
                 borderRadius: '5px',
                 border: `1px solid ${isSelected ? primaryColor : 'rgba(0,0,0,0.06)'}`,
-                background: isSelected ? `${primaryColor}10` : (i % 2 === 0 ? '#fff' : '#fafaf8'),
+                background: isSelected ? `${primaryColor}10` : (i % 2 === 0 ? '#fff' : '#142e28'),
                 cursor: 'pointer',
                 textAlign: 'left',
                 fontFamily: 'Epilogue, system-ui, sans-serif',
@@ -1008,16 +1008,16 @@ function CompactItemDetail({ item, primaryColor }: { item: Record<string, unknow
   const brands = item.brands as string[] | undefined;
 
   return (
-    <div style={{ fontSize: '10px', lineHeight: 1.5, color: '#636466' }}>
-      <div style={{ fontSize: '12px', fontWeight: 700, color: '#333', marginBottom: '4px', textTransform: 'capitalize' }}>
+    <div style={{ fontSize: '10px', lineHeight: 1.5, color: '#8fa89e' }}>
+      <div style={{ fontSize: '12px', fontWeight: 700, color: '#e0ded9', marginBottom: '4px', textTransform: 'capitalize' }}>
         {number !== undefined && <span style={{ color: primaryColor, marginRight: '4px' }}>#{number}</span>}
         {name}
       </div>
       {description && <div style={{ marginBottom: '4px' }}>{description}</div>}
-      {bread && <div><strong style={{ color: '#333' }}>Bread:</strong> {bread}</div>}
-      {protein && <div><strong style={{ color: '#333' }}>Protein:</strong> {protein.join(', ')}</div>}
-      {cheese && <div><strong style={{ color: '#333' }}>Cheese:</strong> {cheese.join(', ')}</div>}
-      {vegsSauce && <div><strong style={{ color: '#333' }}>Toppings:</strong> {vegsSauce.join(', ')}</div>}
+      {bread && <div><strong style={{ color: '#e0ded9' }}>Bread:</strong> {bread}</div>}
+      {protein && <div><strong style={{ color: '#e0ded9' }}>Protein:</strong> {protein.join(', ')}</div>}
+      {cheese && <div><strong style={{ color: '#e0ded9' }}>Cheese:</strong> {cheese.join(', ')}</div>}
+      {vegsSauce && <div><strong style={{ color: '#e0ded9' }}>Toppings:</strong> {vegsSauce.join(', ')}</div>}
       {styling && (
         <div style={{
           marginTop: '4px',
@@ -1039,9 +1039,9 @@ function CompactItemDetail({ item, primaryColor }: { item: Record<string, unknow
               fontSize: '9px',
               padding: '2px 6px',
               borderRadius: '4px',
-              background: 'rgba(0,0,0,0.04)',
-              border: '1px solid rgba(0,0,0,0.06)',
-              color: '#333',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#e0ded9',
             }}>
               {t}
             </span>
@@ -1110,7 +1110,7 @@ function ProductItem({ item, primaryColor }: { item: Record<string, unknown>; pr
         <span style={{
           fontSize: '11px',
           fontWeight: 600,
-          color: '#133B34',
+          color: '#e0ded9',
           flex: 1,
           textTransform: 'capitalize',
         }}>
@@ -1120,7 +1120,7 @@ function ProductItem({ item, primaryColor }: { item: Record<string, unknown>; pr
           <ChevronDown
             size={10}
             style={{
-              color: '#999',
+              color: '#5e7a70',
               transform: detailOpen ? 'rotate(180deg)' : 'rotate(0)',
               transition: 'transform 0.15s ease',
               flexShrink: 0,
@@ -1134,16 +1134,16 @@ function ProductItem({ item, primaryColor }: { item: Record<string, unknown>; pr
           padding: '0 10px 8px',
           fontSize: '10px',
           lineHeight: 1.5,
-          color: '#636466',
+          color: '#8fa89e',
           display: 'flex',
           flexDirection: 'column',
           gap: '4px',
         }}>
           {description && <div>{description}</div>}
-          {bread && <div><strong style={{ color: '#333' }}>Bread:</strong> {bread}</div>}
-          {protein && <div><strong style={{ color: '#333' }}>Protein:</strong> {protein.join(', ')}</div>}
-          {cheese && <div><strong style={{ color: '#333' }}>Cheese:</strong> {cheese.join(', ')}</div>}
-          {vegsSauce && <div><strong style={{ color: '#333' }}>Toppings:</strong> {vegsSauce.join(', ')}</div>}
+          {bread && <div><strong style={{ color: '#e0ded9' }}>Bread:</strong> {bread}</div>}
+          {protein && <div><strong style={{ color: '#e0ded9' }}>Protein:</strong> {protein.join(', ')}</div>}
+          {cheese && <div><strong style={{ color: '#e0ded9' }}>Cheese:</strong> {cheese.join(', ')}</div>}
+          {vegsSauce && <div><strong style={{ color: '#e0ded9' }}>Toppings:</strong> {vegsSauce.join(', ')}</div>}
           {styling && (
             <div style={{
               marginTop: '2px',
@@ -1165,9 +1165,9 @@ function ProductItem({ item, primaryColor }: { item: Record<string, unknown>; pr
                   fontSize: '9px',
                   padding: '2px 6px',
                   borderRadius: '4px',
-                  background: 'rgba(0,0,0,0.04)',
-                  border: '1px solid rgba(0,0,0,0.06)',
-                  color: '#333',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: '#e0ded9',
                 }}>
                   {t}
                 </span>
@@ -1183,7 +1183,7 @@ function ProductItem({ item, primaryColor }: { item: Record<string, unknown>; pr
 function ProfileFooter({ data }: DynamicBrandKitProps) {
   return (
     <div style={{ padding: '16px', textAlign: 'center' }}>
-      <div style={{ fontSize: '9px', color: '#999' }}>
+      <div style={{ fontSize: '9px', color: '#5e7a70' }}>
         Powered by Creative Studio Brand Intelligence
       </div>
     </div>
@@ -1216,8 +1216,8 @@ function getContrastText(hex: string): string {
 export function DynamicBrandKitLoading() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: '12px' }}>
-      <Loader2 size={20} style={{ color: '#636466', animation: 'spin 1s linear infinite' }} />
-      <span style={{ fontSize: '12px', color: '#636466' }}>Loading brand guidelines...</span>
+      <Loader2 size={20} style={{ color: '#8fa89e', animation: 'spin 1s linear infinite' }} />
+      <span style={{ fontSize: '12px', color: '#8fa89e' }}>Loading brand guidelines...</span>
     </div>
   );
 }
@@ -1229,18 +1229,18 @@ export function DynamicBrandKitEmpty({ brandName }: { brandName?: string }) {
         width: '48px',
         height: '48px',
         borderRadius: '12px',
-        background: 'rgba(0,0,0,0.04)',
+        background: 'rgba(255,255,255,0.05)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: '16px',
       }}>
-        <Eye size={20} style={{ color: '#636466' }} />
+        <Eye size={20} style={{ color: '#8fa89e' }} />
       </div>
-      <div style={{ fontSize: '14px', fontWeight: 600, color: '#133B34', marginBottom: '6px' }}>
+      <div style={{ fontSize: '14px', fontWeight: 600, color: '#e0ded9', marginBottom: '6px' }}>
         No brand guidelines yet
       </div>
-      <p style={{ fontSize: '12px', color: '#636466', lineHeight: 1.5, maxWidth: '260px' }}>
+      <p style={{ fontSize: '12px', color: '#8fa89e', lineHeight: 1.5, maxWidth: '260px' }}>
         {brandName || 'This brand'} hasn't been profiled yet. Use Creative Studio to analyze brand assets and build a visual profile.
       </p>
     </div>

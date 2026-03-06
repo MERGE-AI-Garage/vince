@@ -120,7 +120,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
     <div style={{
       borderRadius: '12px',
       border: '1px solid rgba(19, 59, 52, 0.08)',
-      background: '#fff',
+      background: '#1a3a32',
       overflow: 'hidden',
     }}>
       {/* Toggle header */}
@@ -139,13 +139,13 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Clock size={12} style={{ color: '#636466' }} />
+          <Clock size={12} style={{ color: '#8fa89e' }} />
           <span style={{
             fontSize: '10px',
             fontWeight: 600,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
-            color: '#636466',
+            color: '#8fa89e',
           }}>
             Recent prompts
           </span>
@@ -161,7 +161,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
           </span>
         </div>
         <ChevronDown size={12} style={{
-          color: '#636466',
+          color: '#8fa89e',
           transform: expanded ? 'rotate(180deg)' : 'rotate(0)',
           transition: 'transform 0.2s ease',
         }} />
@@ -200,7 +200,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
                   }}>
                     {CATEGORY_LABELS[entry.category] || entry.category}
                   </span>
-                  <span style={{ fontSize: '9px', color: '#636466', opacity: 0.7 }}>
+                  <span style={{ fontSize: '9px', color: '#8fa89e', opacity: 0.7 }}>
                     {formatRelativeTime(entry.timestamp)}
                   </span>
                 </div>
@@ -227,7 +227,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      color: '#636466',
+                      color: '#8fa89e',
                       opacity: 0.3,
                       display: 'flex',
                       alignItems: 'center',
@@ -241,7 +241,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
               </div>
               <div style={{
                 fontSize: '11px',
-                color: '#133B34',
+                color: '#e0ded9',
                 fontWeight: 500,
                 lineHeight: 1.3,
                 overflow: 'hidden',
@@ -252,7 +252,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
               </div>
               <div style={{
                 fontSize: '10px',
-                color: '#636466',
+                color: '#8fa89e',
                 lineHeight: 1.4,
                 marginTop: '2px',
                 overflow: 'hidden',
@@ -281,7 +281,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
               fontSize: '10px',
               fontWeight: 500,
               fontFamily: 'Epilogue, system-ui, sans-serif',
-              color: '#636466',
+              color: '#8fa89e',
               opacity: 0.5,
               transition: 'opacity 0.15s ease',
             }}

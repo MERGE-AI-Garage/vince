@@ -50,7 +50,7 @@ export function BrandOverviewSection() {
           }}
         >
           <SectionHeading sub>{overview.title}</SectionHeading>
-          <p style={{ fontSize: '12px', color: '#636466', marginTop: '6px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '12px', color: '#8fa89e', marginTop: '6px', lineHeight: 1.5 }}>
             {overview.intro}
           </p>
         </div>
@@ -75,13 +75,13 @@ export function BrandOverviewSection() {
           >
             M
           </div>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#636466', marginBottom: '6px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '6px' }}>
             Brand Positioning
           </div>
           <p style={{ fontFamily: 'Fraunces, serif', fontSize: '14px', fontWeight: 500, lineHeight: 1.4, marginBottom: '8px' }}>
             {brandPositioning.statement}
           </p>
-          <p style={{ fontSize: '12px', color: '#636466', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '12px', color: '#8fa89e', lineHeight: 1.5 }}>
             {brandPositioning.description}
           </p>
         </div>

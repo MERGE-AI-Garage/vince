@@ -23,7 +23,7 @@ export function ToneSelect({ value, onChange }: ToneSelectProps) {
         display: 'block',
         fontSize: '10px',
         fontWeight: 600,
-        color: '#636466',
+        color: '#8fa89e',
         marginBottom: '6px',
         textTransform: 'uppercase',
         letterSpacing: '0.06em',
@@ -65,7 +65,7 @@ export function ToneSelect({ value, onChange }: ToneSelectProps) {
         <div style={{
           marginTop: '6px',
           fontSize: '10px',
-          color: '#636466',
+          color: '#8fa89e',
           fontStyle: 'italic',
           lineHeight: 1.4,
         }}>
