@@ -805,63 +805,6 @@ serve(async (req) => {
 
     log('FINALIZE', 'Video generation completed successfully');
 
-    // Track in ai_image_generations for Gemini Control Panel
-    for (let i = 0; i < outputUrls.length; i++) {
-      try {
-        await supabase
-          .from('ai_image_generations')
-          .insert({
-            user_id: user.id,
-            prompt: prompt,
-            original_prompt: prompt,
-            model_used: modelUsed,
-            status: 'completed',
-            image_url: outputUrls[i],
-            storage_path: `creative-studio/${userName}/videos/${Date.now()}-${i}`,
-            generation_time_ms: responseTime,
-            content_type: 'creative-studio-video',
-            category: generation_type,
-            metadata: {
-              aspectRatio: aspect_ratio,
-              resolution,
-              duration,
-              generationId: generation.id,
-              brandId: brand_id,
-              includeAudio: include_audio,
-              endpoint: 'creative-studio-video',
-            },
-          });
-      } catch (imgTrackError) {
-        log('FINALIZE', 'Failed to track in ai_image_generations', { error: String(imgTrackError) });
-      }
-    }
-
-    // Track analytics
-    try {
-      await supabase.functions.invoke('ai-tracking-middleware', {
-        body: {
-          action: 'track_api_call',
-          data: {
-            userId: user.id,
-            apiProvider: 'google-ai',
-            endpoint: 'creative-studio-video',
-            modelName: modelUsed,
-            featureType: generation_type,
-            promptText: prompt.substring(0, 2000),
-            responseTimeMs: responseTime,
-            status: 'success',
-            metadata: {
-              generationId: generation.id,
-              duration,
-              resolution,
-            },
-          },
-        },
-      });
-    } catch (trackingError) {
-      log('FINALIZE', 'Failed to track analytics', { error: String(trackingError) });
-    }
-
     return new Response(
       JSON.stringify({
         success: true,

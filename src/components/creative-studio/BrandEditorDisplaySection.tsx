@@ -55,7 +55,7 @@ export function BrandEditorDisplaySection({ form, updateField, brand, onSave }: 
       }
 
       const { data, error } = await supabase.functions.invoke('generate-header-image', {
-        body: { prompt, aspectRatio: '16:9', style: 'cinematic', contentType: 'custom' },
+        body: { prompt, aspectRatio: '16:9', style: 'cinematic', contentType: 'custom', brand_id: brand?.id },
       });
 
       if (error || !data?.imageUrl) throw error || new Error('No image returned');

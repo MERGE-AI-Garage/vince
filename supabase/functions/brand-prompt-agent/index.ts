@@ -1154,7 +1154,14 @@ serve(async (req) => {
       }
     }
 
-    const assistantContent = response.text();
+    let assistantContent: string;
+    try {
+      assistantContent = response.text();
+    } catch {
+      // Gemini may return empty/blocked response with no text parts
+      console.warn('[Vince] response.text() threw — no text in final response');
+      assistantContent = '';
+    }
 
     // Extract structured data from tool call results
     let extractedPrompt: string | undefined;
@@ -1289,7 +1296,8 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[Vince] Error:', errorMessage);
+    const stack = error instanceof Error ? error.stack : '';
+    console.error('[Vince] Error:', errorMessage, stack);
     return new Response(JSON.stringify({
       success: false,
       error: errorMessage || 'Agent failed',

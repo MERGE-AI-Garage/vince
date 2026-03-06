@@ -184,30 +184,30 @@ serve(async (req) => {
           data: { publicUrl },
         } = supabase.storage.from("media").getPublicUrl(filePath);
 
-        // Track in ai_image_generations for history & admin
+        // Track in creative_studio_generations for history & admin
         const title = key
           .replace(/_/g, " ")
           .replace(/\b\w/g, (c: string) => c.toUpperCase());
 
-        await supabase.from("ai_image_generations").insert({
+        await supabase.from("creative_studio_generations").insert({
           user_id: null,
-          prompt,
-          original_prompt: `Brand card: ${brandData.name} / ${key}`,
+          brand_id,
+          generation_type: "brand_card",
           model_used: MODEL,
-          status: "completed",
-          image_url: publicUrl,
-          storage_path: `media/${filePath}`,
-          file_size: bytes.length,
-          generation_time_ms: generationTimeMs,
-          style_used: "icon",
-          content_type: "brand-card",
-          category: "brand-card",
-          title: `${brandData.name} — ${title}`,
-          metadata: {
+          prompt_text: prompt,
+          parameters: {
+            original_prompt: `Brand card: ${brandData.name} / ${key}`,
             aspectRatio: ASPECT_RATIO,
-            brandId: brand_id,
             cardKey: key,
           },
+          output_urls: [publicUrl],
+          status: "completed",
+          generation_time_ms: generationTimeMs,
+          metadata: {
+            storage_path: `media/${filePath}`,
+            file_size: bytes.length,
+          },
+          completed_at: new Date().toISOString(),
         });
 
         // Register in media library for discoverability

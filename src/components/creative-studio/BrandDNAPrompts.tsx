@@ -33,9 +33,21 @@ const PROMPT_LABELS: Record<string, { label: string; description: string }> = {
     label: 'Image Analysis',
     description: 'Sent to Gemini when analyzing brand reference images for photography style and visual metadata',
   },
+  'brand-image-analysis-food': {
+    label: 'Image Analysis — Food & Restaurant',
+    description: 'Specialized image analysis for food and restaurant brands (plating, lighting, cuisine style)',
+  },
   'brand-profile-synthesis': {
     label: 'Profile Synthesis',
     description: 'Sent to Gemini when synthesizing a unified brand DNA profile from multiple analysis sources',
+  },
+  'brand-document-analysis': {
+    label: 'Document Analysis',
+    description: 'Sent to Gemini when analyzing uploaded brand documents (PDFs, decks, style guides)',
+  },
+  'brand-hero-image': {
+    label: 'Hero Image Generation',
+    description: 'Prompt template for generating brand hero/header images. Supports {{brand_name}}, {{brand_category}}, {{primary_color}}, {{secondary_color}}, {{visual_identity}} variables.',
   },
 };
 
@@ -48,7 +60,8 @@ export function BrandDNAPrompts() {
       const { data, error } = await supabase
         .from('ai_prompt_templates')
         .select('id, name, slug, description, prompt_text, function_target, is_active, usage_count, last_used_at, updated_at')
-        .eq('category', 'brand-dna')
+        .in('category', ['brand-dna', 'brand'])
+        .order('category')
         .order('name');
       if (error) throw error;
       return data as BrandDNAPrompt[];

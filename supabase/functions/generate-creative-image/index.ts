@@ -1547,60 +1547,6 @@ serve(async (req) => {
 
     log('FINALIZE', 'Generation completed successfully');
 
-    // Track in ai_image_generations for Gemini Control Panel
-    for (let i = 0; i < outputUrls.length; i++) {
-      try {
-        await supabase
-          .from('ai_image_generations')
-          .insert({
-            user_id: userId,
-            prompt: prompt || generation_type,
-            original_prompt: prompt || generation_type,
-            model_used: modelUsed,
-            status: 'completed',
-            image_url: outputUrls[i],
-            storage_path: `creative-studio/${userName}/${generation_type}/${Date.now()}-${i}`,
-            generation_time_ms: responseTime,
-            content_type: 'creative-studio',
-            category: generation_type,
-            metadata: {
-              aspectRatio: aspect_ratio,
-              generationId: generation.id,
-              brandId: brand_id,
-              imageSize: image_size || '2K',
-              endpoint: 'creative-studio-image',
-            },
-          });
-      } catch (imgTrackError) {
-        log('FINALIZE', 'Failed to track in ai_image_generations', { error: String(imgTrackError) });
-      }
-    }
-
-    // Track analytics
-    try {
-      await supabase.functions.invoke('ai-tracking-middleware', {
-        body: {
-          action: 'track_api_call',
-          data: {
-            userId: userId,
-            apiProvider: 'google-ai',
-            endpoint: 'creative-studio-image',
-            modelName: modelUsed,
-            featureType: generation_type,
-            promptText: (prompt || generation_type).substring(0, 2000),
-            responseTimeMs: responseTime,
-            status: 'success',
-            metadata: {
-              generationId: generation.id,
-              numOutputs: images.length,
-            },
-          },
-        },
-      });
-    } catch (trackingError) {
-      log('FINALIZE', 'Failed to track analytics', { error: String(trackingError) });
-    }
-
     return new Response(
       JSON.stringify({
         success: true,

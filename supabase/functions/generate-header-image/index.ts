@@ -57,6 +57,7 @@ interface GenerateRequest {
   title?: string;
   description?: string;
   category?: string;
+  brand_id?: string;
 }
 
 // Detect brand context from product name and description
@@ -305,7 +306,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, aspectRatio = '16:9', style = 'professional', contentType, title, description, category } = await req.json() as GenerateRequest
+    const { prompt, aspectRatio = '16:9', style = 'professional', contentType, title, description, category, brand_id } = await req.json() as GenerateRequest
 
     console.log('Request params:', { prompt, aspectRatio, style, contentType, title, description, category })
 
@@ -371,32 +372,6 @@ serve(async (req) => {
       const errorText = await response.text()
       console.error('Gemini API error response:', errorText)
       console.error('Gemini API status:', response.status)
-
-      // Track failed generation (don't let tracking errors break the flow)
-      try {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        await supabase.functions.invoke('ai-tracking-middleware', {
-          body: {
-            action: 'track_api_call',
-            data: {
-              userId: 'system',
-              apiProvider: 'google-ai',
-              endpoint: 'gemini-image-generation',
-              modelName: model,
-              featureType: 'image_generation',
-              promptText: contextualPrompt.substring(0, 500),
-              responseTimeMs: responseTime,
-              status: 'error',
-              errorMessage: `Gemini API error: ${response.status} - ${errorText}`
-            }
-          }
-        });
-      } catch (trackingError) {
-        console.error('Failed to track error:', trackingError);
-      }
 
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
     }
@@ -488,30 +463,34 @@ serve(async (req) => {
       // Continue with base64 fallback
     }
 
-    // Save to ai_image_generations table with comprehensive data
+    // Save to creative_studio_generations table
     const { data: generationRecord, error: dbError } = await supabase
-      .from('ai_image_generations')
+      .from('creative_studio_generations')
       .insert({
         user_id: userId !== 'system' ? userId : null,
-        prompt: contextualPrompt,
-        original_prompt: prompt,
+        brand_id: brand_id || null,
+        generation_type: 'header_image',
         model_used: model,
-        status: 'completed',
-        image_url: publicImageUrl,
-        storage_path: storagePath,
-        file_size: fileSize,
-        generation_time_ms: responseTime,
-        style_used: style,
-        content_type: contentType,
-        category: category,
-        title: title,
-        description: description,
-        metadata: {
+        prompt_text: contextualPrompt,
+        parameters: {
+          original_prompt: prompt,
           aspectRatio,
           imageSize: '2K',
+          style,
+          contentType,
+          title,
+          description,
+          category,
+        },
+        output_urls: [publicImageUrl],
+        status: 'completed',
+        generation_time_ms: responseTime,
+        metadata: {
           endpoint: 'gemini-image-generation',
-          mimeType
-        }
+          mimeType,
+          storage_path: storagePath,
+        },
+        completed_at: new Date().toISOString(),
       })
       .select('id')
       .single();
@@ -585,35 +564,6 @@ serve(async (req) => {
     } catch (mediaError) {
       // Don't fail the generation if media insert fails
       console.error('Failed to add to media library:', mediaError);
-    }
-
-    // Track successful generation for analytics (don't let tracking errors break the flow)
-    try {
-      await supabase.functions.invoke('ai-tracking-middleware', {
-        body: {
-          action: 'track_api_call',
-          data: {
-            userId: userId !== 'system' ? userId : null,
-            apiProvider: 'google-ai',
-            endpoint: 'gemini-image-generation',
-            modelName: model,
-            featureType: 'image_generation',
-            promptText: contextualPrompt.substring(0, 500),
-            responseTimeMs: responseTime,
-            status: 'success',
-            metadata: {
-              aspectRatio,
-              imageSize: '2K',
-              style,
-              contentType,
-              storagePath,
-              generationId: generationRecord?.id
-            }
-          }
-        }
-      });
-    } catch (trackingError) {
-      console.error('Failed to track success:', trackingError);
     }
 
     return new Response(

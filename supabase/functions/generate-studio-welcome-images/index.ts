@@ -185,25 +185,24 @@ serve(async (req) => {
           .replace(/_/g, " ")
           .replace(/\b\w/g, (c: string) => c.toUpperCase());
 
-        await supabase.from("ai_image_generations").insert({
+        await supabase.from("creative_studio_generations").insert({
           user_id: null,
-          prompt: section.prompt,
-          original_prompt: `Studio welcome: ${key}`,
+          generation_type: "welcome_image",
           model_used: MODEL,
-          status: "completed",
-          image_url: publicUrl,
-          storage_path: `media/${filePath}`,
-          file_size: bytes.length,
-          generation_time_ms: generationTimeMs,
-          style_used: "icon",
-          content_type: "studio-welcome",
-          category: "studio-welcome",
-          title: title,
-          metadata: {
+          prompt_text: section.prompt,
+          parameters: {
+            original_prompt: `Studio welcome: ${key}`,
             aspectRatio: section.aspectRatio,
             sectionKey: key,
-            bulkGeneration: true,
           },
+          output_urls: [publicUrl],
+          status: "completed",
+          generation_time_ms: generationTimeMs,
+          metadata: {
+            storage_path: `media/${filePath}`,
+            file_size: bytes.length,
+          },
+          completed_at: new Date().toISOString(),
         });
 
         // Register in media library for discoverability
