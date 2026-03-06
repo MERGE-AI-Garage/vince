@@ -246,7 +246,7 @@ export function WelcomeScreen({
 
 // ── State A: No brand — System Capabilities ──────────────────────────────────
 
-const SYSTEM_HERO_IMAGE = 'https://eubeowzvhsbfhijkvael.supabase.co/storage/v1/object/public/images/products/headers/1772320020787.jpeg';
+const SYSTEM_HERO_IMAGE = '';
 
 function SystemWelcome({
   onUploadClick,

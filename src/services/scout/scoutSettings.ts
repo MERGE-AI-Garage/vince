@@ -113,7 +113,7 @@ export interface VrmAvatarSettings {
 }
 
 export const DEFAULT_VRM_AVATAR_SETTINGS: VrmAvatarSettings = {
-  filePath: 'https://eubeowzvhsbfhijkvael.supabase.co/storage/v1/object/public/ai-avatars/vrm/default-avatar.vrm',
+  filePath: '',
   mouthIntensity: 1.5,
   lipSensitivity: 0.5,
   attackSpeed: 0.6,

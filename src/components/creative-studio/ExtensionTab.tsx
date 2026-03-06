@@ -17,8 +17,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 
-const EXTENSION_DOWNLOAD_URL =
-  'https://eubeowzvhsbfhijkvael.supabase.co/storage/v1/object/public/downloads/merge-ai-brand-guidelines-v1.0.0.zip';
+const EXTENSION_DOWNLOAD_URL = '';
 const EXTENSION_VERSION = '1.0.0';
 
 const features = [

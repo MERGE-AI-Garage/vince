@@ -14,7 +14,7 @@ const corsHeaders = {
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
 // Vertex AI configuration for models not available on the Gemini API
-const VERTEX_AI_PROJECT = 'ai-garage-aigarage-site-oauth';
+const VERTEX_AI_PROJECT = Deno.env.get('VERTEX_AI_PROJECT') || 'brand-lens';
 const VERTEX_AI_LOCATION = 'us-central1';
 const VERTEX_AI_BASE_URL = `https://${VERTEX_AI_LOCATION}-aiplatform.googleapis.com/v1/projects/${VERTEX_AI_PROJECT}/locations/${VERTEX_AI_LOCATION}/publishers/google/models`;
 

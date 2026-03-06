@@ -119,10 +119,7 @@ import { CameraPresetAdmin } from '@/components/creative-studio/CameraPresetAdmi
 import { BrandDNAPrompts } from '@/components/creative-studio/BrandDNAPrompts';
 import { BrandCard } from '@/components/creative-studio/BrandCard';
 
-const HERO_IMAGES = [
-  'https://eubeowzvhsbfhijkvael.supabase.co/storage/v1/object/public/images/products/headers/1772320031579.jpeg',
-  'https://eubeowzvhsbfhijkvael.supabase.co/storage/v1/object/public/images/products/headers/1772320020787.jpeg',
-];
+const HERO_IMAGES: string[] = [];
 
 export default function CreativeStudioAdmin() {
   const { profile } = useAuth();
