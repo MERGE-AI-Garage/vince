@@ -205,6 +205,50 @@ const VINCE_TOOLS = [
       required: ['brief'],
     },
   },
+  {
+    name: 'create_brand',
+    description: 'Create a new brand in the system. Use when the user asks to set up a new brand, onboard a new client, or create a brand from scratch. Returns the new brand ID so subsequent tools can reference it.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Brand name (e.g., "Google", "Nike")' },
+        website_url: { type: 'string', description: 'Brand website URL (e.g., "google.com")' },
+        primary_color: { type: 'string', description: 'Primary brand color as hex (e.g., "#4285F4")' },
+        secondary_color: { type: 'string', description: 'Secondary brand color as hex' },
+        brand_category: { type: 'string', description: 'Category (e.g., "Technology", "Food & Beverage", "Retail")' },
+        description: { type: 'string', description: 'Brief brand description' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'analyze_brand_website',
+    description: 'Crawl a brand website and extract visual DNA — colors, fonts, imagery style, messaging tone. This populates the Brand DNA profile. Requires a brand to already exist (use create_brand first if needed). The analysis runs asynchronously and may take 30-60 seconds.',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Website URL to analyze (e.g., "https://google.com"). If omitted, uses the brand\'s stored website_url.' },
+      },
+    },
+  },
+  {
+    name: 'import_brand_document',
+    description: 'Process an uploaded brand document (PDF, PPTX, DOCX) to extract brand intelligence — guidelines, standards, tone of voice, visual identity. The document must already be uploaded to storage. Returns extracted brand data sections.',
+    parameters: {
+      type: 'object',
+      properties: {
+        document_url: { type: 'string', description: 'Storage URL or public URL of the document to analyze' },
+        filename: { type: 'string', description: 'Original filename (e.g., "Google_Brand_Guidelines.pdf")' },
+        content_type: {
+          type: 'string',
+          enum: ['pdf', 'pptx', 'docx', 'text'],
+          description: 'Document type',
+        },
+        document_type_hint: { type: 'string', description: 'What kind of document this is (e.g., "brand guidelines", "annual report", "style guide")' },
+      },
+      required: ['document_url', 'filename', 'content_type'],
+    },
+  },
 ];
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -251,6 +295,12 @@ async function executeTool(
       return await listBrandReferences(parameters, context, supabase);
     case 'generate_creative_package':
       return await generateCreativePackage(parameters, context, supabase);
+    case 'create_brand':
+      return await createBrand(parameters, context, supabase);
+    case 'analyze_brand_website':
+      return await analyzeBrandWebsite(parameters, context, supabase);
+    case 'import_brand_document':
+      return await importBrandDocument(parameters, context, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
@@ -562,6 +612,172 @@ async function generateCreativePackage(
   };
 }
 
+// ── Brand Onboarding Tools ───────────────────────────────────────────────────
+
+async function createBrand(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const name = params.name as string;
+  if (!name) throw new Error('Brand name is required');
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  // Check for existing slug
+  const { data: existing } = await supabase
+    .from('creative_studio_brands')
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  const finalSlug = existing ? `${slug}-${Date.now()}` : slug;
+
+  const websiteUrl = params.website_url as string | undefined;
+  const normalizedUrl = websiteUrl
+    ? (websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`)
+    : undefined;
+
+  const { data, error } = await supabase
+    .from('creative_studio_brands')
+    .insert({
+      name,
+      slug: finalSlug,
+      website_url: normalizedUrl || null,
+      primary_color: (params.primary_color as string) || '#00856C',
+      secondary_color: (params.secondary_color as string) || null,
+      brand_category: (params.brand_category as string) || null,
+      description: (params.description as string) || null,
+      created_by: context.user_id,
+      is_active: true,
+    })
+    .select('id, name, slug, website_url, primary_color')
+    .single();
+
+  if (error) throw new Error(`Failed to create brand: ${error.message}`);
+
+  return {
+    success: true,
+    brand_id: data.id,
+    name: data.name,
+    slug: data.slug,
+    website_url: data.website_url,
+    primary_color: data.primary_color,
+    message: `Brand "${data.name}" created successfully. You can now analyze their website or import brand documents.`,
+  };
+}
+
+async function analyzeBrandWebsite(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  // Get the brand's website URL if not provided
+  let url = params.url as string | undefined;
+  if (!url) {
+    const { data: brand } = await supabase
+      .from('creative_studio_brands')
+      .select('website_url')
+      .eq('id', context.brand_id)
+      .single();
+    url = brand?.website_url;
+  }
+
+  if (!url) throw new Error('No website URL provided and no website_url stored on the brand. Pass a url parameter.');
+
+  // Normalize URL
+  if (!url.startsWith('http')) url = `https://${url}`;
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/analyze-brand-website`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      brand_id: context.brand_id,
+      url,
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.error) {
+    throw new Error(result.error || `Website analysis failed (${response.status})`);
+  }
+
+  return {
+    success: true,
+    url,
+    pages_crawled: result.pages_crawled || result.pagesCrawled || 1,
+    sections_extracted: result.sections_extracted || Object.keys(result.extracted || {}).length,
+    message: `Website analysis complete for ${url}. Brand DNA profile has been updated with extracted visual identity, colors, typography, and messaging.`,
+    summary: result.summary || result.extracted?.brand_identity || null,
+  };
+}
+
+async function importBrandDocument(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const documentUrl = params.document_url as string;
+  const filename = params.filename as string;
+  const contentType = params.content_type as string;
+
+  if (!documentUrl || !filename || !contentType) {
+    throw new Error('document_url, filename, and content_type are required');
+  }
+
+  // Determine MIME type
+  const mimeMap: Record<string, string> = {
+    pdf: 'application/pdf',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    text: 'text/plain',
+  };
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/analyze-brand-documents`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      brand_id: context.brand_id,
+      documents: [{
+        content: documentUrl,
+        content_type: contentType,
+        mime_type: mimeMap[contentType] || 'application/octet-stream',
+        filename,
+        document_type_hint: (params.document_type_hint as string) || undefined,
+      }],
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.error) {
+    throw new Error(result.error || `Document analysis failed (${response.status})`);
+  }
+
+  const docs = result.documents || result.results || [];
+  const firstDoc = docs[0];
+
+  return {
+    success: true,
+    filename,
+    document_type: firstDoc?.classified_as || contentType,
+    sections_extracted: firstDoc?.sections_count || Object.keys(firstDoc?.extracted || {}).length,
+    message: `Document "${filename}" analyzed and brand profile updated with extracted intelligence.`,
+    summary: firstDoc?.summary || null,
+  };
+}
+
 // ── System Prompt Builder ───────────────────────────────────────────────────
 
 function buildSystemPrompt(
@@ -582,6 +798,9 @@ PERSONALITY:
 
 CAPABILITIES:
 You have tools to take real actions:
+- create_brand: Create a new brand from scratch. Use when onboarding a new client.
+- analyze_brand_website: Crawl a brand's website to extract visual DNA (colors, fonts, imagery, tone). Populates the brand profile automatically.
+- import_brand_document: Process uploaded brand documents (PDFs, guidelines, reports) to extract brand intelligence.
 - save_prompt_template: Save prompts to the brand library for reuse.
 - search_prompt_library: Search existing templates before creating new ones.
 - analyze_brand_image: Analyze reference images for brand visual DNA.
@@ -590,6 +809,13 @@ You have tools to take real actions:
 - check_generation_quota: Check if the user has quota remaining before generating.
 - generate_image: Generate an image using the Creative Studio pipeline. Images are saved to the user's library automatically. Pass reference_collections to include brand reference images.
 - list_brand_references: List available reference image collections for the brand (products, characters, styles, environments).
+
+BRAND ONBOARDING FLOW:
+When a user asks to set up a new brand, follow this sequence:
+1. Call create_brand with the name, website URL, and primary color they provide.
+2. If they gave a website URL, immediately call analyze_brand_website to populate the visual DNA.
+3. If they provide documents (PDFs, brand guidelines), use import_brand_document for each one.
+4. After onboarding, summarize what was extracted and suggest next steps (uploading reference images, creating prompt templates).
 
 BEHAVIORAL RULES:
 1. When generating a prompt, always include recommended camera settings.
@@ -753,7 +979,7 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (!body.brand_id) {
+      if (!body.brand_id && body.tool_name !== 'create_brand') {
         return new Response(JSON.stringify({ success: false, error: 'brand_id is required for tool calls' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -779,8 +1005,8 @@ serve(async (req) => {
     // ── Standard chat mode ───────────────────────────────────────────────
     const { brand_id, user_message, parts, conversation_id, user_context } = body;
 
-    if (!brand_id || (!user_message && !parts)) {
-      return new Response(JSON.stringify({ success: false, error: 'brand_id and user_message are required' }), {
+    if (!user_message && !parts) {
+      return new Response(JSON.stringify({ success: false, error: 'user_message is required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -788,22 +1014,37 @@ serve(async (req) => {
     console.log(`[Vince] Message from ${user.email}: "${user_message.slice(0, 80)}"`);
 
     // Load brand context and available models
-    const [brandResult, profileResult, directivesResult, modelsResult] = await Promise.all([
-      supabase.from('creative_studio_brands').select('*').eq('id', brand_id).single(),
-      supabase.from('creative_studio_brand_profiles').select('*').eq('brand_id', brand_id).single(),
-      supabase.from('creative_studio_agent_directives').select('*').eq('brand_id', brand_id).eq('is_active', true),
-      supabase.from('creative_studio_models').select('model_id, name, model_type, capabilities, cost_per_generation, is_default').eq('is_active', true).order('sort_order', { ascending: true }),
-    ]);
+    let brand: Record<string, unknown> | null = null;
+    let profile: Record<string, unknown> | null = null;
+    let directives: Array<Record<string, unknown>> = [];
+    let models: Array<Record<string, unknown>> = [];
 
-    const brand = brandResult.data;
-    const profile = profileResult.data;
-    const directives = directivesResult.data || [];
-    const models = modelsResult.data || [];
+    if (brand_id) {
+      const [brandResult, profileResult, directivesResult, modelsResult] = await Promise.all([
+        supabase.from('creative_studio_brands').select('*').eq('id', brand_id).single(),
+        supabase.from('creative_studio_brand_profiles').select('*').eq('brand_id', brand_id).single(),
+        supabase.from('creative_studio_agent_directives').select('*').eq('brand_id', brand_id).eq('is_active', true),
+        supabase.from('creative_studio_models').select('model_id, name, model_type, capabilities, cost_per_generation, is_default').eq('is_active', true).order('sort_order', { ascending: true }),
+      ]);
 
-    if (!brand) {
-      return new Response(JSON.stringify({ success: false, error: 'Brand not found' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      brand = brandResult.data;
+      profile = profileResult.data;
+      directives = directivesResult.data || [];
+      models = modelsResult.data || [];
+
+      if (!brand) {
+        return new Response(JSON.stringify({ success: false, error: 'Brand not found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } else {
+      // No brand selected — load just models for onboarding mode
+      const modelsResult = await supabase
+        .from('creative_studio_models')
+        .select('model_id, name, model_type, capabilities, cost_per_generation, is_default')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      models = modelsResult.data || [];
     }
 
     // Load conversation history
