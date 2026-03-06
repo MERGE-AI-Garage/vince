@@ -31,6 +31,7 @@ import {
   DEFAULT_QUICK_PROMPTS,
 } from '@/services/brand-agent/brandAgentSettings';
 import type { CameraPreset } from '@/types/creative-studio';
+import { CreativePackageDisplay, type PackagePart } from './CreativePackageDisplay';
 
 function formatToolAction(action: ToolAction): string {
   const result = action.result as Record<string, unknown> | undefined;
@@ -55,6 +56,10 @@ function formatToolAction(action: ToolAction): string {
       return action.success
         ? `Generated ${(result?.image_count as number) || 0} image(s) in ${(((result?.generation_time_ms as number) || 0) / 1000).toFixed(1)}s`
         : `Generation failed: ${action.error}`;
+    case 'generate_creative_package':
+      return action.success
+        ? `Creative package: ${(result?.image_urls as string[])?.length || 0} images in ${(((result?.latency_ms as number) || 0) / 1000).toFixed(1)}s`
+        : `Package generation failed: ${action.error}`;
     case 'list_available_models':
       return action.success
         ? `Found ${(result?.count as number) || 0} available model(s)`
@@ -79,12 +84,21 @@ interface BrandAgentAppProps {
   onClose?: () => void;
 }
 
+interface CreativePackageResult {
+  parts: PackagePart[];
+  image_urls: string[];
+  latency_ms: number;
+  model: string;
+  brand_name: string;
+}
+
 interface AgentResponse {
   prompt?: string;
   camera_preset?: CameraPreset;
   recommended_model?: string;
   tool_actions?: ToolAction[];
   generated_images?: GeneratedImage[];
+  creative_package?: CreativePackageResult;
 }
 
 export function BrandAgentApp({
@@ -311,8 +325,26 @@ export function BrandAgentApp({
         )
       );
 
+      // Extract creative package from tool actions if present
+      let creativePackage: CreativePackageResult | undefined;
+      const packageAction = response.tool_actions?.find(
+        (a: ToolAction) => a.toolName === 'generate_creative_package' && a.success
+      );
+      if (packageAction?.result) {
+        const r = packageAction.result as Record<string, unknown>;
+        if (r.parts && Array.isArray(r.parts)) {
+          creativePackage = {
+            parts: r.parts as PackagePart[],
+            image_urls: (r.image_urls as string[]) || [],
+            latency_ms: (r.latency_ms as number) || 0,
+            model: (r.model as string) || 'gemini-3.1-flash-image-preview',
+            brand_name: brandName,
+          };
+        }
+      }
+
       // Store structured response data alongside the message
-      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length) {
+      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length || creativePackage) {
         setAgentResponses(prev => ({
           ...prev,
           [agentMsgId]: {
@@ -321,6 +353,7 @@ export function BrandAgentApp({
             recommended_model: response.recommended_model,
             tool_actions: response.tool_actions,
             generated_images: response.generated_images,
+            creative_package: creativePackage,
           },
         }));
       }
@@ -702,8 +735,21 @@ export function BrandAgentApp({
                   </div>
                 ))}
 
-                {/* Generated Images */}
-                {agentResponses[message.id].generated_images && agentResponses[message.id].generated_images!.length > 0 && (
+                {/* Creative Package (interleaved text + images) */}
+                {agentResponses[message.id].creative_package && (
+                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                    <CreativePackageDisplay
+                      parts={agentResponses[message.id].creative_package!.parts}
+                      imageUrls={agentResponses[message.id].creative_package!.image_urls}
+                      latencyMs={agentResponses[message.id].creative_package!.latency_ms}
+                      brandName={agentResponses[message.id].creative_package!.brand_name}
+                      model={agentResponses[message.id].creative_package!.model}
+                    />
+                  </div>
+                )}
+
+                {/* Generated Images (single tool) */}
+                {!agentResponses[message.id].creative_package && agentResponses[message.id].generated_images && agentResponses[message.id].generated_images!.length > 0 && (
                   <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
                     <p className="text-[10px] font-medium text-purple-400 mb-2">Generated Images</p>
                     <div className={`grid gap-2 ${

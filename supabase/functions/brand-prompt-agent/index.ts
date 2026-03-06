@@ -174,6 +174,37 @@ const VINCE_TOOLS = [
       },
     },
   },
+  {
+    name: 'generate_creative_package',
+    description: 'Generate a complete creative package with interleaved text and images in a single call. Use this when the user asks for a campaign, a set of deliverables, or multiple assets at once. This generates ALL copy AND images together — much faster than generating images one by one. Returns alternating text blocks (headlines, body copy, strategy notes) and images. PREFER this over generate_image when the user wants a creative campaign or multiple deliverables.',
+    parameters: {
+      type: 'object',
+      properties: {
+        brief: {
+          type: 'string',
+          description: 'The creative brief describing what to generate. Include target audience, deliverable types, tone, and any specific requirements.',
+        },
+        deliverables: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              name: { type: 'string', description: 'Deliverable name (e.g., "Hero Banner")' },
+              description: { type: 'string', description: 'What this deliverable should show' },
+              aspect_ratio: {
+                type: 'string',
+                enum: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+                description: 'Image format',
+              },
+            },
+            required: ['name', 'description', 'aspect_ratio'],
+          },
+          description: 'Specific deliverables to generate. If omitted, Vince will determine the best deliverables from the brief.',
+        },
+      },
+      required: ['brief'],
+    },
+  },
 ];
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -218,6 +249,8 @@ async function executeTool(
       return await generateImage(parameters, context, supabase);
     case 'list_brand_references':
       return await listBrandReferences(parameters, context, supabase);
+    case 'generate_creative_package':
+      return await generateCreativePackage(parameters, context, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
@@ -490,6 +523,42 @@ async function generateImage(
     image_count: (result.output_urls || []).length,
     generation_time_ms: result.generation_time_ms,
     quota_remaining: result.quota?.remaining,
+  };
+}
+
+async function generateCreativePackage(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/generate-creative-package`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      brand_id: context.brand_id,
+      brief: params.brief as string,
+      deliverables: params.deliverables || undefined,
+    }),
+  });
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Creative package generation failed');
+  }
+
+  return {
+    success: true,
+    parts: result.parts,
+    image_urls: result.image_urls,
+    latency_ms: result.latency_ms,
+    model: result.model,
+    message: `Generated creative package with ${result.image_urls?.length || 0} images in ${(result.latency_ms / 1000).toFixed(1)}s`,
   };
 }
 
