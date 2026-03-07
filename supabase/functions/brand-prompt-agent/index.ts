@@ -228,6 +228,31 @@ const VINCE_TOOLS = [
     },
   },
   {
+    name: 'synthesize_brand_profile',
+    description: 'Synthesize all raw brand intelligence (website analysis, uploaded documents, image analysis) into a unified Brand DNA profile. Run this after any combination of analyze_brand_website, import_brand_document, or analyze_brand_images — it merges all sources with intelligent weighting (logos have highest authority for colors, brand guidelines PDFs have highest authority for rules). Should be run before generating guardrails or the generation prompt for best results.',
+    parameters: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'generate_brand_playbook',
+    description: 'Run the full brand playbook preparation sequence in one shot: (1) synthesize all intelligence into a unified Brand DNA profile, (2) generate all 6 focused governance directive sets, (3) generate the brand-aware generation prompt, (4) generate brand card images. Use this when the user says "prepare the brand", "set up the full playbook", "get this brand ready to create", or similar. Takes 2-3 minutes.',
+    parameters: {
+      type: 'object',
+      properties: {
+        skip_synthesis: {
+          type: 'boolean',
+          description: 'Skip the synthesis step if a profile already exists and is up to date.',
+        },
+        skip_cards: {
+          type: 'boolean',
+          description: 'Skip card image generation to run faster.',
+        },
+      },
+    },
+  },
+  {
     name: 'create_brand',
     description: 'Create a new brand in the system. Requires a name and website URL. For well-known brands, infer the URL (e.g., "Google" → "google.com"). Call this immediately after the user provides a brand name — do not ask for additional details beyond the website.',
     parameters: {
@@ -349,6 +374,10 @@ async function executeTool(
       return await generateBrandCards(parameters, context, supabase);
     case 'generate_brand_guardrails':
       return await generateBrandGuardrails(parameters, context, supabase);
+    case 'synthesize_brand_profile':
+      return await synthesizeBrandProfile(context, supabase);
+    case 'generate_brand_playbook':
+      return await generateBrandPlaybook(parameters, context, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
@@ -1013,6 +1042,116 @@ async function generateBrandGuardrails(
   }
 
   throw new Error(failed[0] || 'Guardrails generation failed');
+}
+
+async function synthesizeBrandProfile(
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/synthesize-brand-profile`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ brand_id: context.brand_id }),
+  });
+
+  const result = await response.json();
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || `Brand profile synthesis failed (${response.status})`);
+  }
+
+  const sections = result.updated_sections || [];
+  const { source_breakdown, confidence_score, images_analyzed } = result;
+  const sourcesSummary = source_breakdown
+    ? `${source_breakdown.websites || 0} website(s), ${source_breakdown.documents || 0} document(s), ${source_breakdown.images || 0} image(s)`
+    : 'available intelligence';
+
+  return {
+    success: true,
+    updated_sections: sections,
+    confidence_score,
+    images_analyzed,
+    message: sections.length > 0
+      ? `Brand DNA profile synthesized from ${sourcesSummary} (confidence: ${Math.round((confidence_score || 0) * 100)}%). Sections updated: ${sections.join(', ')}. The brand is ready for guardrail generation and campaign work.`
+      : 'Brand profile synthesis completed but no sections were updated — run analyze_brand_website or import_brand_document first to build the intelligence base.',
+  };
+}
+
+async function generateBrandPlaybook(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const steps: string[] = [];
+  const errors: string[] = [];
+
+  // Step 1: Synthesize brand profile
+  if (!params.skip_synthesis) {
+    try {
+      const synthResult = await synthesizeBrandProfile(context, supabase);
+      steps.push(`✓ Brand DNA synthesized (${synthResult.updated_sections?.length || 0} sections)`);
+    } catch (err: any) {
+      errors.push(`Synthesis: ${err.message}`);
+      steps.push(`⚠ Brand synthesis skipped — ${err.message}`);
+    }
+  } else {
+    steps.push('→ Synthesis skipped');
+  }
+
+  // Step 2: Generate all 6 focused guardrail sets
+  try {
+    const guardrailResult = await generateBrandGuardrails({ all_areas: true }, context, supabase);
+    steps.push(`✓ ${guardrailResult.generated || 0} governance directive sets created`);
+  } catch (err: any) {
+    errors.push(`Guardrails: ${err.message}`);
+    steps.push(`⚠ Guardrails: ${err.message}`);
+  }
+
+  // Step 3: Generate brand-aware generation prompt
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const promptRes = await fetch(`${supabaseUrl}/functions/v1/synthesize-generation-prompt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+      body: JSON.stringify({ brand_id: context.brand_id }),
+    });
+    const promptData = await promptRes.json();
+    if (promptRes.ok && promptData.success) {
+      steps.push('✓ Brand generation prompt synthesized');
+    } else {
+      steps.push(`⚠ Generation prompt: ${promptData.error || 'failed'}`);
+    }
+  } catch (err: any) {
+    steps.push(`⚠ Generation prompt: ${err.message}`);
+  }
+
+  // Step 4: Generate brand card images (optional)
+  if (!params.skip_cards) {
+    try {
+      const cardResult = await generateBrandCards({}, context, supabase);
+      steps.push(`✓ ${cardResult.generated || 0} brand card image(s) generated`);
+    } catch (err: any) {
+      errors.push(`Cards: ${err.message}`);
+      steps.push(`⚠ Cards: ${err.message}`);
+    }
+  } else {
+    steps.push('→ Card images skipped');
+  }
+
+  return {
+    success: errors.length < 4,
+    steps,
+    errors: errors.length > 0 ? errors : undefined,
+    message: errors.length === 0
+      ? `Brand playbook complete! All 4 steps finished:\n${steps.join('\n')}\n\nThe brand is fully configured and ready for creative work.`
+      : `Brand playbook done with ${errors.length} issue(s):\n${steps.join('\n')}`,
+  };
 }
 
 // ── System Prompt Builder ───────────────────────────────────────────────────
