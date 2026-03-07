@@ -11,7 +11,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const SYSTEM_PROMPT = `You are an expert brand governance strategist. Given a brand's intelligence profile (visual DNA, colors, typography, photography style, tone of voice, brand identity, brand story, and standards), generate operational guardrails that protect brand consistency in AI-generated creative content.
+const SYSTEM_PROMPT_BASE = `You are an expert brand governance strategist. Given a brand's intelligence profile (visual DNA, colors, typography, photography style, tone of voice, brand identity, brand story, and standards), generate operational guardrails that protect brand consistency in AI-generated creative content.
 
 Generate guardrails that are:
 - SPECIFIC to this brand (reference actual colors, fonts, values by name)
@@ -33,8 +33,23 @@ Assign categories to rules from: "color", "typography", "photography", "composit
 
 Return ONLY valid JSON matching the specified schema.`;
 
+const FOCUS_AREA_ADDITIONS: Record<string, string> = {
+  visual_identity: `FOCUS: Visual Identity only. Concentrate rules on brand colors (exact hex values), logo usage, brand marks, visual symbols, and color combinations. Ignore photography, tone, and copy direction. The persona should be a brand identity specialist.`,
+  photography_and_composition: `FOCUS: Photography & Composition only. Concentrate rules on shot types, lighting setups, camera settings (aperture, focal length), color temperature, framing, depth of field, and compositional guidelines. Ignore tone, copy, and color palette rules unless they specifically relate to photographic post-processing. The persona should be a senior art director or director of photography.`,
+  tone_and_messaging: `FOCUS: Tone & Messaging only. Concentrate rules on brand voice, copy direction, content dos/don'ts, word choice, audience tone, emotional register, and messaging hierarchy. Ignore visual and photographic rules entirely. The persona should be a brand voice and content strategist.`,
+  typography_and_text: `FOCUS: Typography & Text only. Concentrate rules on font usage, type hierarchy, text overlay guidelines (when text appears in images), typographic combinations to avoid, size relationships, and text legibility standards. The persona should be a typographer or visual communications specialist.`,
+  product_representation: `FOCUS: Product Representation only. Concentrate rules on how products must be shown — accurate colors, required brand elements on packaging, forbidden modifications, surface and context requirements, and what constitutes faithful vs. distorted product reproduction in AI-generated imagery. The persona should be a product marketing or brand standards specialist.`,
+  compliance: `FOCUS: Compliance & Regulatory only. Concentrate rules on legal restrictions, industry regulations, required disclaimers, forbidden claims, competitor references, and brand liability guardrails. Ignore aesthetic and stylistic rules. The persona should be a brand compliance or legal risk specialist.`,
+};
+
+function buildSystemPrompt(focusArea?: string): string {
+  if (!focusArea || !FOCUS_AREA_ADDITIONS[focusArea]) return SYSTEM_PROMPT_BASE;
+  return `${SYSTEM_PROMPT_BASE}\n\n${FOCUS_AREA_ADDITIONS[focusArea]}`;
+}
+
 interface GenerateRequest {
   brand_id: string;
+  focus_area?: string;
 }
 
 serve(async (req) => {
@@ -61,7 +76,7 @@ serve(async (req) => {
     }
 
     const body: GenerateRequest = await req.json();
-    const { brand_id } = body;
+    const { brand_id, focus_area } = body;
 
     if (!brand_id) {
       return new Response(JSON.stringify({ error: 'brand_id is required' }), {
@@ -161,7 +176,7 @@ serve(async (req) => {
         }],
       }],
       systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
+        parts: [{ text: buildSystemPrompt(focus_area) }],
       },
       generationConfig: {
         temperature: 0.3,
@@ -255,12 +270,12 @@ serve(async (req) => {
         brand_id,
         name: guardrails.name,
         persona: guardrails.persona,
+        focus_area: focus_area || null,
         rules: guardrails.rules,
         forbidden_combinations: guardrails.forbidden_combinations,
         required_elements: guardrails.required_elements,
         tone_guidelines: guardrails.tone_guidelines,
         is_active: false,
-        created_by: user.id,
       })
       .select()
       .single();
@@ -275,6 +290,7 @@ serve(async (req) => {
       brand_id,
       parameters: {
         directive_id: newDirective.id,
+        focus_area: focus_area || null,
         rule_count: guardrails.rules?.length || 0,
         forbidden_count: guardrails.forbidden_combinations?.length || 0,
         required_count: guardrails.required_elements?.length || 0,

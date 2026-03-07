@@ -605,11 +605,33 @@ export interface BrandPromptTemplate {
   updated_at: string;
 }
 
+export type DirectiveFocusArea =
+  | 'visual_identity'
+  | 'photography_and_composition'
+  | 'tone_and_messaging'
+  | 'typography_and_text'
+  | 'product_representation'
+  | 'compliance';
+
+export const DIRECTIVE_FOCUS_AREAS: Array<{
+  value: DirectiveFocusArea;
+  label: string;
+  description: string;
+}> = [
+  { value: 'visual_identity', label: 'Visual Identity', description: 'Colors, logos, marks, and brand symbols' },
+  { value: 'photography_and_composition', label: 'Photography & Composition', description: 'Shot types, lighting, camera, framing' },
+  { value: 'tone_and_messaging', label: 'Tone & Messaging', description: 'Voice, copy direction, content dos/don\'ts' },
+  { value: 'typography_and_text', label: 'Typography & Text', description: 'Font usage, text overlays, typographic rules' },
+  { value: 'product_representation', label: 'Product Representation', description: 'Product shots, required elements, faithful reproduction' },
+  { value: 'compliance', label: 'Compliance', description: 'Regulatory, legal, and industry restrictions' },
+];
+
 export interface AgentDirective {
   id: string;
   brand_id: string;
   name: string;
   persona: string;
+  focus_area?: DirectiveFocusArea;
   rules: Array<{
     rule: string;
     severity: 'error' | 'warning' | 'info';
@@ -1130,3 +1152,20 @@ export interface ModelGuidance {
   speed_tier: 'fast' | 'standard' | 'slow';
   quality_tier: 'draft' | 'standard' | 'high' | 'ultra';
 }
+
+// ── Composite deliverable types for interleaved creative packages ────────────
+
+export type DeliverableType =
+  | 'linkedin_post'
+  | 'product_shot_with_text'
+  | 'social_story'
+  | 'display_banner'
+  | 'email_header';
+
+export const DELIVERABLE_TYPE_LABELS: Record<DeliverableType, string> = {
+  linkedin_post: 'LinkedIn Post',
+  product_shot_with_text: 'Product Shot with Text',
+  social_story: 'Social Story',
+  display_banner: 'Display Banner',
+  email_header: 'Email Header',
+};

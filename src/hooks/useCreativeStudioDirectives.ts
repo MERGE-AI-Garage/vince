@@ -105,9 +105,9 @@ export function useGenerateBrandGuardrails() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (brandId: string) => {
+    mutationFn: async ({ brandId, focusArea }: { brandId: string; focusArea?: string }) => {
       const { data, error } = await supabase.functions.invoke('generate-brand-guardrails', {
-        body: { brand_id: brandId },
+        body: { brand_id: brandId, focus_area: focusArea },
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Guardrails generation failed');
@@ -117,7 +117,7 @@ export function useGenerateBrandGuardrails() {
         summary: { rules: number; forbidden_combinations: number; required_elements: number };
       };
     },
-    onSuccess: (_data, brandId) => {
+    onSuccess: (_data, { brandId }) => {
       queryClient.invalidateQueries({ queryKey: [DIRECTIVES_KEY, brandId] });
       queryClient.invalidateQueries({ queryKey: [BRAND_STATS_KEY, brandId] });
     },

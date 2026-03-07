@@ -1,7 +1,7 @@
 // ABOUTME: Brand intelligence overview tab for Creative Studio admin dashboard
 // ABOUTME: Shows per-brand visual DNA status, directives, prompt counts, and confidence scores
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -75,6 +75,15 @@ import {
 } from '@/hooks/useCreativeStudioBrandIntelligence';
 import { PromptTemplateAdmin } from './PromptTemplateAdmin';
 import { useDeleteAgentDirective, useGenerateBrandGuardrails } from '@/hooks/useCreativeStudioDirectives';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { DIRECTIVE_FOCUS_AREAS } from '@/types/creative-studio';
 import { AgentDirectiveEditor } from './AgentDirectiveEditor';
 import { BrandImageAnalyzer } from './BrandImageAnalyzer';
 import { BrandDocumentImport } from './BrandDocumentImport';
@@ -84,15 +93,6 @@ import { CorporateDNADialog } from './BrandStoryDialog';
 import { BrandStandardsDialog } from './BrandStandardsDialog';
 import { BrandReferenceCollections } from './BrandReferenceCollections';
 import { BrandSynthesizeDialog } from './BrandSynthesizeDialog';
-import {
-  VisualDNAArt,
-  IntelligenceSourcesArt,
-  GenerationPromptArt,
-  AgentDirectivesArt,
-  ToolApprovalsArt,
-  ReferenceImagesArt,
-  ReferenceCollectionsArt,
-} from './SectionHeaderArt';
 import type { BrandDialogView } from './BrandDialogNav';
 import type { BrandGenerationPromptSectionToggles } from '@/types/creative-studio';
 import {
@@ -144,6 +144,11 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
   const effectiveBrandId = brandId || activeBrands[0]?.id || null;
   const selectedBrand = activeBrands.find(b => b.id === effectiveBrandId) || null;
   const [logoError, setLogoError] = useState(false);
+
+  // Reset logo error when brand or logo URL changes
+  useEffect(() => {
+    setLogoError(false);
+  }, [effectiveBrandId, selectedBrand?.logo_url]);
 
   // Showcase dialog state (lifted from child so buttons live in the brand identity card)
   const { data: profile } = useBrandProfile(effectiveBrandId ?? undefined);
@@ -371,6 +376,9 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
 
 // ── Per-brand detail view ─────────────────────────────────────────────────────
 
+// Shared pill button class for section actions — matches header brand pills
+const PILL_BTN = 'rounded-full border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50 transition-all duration-150';
+
 export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: string; brandLogoUrl?: string }) {
   const queryClient = useQueryClient();
   const { data: stats, isLoading: statsLoading } = useBrandStats(brandId);
@@ -382,6 +390,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
 
   const [directiveEditorOpen, setDirectiveEditorOpen] = useState(false);
   const [editingDirective, setEditingDirective] = useState<AgentDirective | null>(null);
+  const [isGeneratingAllDirectives, setIsGeneratingAllDirectives] = useState(false);
   const [analyzerOpen, setAnalyzerOpen] = useState(false);
   const [docImportOpen, setDocImportOpen] = useState(false);
   const [dnaBuilderOpen, setDnaBuilderOpen] = useState(false);
@@ -390,6 +399,13 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
   const { data: analyses } = useBrandAnalyses(brandId);
   const deleteAnalysis = useDeleteBrandAnalysis();
   const deleteProfile = useDeleteBrandProfile();
+
+  // Map focus_area → existing directive for replace-on-regenerate logic
+  const directiveByFocusArea = useMemo(() => {
+    const map: Record<string, AgentDirective> = {};
+    directives?.forEach(d => { if (d.focus_area) map[d.focus_area] = d; });
+    return map;
+  }, [directives]);
 
   // Brand voice (legacy)
   const [editingBrandVoice, setEditingBrandVoice] = useState(false);
@@ -830,8 +846,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
       </div>
 
       {/* Visual DNA Section */}
-      <Card className="shadow-sm relative overflow-hidden">
-        <VisualDNAArt />
+      <Card className="shadow-sm">
         <CardHeader>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -882,7 +897,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                   {((stats?.imagesAnalyzed || 0) > 0 || profile) && (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 px-2.5" onClick={() => setSynthesizeDialogOpen(true)}>
+                        <Button variant="outline" size="sm" className={`h-7 text-xs gap-1.5 px-2.5 ${PILL_BTN}`} onClick={() => setSynthesizeDialogOpen(true)}>
                           <Brain className="h-3.5 w-3.5" />
                           Synthesize Profile
                         </Button>
@@ -1059,8 +1074,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
         );
 
         return (
-          <Card className="relative overflow-hidden">
-            <IntelligenceSourcesArt />
+          <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -1113,8 +1127,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
       })()}
 
       {/* Generation Prompt */}
-      <Card className="relative overflow-hidden">
-        <GenerationPromptArt />
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -1139,6 +1152,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                 <Button
                   variant="outline"
                   size="sm"
+                  className={PILL_BTN}
                   onClick={() => {
                     setGenPromptText(generationPrompt.prompt_text);
                     setEditingGenPrompt(true);
@@ -1151,6 +1165,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
               <Button
                 variant="outline"
                 size="sm"
+                className={PILL_BTN}
                 onClick={async () => {
                   try {
                     await synthesizeMutation.mutateAsync(brandId);
@@ -1409,8 +1424,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
       </Card>
 
       {/* Agent Directives */}
-      <Card className="relative overflow-hidden">
-        <AgentDirectivesArt />
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -1423,28 +1437,101 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={PILL_BTN}
+                    disabled={generateGuardrailsMutation.isPending || isGeneratingAllDirectives || !profile}
+                    title={!profile ? 'Build a brand profile first' : undefined}
+                  >
+                    {(generateGuardrailsMutation.isPending || isGeneratingAllDirectives)
+                      ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      : <Wand2 className="h-3 w-3 mr-1" />}
+                    Generate Guardrails
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel className="text-xs">Choose focus area</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      try {
+                        const result = await generateGuardrailsMutation.mutateAsync({ brandId });
+                        toast.success(`General guardrails generated — ${result.summary.rules} rules. Review and activate.`);
+                      } catch (err) {
+                        toast.error(`Generation failed: ${String(err)}`);
+                      }
+                    }}
+                  >
+                    <div>
+                      <div className="text-sm font-medium">General Overview</div>
+                      <div className="text-xs text-muted-foreground">One broad directive covering all brand domains</div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      setIsGeneratingAllDirectives(true);
+                      const results = await Promise.allSettled(
+                        DIRECTIVE_FOCUS_AREAS.map(async area => {
+                          // Replace existing directive for this focus area if present
+                          if (directiveByFocusArea[area.value]) {
+                            await deleteMutation.mutateAsync({ id: directiveByFocusArea[area.value].id, brandId });
+                          }
+                          return generateGuardrailsMutation.mutateAsync({ brandId, focusArea: area.value });
+                        })
+                      );
+                      setIsGeneratingAllDirectives(false);
+                      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+                      const failed = results.filter(r => r.status === 'rejected').length;
+                      if (failed === 0) {
+                        toast.success(`All 6 focused directive sets generated. Review and activate each one.`);
+                      } else {
+                        toast.warning(`${succeeded} generated, ${failed} failed. Retry individual areas as needed.`);
+                      }
+                    }}
+                  >
+                    <div>
+                      <div className="text-sm font-medium">All 6 Focus Areas</div>
+                      <div className="text-xs text-muted-foreground">Generate one specialized directive per domain — replaces existing</div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {DIRECTIVE_FOCUS_AREAS.map(area => {
+                    const existing = directiveByFocusArea[area.value];
+                    return (
+                      <DropdownMenuItem
+                        key={area.value}
+                        onClick={async () => {
+                          try {
+                            if (existing) {
+                              await deleteMutation.mutateAsync({ id: existing.id, brandId });
+                            }
+                            const result = await generateGuardrailsMutation.mutateAsync({ brandId, focusArea: area.value });
+                            toast.success(`${area.label} guardrails ${existing ? 'regenerated' : 'generated'} — ${result.summary.rules} rules. Review and activate.`);
+                          } catch (err) {
+                            toast.error(`Generation failed: ${String(err)}`);
+                          }
+                        }}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-medium">{area.label}</div>
+                            {existing && <span className="text-[10px] text-muted-foreground ml-2">replace existing</span>}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{area.description}</div>
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={async () => {
-                  try {
-                    const result = await generateGuardrailsMutation.mutateAsync(brandId);
-                    toast.success(`Guardrails generated — ${result.summary.rules} rules, ${result.summary.forbidden_combinations} forbidden combos. Review and activate.`);
-                  } catch (err) {
-                    toast.error(`Generation failed: ${String(err)}`);
-                  }
-                }}
-                disabled={generateGuardrailsMutation.isPending || !profile}
-                title={!profile ? 'Build a brand profile first' : undefined}
-              >
-                {generateGuardrailsMutation.isPending
-                  ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  : <Wand2 className="h-3 w-3 mr-1" />}
-                Generate Guardrails
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                className={PILL_BTN}
                 onClick={() => { setEditingDirective(null); setDirectiveEditorOpen(true); }}
               >
                 <Plus className="h-3 w-3 mr-1" />
@@ -1467,6 +1554,11 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                     <div className="flex items-center gap-1">
                       <Badge variant={directive.is_active ? "outline" : "secondary"} className="text-[10px]">
                         {directive.is_active ? 'Active' : 'Review'}
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {directive.focus_area
+                          ? (DIRECTIVE_FOCUS_AREAS.find(a => a.value === directive.focus_area)?.label ?? directive.focus_area)
+                          : 'General'}
                       </Badge>
                       <Button
                         variant="ghost"
@@ -1522,8 +1614,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
       </Card>
 
       {/* Tool Approvals */}
-      <Card className="relative overflow-hidden">
-        <ToolApprovalsArt />
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -1541,6 +1632,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                   <Button
                     variant="outline"
                     size="sm"
+                    className={PILL_BTN}
                     onClick={() => { setBulkManaging(true); setBulkManageSelectedIds(new Set()); }}
                   >
                     <Pencil className="h-3 w-3 mr-1" />
@@ -1550,6 +1642,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                 <Button
                   variant="outline"
                   size="sm"
+                  className={PILL_BTN}
                   onClick={() => setBulkAdding(true)}
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -1558,6 +1651,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                 <Button
                   variant="outline"
                   size="sm"
+                  className={PILL_BTN}
                   onClick={() => setAddingTool(true)}
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -1961,8 +2055,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
 
       {/* Reference Images Gallery */}
       {imageAnalyses.length > 0 && (
-        <Card className="relative overflow-hidden">
-          <ReferenceImagesArt />
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -2008,7 +2101,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                     <List className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setAnalyzerOpen(true)}>
+                <Button variant="outline" size="sm" className={PILL_BTN} onClick={() => setAnalyzerOpen(true)}>
                   <Plus className="h-3 w-3 mr-1" />
                   Add More
                 </Button>
@@ -2138,8 +2231,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
 
       {/* Reference Collections */}
       {brandSlug && (
-        <Card className="relative overflow-hidden">
-          <ReferenceCollectionsArt />
+        <Card>
           <CardContent className="pt-6">
             <BrandReferenceCollections brandId={brandId} brandSlug={brandSlug} />
           </CardContent>

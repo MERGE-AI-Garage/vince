@@ -176,7 +176,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'generate_creative_package',
-    description: 'Generate a complete creative package with interleaved text and images in a single call. Use this when the user asks for a campaign, a set of deliverables, or multiple assets at once. This generates ALL copy AND images together — much faster than generating images one by one. Returns alternating text blocks (headlines, body copy, strategy notes) and images. PREFER this over generate_image when the user wants a creative campaign or multiple deliverables.',
+    description: 'Generate a complete creative package with interleaved text and images in a single call. Use this when the user asks for a campaign, a set of deliverables, or multiple assets at once. This generates ALL copy AND images together — much faster than generating images one by one. Returns alternating text blocks (headlines, body copy, strategy notes) and images. PREFER this over generate_image when the user wants a creative campaign or multiple deliverables. Use deliverable_type for common named formats (linkedin_post, product_shot_with_text, social_story, display_banner, email_header) — these include pre-built instructions for branded typography and layout rendered directly into the image.',
     parameters: {
       type: 'object',
       properties: {
@@ -189,20 +189,42 @@ const VINCE_TOOLS = [
           items: {
             type: 'object',
             properties: {
-              name: { type: 'string', description: 'Deliverable name (e.g., "Hero Banner")' },
-              description: { type: 'string', description: 'What this deliverable should show' },
+              name: { type: 'string', description: 'Deliverable name (e.g., "Hero Banner"). Optional when deliverable_type is set — defaults to the type\'s standard name.' },
+              description: { type: 'string', description: 'Additional context for what this deliverable should show. Optional when deliverable_type is set.' },
               aspect_ratio: {
                 type: 'string',
                 enum: ['1:1', '16:9', '9:16', '4:3', '3:4'],
-                description: 'Image format',
+                description: 'Image format. Optional when deliverable_type is set — each type has a sensible default.',
+              },
+              deliverable_type: {
+                type: 'string',
+                enum: ['linkedin_post', 'product_shot_with_text', 'social_story', 'display_banner', 'email_header'],
+                description: 'Named deliverable type with pre-built brand typography and layout instructions. Use this for real-world marketing formats that need branded text rendered into the image. linkedin_post (4:3, LinkedIn-ready with headline+logo), product_shot_with_text (1:1, product hero with text overlay), social_story (9:16, vertical story with bold headline+CTA), display_banner (16:9, ad banner with headline+CTA button), email_header (3:4, email masthead with logo+title).',
               },
             },
-            required: ['name', 'description', 'aspect_ratio'],
           },
-          description: 'Specific deliverables to generate. If omitted, Vince will determine the best deliverables from the brief.',
+          description: 'Specific deliverables to generate. Use deliverable_type for named formats (linkedin_post, product_shot_with_text, etc.) which include branded text rendering. Mix typed and custom deliverables freely.',
         },
       },
       required: ['brief'],
+    },
+  },
+  {
+    name: 'generate_brand_guardrails',
+    description: 'Generate AI brand governance directives (guardrails) from the brand\'s DNA profile. Use this when the user asks to generate guardrails, create agent directives, build brand rules, or set up brand governance. Can generate a single focused set for one domain, or all 6 focused sets at once. Each generated directive is saved as inactive for the user to review and activate.',
+    parameters: {
+      type: 'object',
+      properties: {
+        focus_area: {
+          type: 'string',
+          enum: ['visual_identity', 'photography_and_composition', 'tone_and_messaging', 'typography_and_text', 'product_representation', 'compliance'],
+          description: 'Generate guardrails focused on a specific brand domain. visual_identity=colors/logos/marks, photography_and_composition=shot types/lighting/framing, tone_and_messaging=voice/copy direction, typography_and_text=font usage/text overlays, product_representation=product shots/faithful reproduction, compliance=legal/regulatory restrictions. Omit for a general overview across all areas.',
+        },
+        all_areas: {
+          type: 'boolean',
+          description: 'Set to true to generate all 6 focused directive sets at once — one per domain. Use when the user asks to "generate all guardrails", "set up all brand governance", or similar. Each area runs in parallel and replaces any existing directive for that area.',
+        },
+      },
     },
   },
   {
@@ -325,6 +347,8 @@ async function executeTool(
       return await generateBrandHeader(parameters, context, supabase);
     case 'generate_brand_cards':
       return await generateBrandCards(parameters, context, supabase);
+    case 'generate_brand_guardrails':
+      return await generateBrandGuardrails(parameters, context, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
@@ -713,7 +737,10 @@ async function analyzeBrandWebsite(
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/analyze-brand-website`, {
+  // Fire-and-forget: kick off the analysis and return immediately.
+  // The analyze-brand-website function saves results to the DB when done.
+  // This prevents voice sessions from timing out during the 15-20s crawl.
+  fetch(`${supabaseUrl}/functions/v1/analyze-brand-website`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -722,21 +749,23 @@ async function analyzeBrandWebsite(
     body: JSON.stringify({
       brand_id: context.brand_id,
       url,
+      user_id: context.user_id,
     }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      console.error(`[Vince] Background website analysis failed (${response.status}):`, result.error || 'unknown');
+    } else {
+      console.log(`[Vince] Background website analysis completed for ${url}`);
+    }
+  }).catch((err) => {
+    console.error(`[Vince] Background website analysis fetch error:`, err.message);
   });
-
-  const result = await response.json();
-  if (!response.ok || result.error) {
-    throw new Error(result.error || `Website analysis failed (${response.status})`);
-  }
 
   return {
     success: true,
     url,
-    pages_crawled: result.pages_crawled || result.pagesCrawled || 1,
-    sections_extracted: result.sections_extracted || Object.keys(result.extracted || {}).length,
-    message: `Website analysis complete for ${url}. Brand DNA profile has been updated with extracted visual identity, colors, typography, and messaging.`,
-    summary: result.summary || result.extracted?.brand_identity || null,
+    message: `Website analysis started for ${url}. This takes about 30 seconds — the brand's colors, fonts, imagery style, and messaging will be extracted automatically. You can continue chatting while it runs.`,
   };
 }
 
@@ -917,6 +946,75 @@ async function generateBrandCards(
   };
 }
 
+async function generateBrandGuardrails(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const focusAreas = params.all_areas
+    ? ['visual_identity', 'photography_and_composition', 'tone_and_messaging', 'typography_and_text', 'product_representation', 'compliance']
+    : [params.focus_area as string | undefined];
+
+  const results = await Promise.allSettled(
+    focusAreas.map(async (focus_area) => {
+      // Delete existing directive for this focus_area to replace it
+      if (focus_area) {
+        await (supabase.from('creative_studio_agent_directives') as any)
+          .delete()
+          .eq('brand_id', context.brand_id)
+          .eq('focus_area', focus_area);
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-brand-guardrails`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({
+          brand_id: context.brand_id,
+          focus_area: focus_area || null,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Guardrails generation failed for ${focus_area || 'general'}`);
+      }
+      return { focus_area: focus_area || 'general', summary: result.summary, name: result.directive?.name };
+    })
+  );
+
+  const succeeded = results.filter(r => r.status === 'fulfilled').map(r => (r as PromiseFulfilledResult<any>).value);
+  const failed = results.filter(r => r.status === 'rejected').map(r => (r as PromiseRejectedResult).reason?.message || 'unknown error');
+
+  if (params.all_areas) {
+    return {
+      success: succeeded.length > 0,
+      generated: succeeded.length,
+      failed: failed.length,
+      directives: succeeded,
+      message: failed.length === 0
+        ? `Generated all 6 focused directive sets. Each is saved as inactive — activate them in the Brand DNA admin tab after reviewing.`
+        : `Generated ${succeeded.length} of 6 directive sets. ${failed.length} failed: ${failed.join(', ')}`,
+    };
+  }
+
+  if (succeeded.length === 1) {
+    const d = succeeded[0];
+    return {
+      success: true,
+      directive: d,
+      message: `Generated "${d.name}" (${d.summary.rules} rules, ${d.summary.forbidden_combinations} forbidden combinations). Saved as inactive — activate it in the Brand DNA admin tab after reviewing.`,
+    };
+  }
+
+  throw new Error(failed[0] || 'Guardrails generation failed');
+}
+
 // ── System Prompt Builder ───────────────────────────────────────────────────
 
 function buildSystemPrompt(
@@ -955,7 +1053,7 @@ BRAND ONBOARDING FLOW:
 When a user asks to set up a new brand, you need TWO things: the brand name and the website URL.
 1. If the user gives you a brand name WITHOUT a website URL, infer it for well-known brands (e.g., "Google" → "google.com", "Nike" → "nike.com"). If you can't infer it, ask for the website URL — it's required.
 2. Call create_brand with both the name and website_url. Do NOT call it without a website URL.
-3. ALWAYS call analyze_brand_website immediately after creating the brand. Website analysis extracts colors, fonts, imagery style, and messaging automatically — this is the foundation of the brand profile.
+3. Website analysis is triggered AUTOMATICALLY after brand creation — you do NOT need to call analyze_brand_website yourself. The system chains it for you. Tell the user: "I've created the brand and kicked off the website analysis — it takes about 30 seconds to extract colors, fonts, and visual identity."
 4. If they provide documents (PDFs, brand guidelines), use import_brand_document for each one.
 5. After DNA is loaded and profile looks solid, offer to generate the brand visuals: "Want me to build out the brand visuals? I'll generate the header image and card icons using your brand colors."
 6. When the user confirms (or says "build it out", "finish the brand", "generate the brand images"), call generate_brand_header and generate_brand_cards to complete the brand setup.
@@ -1141,6 +1239,10 @@ serve(async (req) => {
           { brand_id: body.brand_id, user_id: user.id },
           supabase,
         );
+
+        // Website analysis after create_brand is triggered client-side (brandAgentLiveService)
+        // to avoid edge function lifecycle issues in voice mode
+
         return new Response(JSON.stringify({ success: true, result }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -1286,9 +1388,44 @@ serve(async (req) => {
         toolCalls.push({ toolName, parameters, result: toolResult, success: true });
         toolCallsCount++;
 
-        // After create_brand, update brand_id so subsequent tools target the new brand
+        // After create_brand, update brand_id and auto-chain website analysis
         if (toolName === 'create_brand' && toolResult?.brand_id) {
           brand_id = toolResult.brand_id;
+
+          // Deterministic chaining: automatically run website analysis if brand has a URL
+          const newBrandUrl = (toolResult as Record<string, unknown>).website_url as string | undefined;
+          if (newBrandUrl) {
+            console.log(`[Vince] Auto-chaining: analyze_brand_website for ${newBrandUrl}`);
+            try {
+              const analysisResult = await executeTool(
+                'analyze_brand_website',
+                { url: newBrandUrl },
+                { brand_id, user_id: user.id },
+                supabase,
+              );
+              toolCalls.push({ toolName: 'analyze_brand_website', parameters: { url: newBrandUrl }, result: analysisResult, success: true });
+              toolCallsCount++;
+
+              // Send both results to Gemini so it can compose a unified response
+              result = await chat.sendMessage([
+                { functionResponse: { name: toolName, response: toolResult } },
+                { functionResponse: { name: 'analyze_brand_website', response: analysisResult } },
+              ]);
+            } catch (analysisError) {
+              const analysisErrorMsg = analysisError instanceof Error ? analysisError.message : String(analysisError);
+              console.error(`[Vince] Auto-chain analyze_brand_website failed:`, analysisErrorMsg);
+              toolCalls.push({ toolName: 'analyze_brand_website', parameters: { url: newBrandUrl }, error: analysisErrorMsg, success: false });
+
+              // Send create_brand result + analysis error to Gemini
+              result = await chat.sendMessage([
+                { functionResponse: { name: toolName, response: toolResult } },
+                { functionResponse: { name: 'analyze_brand_website', response: { error: analysisErrorMsg } } },
+              ]);
+            }
+            response = result.response;
+            functionCallsResult = response.functionCalls();
+            continue; // Skip the normal sendMessage below — we already sent both responses
+          }
         }
 
         result = await chat.sendMessage([{
@@ -1389,16 +1526,27 @@ serve(async (req) => {
     };
     messages.push(assistantMessage);
 
-    // Persist conversation
+    // Persist conversation — upsert to handle cases where client-side creation failed
     if (conversation_id) {
-      await supabase
+      console.log(`[Vince] Saving ${messages.length} messages to conversation ${conversation_id}`);
+      const { error: saveError } = await supabase
         .from('chatbot_conversations')
-        .update({
+        .upsert({
+          id: conversation_id,
+          user_id: user.id,
           messages,
           tool_calls_count: toolCallsCount,
+          metadata: { assistant: 'vince' },
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', conversation_id);
+        }, { onConflict: 'id' });
+
+      if (saveError) {
+        console.error(`[Vince] Conversation save failed:`, saveError.message);
+      } else {
+        console.log(`[Vince] Conversation saved successfully`);
+      }
+    } else {
+      console.warn('[Vince] No conversation_id — messages not persisted');
     }
 
     // Audit log
