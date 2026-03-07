@@ -1,5 +1,5 @@
 // ABOUTME: AI tool guidelines dialog for Brand Shop — shows per-brand tool approvals with compliance details
-// ABOUTME: MERGE-branded header, tool-by-tool breakdown using shared compliance guidance functions
+// ABOUTME: Branded header, tool-by-tool breakdown using shared compliance guidance functions
 
 import {
   Dialog,
@@ -100,13 +100,9 @@ function ToolGuidelineCard({ approval }: { approval: BrandToolApproval }) {
             </div>
           )}
           <div>
-            <a
-              href={`/tools/tool/${approval.product.slug}`}
-              className="font-semibold text-sm hover:text-primary hover:underline transition-colors inline-flex items-center gap-1"
-            >
+            <span className="font-semibold text-sm">
               {approval.product.name}
-              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
-            </a>
+            </span>
             {approval.vendor && (
               <p className="text-[11px] text-muted-foreground">{approval.vendor.name}</p>
             )}

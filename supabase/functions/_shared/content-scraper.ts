@@ -63,7 +63,7 @@ export async function resolveUrl(url: string): Promise<string | null> {
     const response = await fetch(url, {
       method: 'HEAD',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; MERGE-AI-RSS-Bot/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; BrandLens-Bot/1.0)',
       },
       redirect: 'follow',
       signal: AbortSignal.timeout(10000),
@@ -135,7 +135,7 @@ export async function scrapePageContent(
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; MERGE-AI-RSS-Bot/1.0)',
+          'User-Agent': 'Mozilla/5.0 (compatible; BrandLens-Bot/1.0)',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         },
         signal: AbortSignal.timeout(timeoutMs),

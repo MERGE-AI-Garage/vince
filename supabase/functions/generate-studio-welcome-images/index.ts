@@ -1,5 +1,5 @@
 // ABOUTME: Generates stylized 3D icon images for Creative Studio system welcome cards
-// ABOUTME: Uses Gemini image generation with MERGE brand colors for the 8 capability cards + hero
+// ABOUTME: Uses Gemini image generation for the 8 capability cards + hero welcome images
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -18,7 +18,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const MODEL = "gemini-3-pro-image-preview";
 
 /*
- * MERGE brand context (same palette as guidelines images):
+ * Brand color context:
  * - Primary: dark green #133B34, viridian #00856C
  * - Accent: electrolight green #1ED75F
  * - Warm gray #EAE8E3

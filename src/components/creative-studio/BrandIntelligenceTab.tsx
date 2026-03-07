@@ -1744,7 +1744,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                   <input
                     value={newNotes}
                     onChange={e => setNewNotes(e.target.value)}
-                    placeholder="e.g. Approved for all Subway work"
+                    placeholder="e.g. Approved for all client work"
                     className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
                   />
                 </div>
@@ -1853,7 +1853,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                   <input
                     value={bulkNotes}
                     onChange={e => setBulkNotes(e.target.value)}
-                    placeholder="e.g. Approved for all Subway work"
+                    placeholder="e.g. Approved for all client work"
                     className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs"
                   />
                 </div>

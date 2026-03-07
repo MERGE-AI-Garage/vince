@@ -57,7 +57,7 @@ export interface Product {
 
   // Product-level Risk Classification Framework
   commercial_safety?: 'Safe for Commercial Use' | 'Requires Human Review' | 'Unsafe for Commercial Use' | null;
-  approved_workflow_stage?: 'MERGE Marketing' | 'Internal Concepting & Pitches' | 'Internal Operations' | 'N/A' | null;
+  approved_workflow_stage?: 'Agency Marketing' | 'Internal Concepting & Pitches' | 'Internal Operations' | 'N/A' | null;
   access_tier?: 'Tier 1: Green' | 'Tier 2: Amber' | 'Tier 3: Red' | null;
   output_restrictions?: string | null;
   indemnification_level?: 'Full' | 'Limited' | 'None' | 'TBD' | 'N/A' | null;

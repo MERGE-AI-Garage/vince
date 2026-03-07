@@ -68,7 +68,7 @@ export function getInternalUsageGuidance(accessTier: string | null, _clientAppro
       allowed: true,
       icon: CheckCircle2,
       iconColor: 'text-green-600',
-      text: 'Yes - approved for all MERGE employees',
+      text: 'Yes - approved for all team members',
       detail: 'This tool is fully approved for internal work. Use it freely for ideation, research, drafts, and internal projects.',
     };
   } else if (tier.includes('Tier 2') || tier.includes('Amber')) {
@@ -145,7 +145,7 @@ export function getOwnershipGuidance(outputOwnershipRights: string | null): Owne
       icon: CheckCircle2,
       iconColor: 'text-green-600',
       text: 'You and the client own what you create',
-      detail: 'All outputs generated are owned by you/MERGE and your clients. Safe for client deliverables.',
+      detail: 'All outputs generated are owned by you and your clients. Safe for client deliverables.',
     };
   } else if (ownership.includes('Vendor Retains Rights')) {
     return {
@@ -230,7 +230,7 @@ export function getApprovalGuidance(accessTier: string | null, clientApprovalReq
       icon: CheckCircle2,
       iconColor: 'text-green-600',
       text: 'No special approval needed',
-      requirements: ['Use freely following standard MERGE processes'],
+      requirements: ['Use freely following standard approval processes'],
     };
   }
 

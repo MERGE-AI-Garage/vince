@@ -84,7 +84,7 @@ If ALL font lists are empty or only contain generic names, say "Sans-serif (not 
 You receive **detected_logo_urls**: URLs identified as potential logo images. May include "__inline_svg_logo__" which means an SVG logo was found inline in the HTML header but no URL can be extracted.
 
 Brands often have multiple logo forms:
-- **Wordmark/Primary logo**: The full brand name as a logo (e.g., "MERGE" spelled out). Usually wider/rectangular.
+- **Wordmark/Primary logo**: The full brand name as a logo (e.g., "Nike" spelled out). Usually wider/rectangular.
 - **Icon mark/Symbol**: A compact symbol or icon (e.g., an "M" mark). Usually square or compact.
 
 Pick the best primary logo URL (wordmark preferred) as logo_url. If you can identify a separate icon mark/symbol, return it as logo_mark_url. Look for clues like "mark", "icon", "symbol", "favicon" in URLs/alt text.
@@ -217,7 +217,7 @@ async function fetchPage(url: string, timeoutMs = 15000): Promise<string | null>
 async function fetchCSS(url: string): Promise<string> {
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MERGE-AI-Brand-Analyzer/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BrandLens-Analyzer/1.0)' },
       signal: AbortSignal.timeout(10000),
     });
     if (!response.ok) return '';
@@ -807,7 +807,7 @@ async function discoverBrandPages(doc: any, baseUrl: string): Promise<string[]> 
     try {
       const response = await fetch(testUrl, {
         method: 'HEAD',
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MERGE-AI-Brand-Analyzer/1.0)' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BrandLens-Analyzer/1.0)' },
         signal: AbortSignal.timeout(5000),
       });
       if (response.ok && response.status === 200) {

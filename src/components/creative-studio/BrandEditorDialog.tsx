@@ -231,7 +231,7 @@ export function BrandEditorDialog({ open, brand, onClose, onSave, saving }: Bran
             <Input
               value={form.name}
               onChange={(e) => updateField('name', e.target.value)}
-              placeholder="e.g. Subway, Nike, Patagonia"
+              placeholder="e.g. Nike, Patagonia, Apple"
               autoFocus
             />
             {form.slug && (
