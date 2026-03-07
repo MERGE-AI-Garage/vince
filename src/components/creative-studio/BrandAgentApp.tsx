@@ -131,6 +131,10 @@ export function BrandAgentApp({
   const [voiceTranscript, setVoiceTranscript] = useState<TranscriptItem[]>([]);
   const liveControlRef = useRef<LiveSessionControl | null>(null);
   const addedTranscriptIdsRef = useRef<Set<string>>(new Set());
+  // Token-based guard: each connection attempt gets a unique token;
+  // handleCloseVoice resets it to -1 so pending connections self-abort.
+  const activeConnectionTokenRef = useRef<number>(0);
+  const voiceAutoStartedRef = useRef(false);
 
   // Settings state
   const [quickPrompts, setQuickPrompts] = useState<string[]>(DEFAULT_QUICK_PROMPTS);
@@ -267,6 +271,15 @@ export function BrandAgentApp({
       if (container) container.scrollTop = container.scrollHeight;
     }
   }, [messages]);
+
+  // Auto-start voice when API key becomes ready (voice-first mode)
+  useEffect(() => {
+    if (liveApiKeyReady && !voiceAutoStartedRef.current) {
+      voiceAutoStartedRef.current = true;
+      handleStartVoice();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveApiKeyReady]);
 
   // Cleanup on unmount — disconnect voice but preserve conversation
   useEffect(() => {
@@ -415,6 +428,8 @@ export function BrandAgentApp({
   const MAX_RECONNECT_ATTEMPTS = 2;
 
   const connectVoice = async (resumeHandle?: string) => {
+    const token = Date.now();
+    activeConnectionTokenRef.current = token;
     try {
       const control = await connectVinceLiveSession(
         {
@@ -500,6 +515,12 @@ export function BrandAgentApp({
         resumeHandle,
       );
 
+      // If the user exited voice mode while we were connecting, abandon this session
+      if (activeConnectionTokenRef.current !== token) {
+        control?.disconnect?.();
+        return;
+      }
+
       if (control) {
         liveControlRef.current = control;
         if (resumeHandle) {
@@ -532,12 +553,15 @@ export function BrandAgentApp({
     voiceVolumeRef.current = 0;
     addedTranscriptIdsRef.current.clear();
     reconnectAttemptsRef.current = 0;
+    activeConnectionTokenRef.current = 0; // reset so new connection isn't blocked
     connectVoice();
   };
 
   const handleCloseVoice = () => {
     // Prevent auto-reconnect when user manually closes
     reconnectAttemptsRef.current = MAX_RECONNECT_ATTEMPTS;
+    // Invalidate any pending connection attempt
+    activeConnectionTokenRef.current = -1;
     if (liveControlRef.current) {
       liveControlRef.current.disconnect();
       liveControlRef.current = null;
@@ -864,12 +888,13 @@ export function BrandAgentApp({
             </span>
             <Button
               variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              size="sm"
+              className="h-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1 text-[10px]"
               onClick={handleCloseVoice}
-              aria-label="End voice session"
+              aria-label="Switch to chat"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
+              Chat
             </Button>
           </div>
         </div>
