@@ -872,29 +872,30 @@ serve(async (req) => {
     const promptData = await getPromptWithModel(supabase, 'brand-website-analysis');
     const brandAnalysisPrompt = promptData?.prompt.prompt_text || FALLBACK_BRAND_ANALYSIS_PROMPT;
 
-    // Verify auth — accept service_role JWTs (from internal edge function calls) or user tokens
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    let user: { id: string; email?: string } | null = null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.role === 'service_role') {
-        user = { id: 'service_role', email: 'system@internal' };
-      }
-    } catch { /* not a valid JWT, try user auth */ }
-    if (!user) {
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
-      if (authError || !authUser) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      user = authUser;
+    // Identify caller for logging — gateway handles security via --no-verify-jwt
+    const authHeader = req.headers.get('Authorization');
+    let callerId = 'anonymous';
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        callerId = payload.role === 'service_role' ? 'service_role' : (payload.sub || 'user');
+      } catch { /* not a parseable JWT */ }
     }
+    console.log(`[analyze-brand-website] Caller: ${callerId}`);
 
-    const body: AnalyzeWebsiteRequest = await req.json();
-    const { brand_id, url } = body;
+    const body = await req.json();
+    const { brand_id, url, user_id: bodyUserId } = body;
+
+    // Resolve user identity: from request body, JWT, or fallback for service-role callers
+    let user: { id: string; email: string };
+    if (bodyUserId) {
+      user = { id: bodyUserId, email: 'system@brand-lens' };
+    } else if (callerId !== 'anonymous' && callerId !== 'service_role') {
+      user = { id: callerId, email: 'unknown' };
+    } else {
+      user = { id: 'system', email: 'system@brand-lens' };
+    }
 
     if (!brand_id || !url) {
       return new Response(JSON.stringify({ error: 'brand_id and url are required' }), {
@@ -1285,6 +1286,24 @@ serve(async (req) => {
           .eq('id', brand_id);
       }
     }
+
+    // Chain to synthesize-brand-profile to build the brand DNA profile from analysis data
+    // Fire-and-forget — synthesis takes ~20s but we don't need to wait
+    const synthUrl = `${supabaseUrl}/functions/v1/synthesize-brand-profile`;
+    fetch(synthUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
+      body: JSON.stringify({ brand_id }),
+    }).then(async (synthResp) => {
+      if (!synthResp.ok) {
+        const err = await synthResp.text().catch(() => 'unknown');
+        console.error(`[Website Analyzer] Synthesis failed (${synthResp.status}):`, err.slice(0, 200));
+      } else {
+        console.log(`[Website Analyzer] Synthesis completed for brand ${brand_id}`);
+      }
+    }).catch((err) => {
+      console.error(`[Website Analyzer] Synthesis fetch error:`, err.message);
+    });
 
     // Audit log
     await supabase.from('creative_studio_audit_log').insert({

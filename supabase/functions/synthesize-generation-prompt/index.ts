@@ -118,7 +118,7 @@ serve(async (req) => {
     // Brand visual profile (DNA)
     const { data: profile } = await supabase
       .from('creative_studio_brand_profiles')
-      .select('visual_dna, photography_style, color_profile, composition_rules, brand_identity, tone_of_voice, typography, art_direction_rules, post_production_style, brand_story')
+      .select('visual_dna, photography_style, color_profile, composition_rules, brand_identity, tone_of_voice, typography, brand_standards, brand_story')
       .eq('brand_id', brand_id)
       .maybeSingle();
 
@@ -181,11 +181,8 @@ serve(async (req) => {
       if (profile.composition_rules) {
         inputSections.push(`COMPOSITION RULES:\n${JSON.stringify(profile.composition_rules, null, 0)}`);
       }
-      if (profile.art_direction_rules) {
-        inputSections.push(`ART DIRECTION RULES:\n${JSON.stringify(profile.art_direction_rules, null, 0)}`);
-      }
-      if (profile.post_production_style) {
-        inputSections.push(`POST-PRODUCTION STYLE:\n${JSON.stringify(profile.post_production_style, null, 0)}`);
+      if (profile.brand_standards) {
+        inputSections.push(`BRAND STANDARDS:\n${JSON.stringify(profile.brand_standards, null, 0)}`);
       }
       if (profile.brand_story) {
         inputSections.push(`BRAND STORY:\n${JSON.stringify(profile.brand_story, null, 0)}`);
