@@ -3,12 +3,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip, X } from 'lucide-react';
+import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, InputArea, type Message, type Attachment } from '@/components/shared-chat';
-import { type TranscriptItem } from '@/components/shared-chat/VoiceOverlay';
-import { CompactAudioIndicator } from '@/components/shared-chat/CompactAudioIndicator';
+import { VoiceOverlay, type TranscriptItem } from '@/components/shared-chat/VoiceOverlay';
 import { supabase } from '@/integrations/supabase/client';
 import {
   generateBrandAgentGreeting,
@@ -134,7 +133,6 @@ export function BrandAgentApp({
   // Token-based guard: each connection attempt gets a unique token;
   // handleCloseVoice resets it to -1 so pending connections self-abort.
   const activeConnectionTokenRef = useRef<number>(0);
-  const voiceAutoStartedRef = useRef(false);
 
   // Settings state
   const [quickPrompts, setQuickPrompts] = useState<string[]>(DEFAULT_QUICK_PROMPTS);
@@ -271,15 +269,6 @@ export function BrandAgentApp({
       if (container) container.scrollTop = container.scrollHeight;
     }
   }, [messages]);
-
-  // Auto-start voice when API key becomes ready (voice-first mode)
-  useEffect(() => {
-    if (liveApiKeyReady && !voiceAutoStartedRef.current) {
-      voiceAutoStartedRef.current = true;
-      handleStartVoice();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveApiKeyReady]);
 
   // Cleanup on unmount — disconnect voice but preserve conversation
   useEffect(() => {
@@ -578,12 +567,6 @@ export function BrandAgentApp({
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  // Derive current transcript text for the voice bar
-  const currentModelTranscript = voiceTranscript.find(t => t.id === 'current-model')?.text || '';
-  const currentUserTranscript = voiceTranscript.find(t => t.id === 'current-user')?.text || '';
-  const isModelSpeaking = currentModelTranscript.length > 0;
-  const isUserSpeaking = currentUserTranscript.length > 0;
-  const liveTranscriptText = isUserSpeaking ? currentUserTranscript : currentModelTranscript;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -601,7 +584,7 @@ export function BrandAgentApp({
           )}
         </div>
         <div className="flex items-center gap-1">
-          {enableImageUpload && (
+          {enableImageUpload && !isVoiceMode && (
             <Button
               variant="ghost"
               size="icon"
@@ -637,30 +620,44 @@ export function BrandAgentApp({
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) {
+              const isDocument = file.type === 'application/pdf'
+                || file.name.endsWith('.docx')
+                || file.name.endsWith('.pptx')
+                || file.type === 'text/plain';
+
               const reader = new FileReader();
-              reader.onload = (ev) => {
-                if (ev.target?.result) {
-                  const base64 = (ev.target.result as string).split(',')[1];
-                  if (isVoiceMode && liveControlRef.current?.sendFile) {
-                    liveControlRef.current.sendFile({
-                      name: file.name,
-                      mimeType: file.type,
-                      data: base64,
-                    }).catch(err => console.error('[Vince] Voice file upload failed:', err));
+              reader.onload = async (ev) => {
+                if (!ev.target?.result) return;
+                const base64 = (ev.target.result as string).split(',')[1];
+
+                // Documents: upload to Storage first so Vince has a URL for import_brand_document
+                if (isDocument && brandId) {
+                  const path = `brand-documents/${brandId}/${Date.now()}-${file.name}`;
+                  const { error } = await supabase.storage
+                    .from('media')
+                    .upload(path, file, { contentType: file.type });
+                  if (!error) {
+                    const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path);
+                    const msg = `[Brand document uploaded: ${file.name}]\nURL: ${publicUrl}\n\nPlease import this document using import_brand_document with the URL above, then synthesize the brand profile and run the brand playbook.`;
+                    handleSendMessage(msg, [{ name: file.name, mimeType: file.type, data: base64 }]);
                   } else {
-                    handleSendMessage(`[Uploaded: ${file.name}]`, [{
-                      name: file.name,
-                      mimeType: file.type,
-                      data: base64,
-                    }]);
+                    console.error('[Vince] Document storage upload failed:', error);
+                    // Fall back to inline-only so Vince can still read the content
+                    handleSendMessage(`[Uploaded: ${file.name}]`, [{ name: file.name, mimeType: file.type, data: base64 }]);
                   }
+                } else {
+                  handleSendMessage(`[Uploaded: ${file.name}]`, [{
+                    name: file.name,
+                    mimeType: file.type,
+                    data: base64,
+                  }]);
                 }
               };
               reader.readAsDataURL(file);
             }
             if (fileInputRef.current) fileInputRef.current.value = '';
           }}
-          accept="image/*,application/pdf,text/plain"
+          accept="image/*,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
         />
       </div>
 
@@ -865,40 +862,27 @@ export function BrandAgentApp({
         </div>
       )}
 
-      {/* Voice bar — replaces input area during voice mode */}
-      {isVoiceMode && (
-        <div className="flex-shrink-0 border-t bg-muted/40 px-3 py-2.5">
-          {/* Current transcript */}
-          {liveTranscriptText && (
-            <p className={`text-xs leading-relaxed mb-2 truncate ${
-              isUserSpeaking ? 'text-cyan-400 italic' : 'text-foreground'
-            }`}>
-              {liveTranscriptText}
-            </p>
-          )}
-          {/* Controls row */}
-          <div className="flex items-center gap-3">
-            <CompactAudioIndicator
-              volumeRef={voiceVolumeRef}
-              isModelSpeaking={isModelSpeaking}
-              isUserSpeaking={isUserSpeaking}
-            />
-            <span className="text-[10px] text-muted-foreground flex-1">
-              {!liveControlRef.current ? 'Reconnecting...' : isModelSpeaking ? 'Vince is speaking...' : isUserSpeaking ? 'Listening...' : 'Waiting...'}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1 text-[10px]"
-              onClick={handleCloseVoice}
-              aria-label="Switch to chat"
-            >
-              <X className="w-3.5 h-3.5" />
-              Chat
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Full-screen voice overlay */}
+      <VoiceOverlay
+        isActive={isVoiceMode}
+        onClose={handleCloseVoice}
+        onFileUpload={(file) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            if (!ev.target?.result) return;
+            const base64 = (ev.target.result as string).split(',')[1];
+            if (liveControlRef.current?.sendFile) {
+              liveControlRef.current.sendFile({ name: file.name, mimeType: file.type, data: base64 })
+                .catch(err => console.error('[Vince] Voice file upload failed:', err));
+            }
+          };
+          reader.readAsDataURL(file);
+        }}
+        volumeRef={voiceVolumeRef}
+        transcript={voiceTranscript}
+        agentName="Vince"
+        agentLabel="Creative Director"
+      />
 
       {/* Text input — hidden during voice mode */}
       {!isVoiceMode && (
