@@ -48,6 +48,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 - [x] `brand-prompt-agent` — Vince's brain. Gemini function calling with 10+ tools
 - [x] `generate-creative-package` — interleaved output (text + images in one call)
 - [x] `generate-creative-image` — single image generation via Imagen/Gemini
+- [x] `generate-brand-guardrails` — AI-generates brand governance directives from DNA
 
 ### Interleaved Output Pipeline (Hackathon Centerpiece)
 - [x] Phase 0 validated — Gemini interleaved output works (12-56s latency, acceptable for demo)
@@ -56,6 +57,20 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 - [x] `CreativePackageDisplay` component renders alternating copy blocks and images
 - [x] `BrandAgentApp` extracts package data from tool actions and renders the display
 - [x] `formatToolAction` shows package stats (image count, latency)
+
+### Composite Deliverable Types (Mar 6)
+- [x] 5 named deliverable types: `linkedin_post`, `product_shot_with_text`, `social_story`, `display_banner`, `email_header`
+- [x] Each type has pre-built image instructions for branded typography rendered directly into the image by Gemini
+- [x] `DeliverableSpec.deliverable_type` field in `generate-creative-package` — templates auto-applied when set
+- [x] Vince tool updated: `deliverable_type` param exposed with descriptions of all 5 types
+- [x] Aspect ratio defaults per type (linkedin_post→4:3, product_shot→1:1, social_story→9:16, etc.)
+
+### Brand Governance — Focused Directives (Mar 6)
+- [x] `focus_area` column added to `creative_studio_agent_directives` (6 areas: visual_identity, photography_and_composition, tone_and_messaging, typography_and_text, product_representation, compliance)
+- [x] `generate-brand-guardrails` accepts `focus_area` param — each area has specialized system prompt instructions
+- [x] Admin UI: "Generate Guardrails" now a dropdown with General + 6 focused options
+- [x] Directive cards show focus area badge alongside active/review status
+- [x] `DirectiveFocusArea` + `DIRECTIVE_FOCUS_AREAS` exported from `creative-studio.ts`
 
 ---
 
