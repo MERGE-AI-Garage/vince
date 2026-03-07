@@ -10,10 +10,58 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface DeliverableSpec {
+type DeliverableType =
+  | 'linkedin_post'
+  | 'product_shot_with_text'
+  | 'social_story'
+  | 'display_banner'
+  | 'email_header';
+
+interface DeliverableTemplate {
   name: string;
-  description: string;
-  aspect_ratio: '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
+  default_aspect_ratio: '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
+  image_instructions: string;
+  copy_instructions: string;
+}
+
+const DELIVERABLE_TEMPLATES: Record<DeliverableType, DeliverableTemplate> = {
+  linkedin_post: {
+    name: 'LinkedIn Post',
+    default_aspect_ratio: '4:3',
+    image_instructions: `Professional marketing image suitable for LinkedIn. Include the brand logo subtly in a corner or along the bottom edge. Render a bold, concise headline in clean sans-serif typography in the upper portion of the image. Use the brand's primary color as an accent bar or background element at the bottom. The overall composition should feel polished and corporate-creative — not stock photography.`,
+    copy_instructions: `Write a LinkedIn post (200–300 characters) with a strong hook, 2–3 value sentences, and a closing call-to-action or question. Return this as the text block BEFORE the image.`,
+  },
+  product_shot_with_text: {
+    name: 'Product Shot',
+    default_aspect_ratio: '1:1',
+    image_instructions: `Clean product photography on a brand-appropriate surface or background. Render the product name or a 3–5 word headline in the brand's typographic style in the upper or lower third. Place the brand logo in a corner with adequate breathing room. The product should be the clear hero — text and logo are supporting elements, not competing.`,
+    copy_instructions: `Write a 2–3 sentence product caption that highlights the key benefit and includes a CTA. Return this as the text block BEFORE the image.`,
+  },
+  social_story: {
+    name: 'Social Story',
+    default_aspect_ratio: '9:16',
+    image_instructions: `Vertical social story format (9:16). Render a bold, punchy headline in the upper third in large brand typography. A hero visual fills the middle section. Render a short CTA or swipe-up prompt at the bottom in a contrasting brand color. Brand logo sits in the top corner. The design should feel native to Instagram or TikTok stories — bold, immediate, scroll-stopping.`,
+    copy_instructions: `Write a 1-sentence hook and a 3–5 word CTA for the story overlay. Return this as the text block BEFORE the image.`,
+  },
+  display_banner: {
+    name: 'Display Banner',
+    default_aspect_ratio: '16:9',
+    image_instructions: `Horizontal display advertising banner. Clean, high-contrast layout. Render a main headline in bold brand typography on the left or upper portion. Render a shorter subheadline below it. Include a CTA button shape with the CTA text rendered inside it in the lower right. Brand logo in the upper left corner. Background uses the brand's primary or secondary color palette. Professional, ad-ready composition.`,
+    copy_instructions: `Write a headline (6–8 words), a subheadline (10–14 words), and a CTA button label (2–3 words). Return these as the text block BEFORE the image.`,
+  },
+  email_header: {
+    name: 'Email Header',
+    default_aspect_ratio: '3:4',
+    image_instructions: `Email newsletter masthead image. Brand logo prominently placed at the top center or top left. Render the email campaign title or subject line in the brand's heading typography below the logo. A supporting visual or brand color background fills the lower portion. Clean, professional, optimized for email rendering — minimal complexity, high contrast.`,
+    copy_instructions: `Write the email subject line (50 characters max) and a preview text snippet (90 characters max). Return these as the text block BEFORE the image.`,
+  },
+};
+
+interface DeliverableSpec {
+  name?: string;
+  description?: string;
+  aspect_ratio?: '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
+  deliverable_type?: DeliverableType;
 }
 
 interface PackageRequest {
@@ -71,14 +119,29 @@ serve(async (req) => {
       ? `${system_context}\n\n${brandContext}`
       : `You are Vince, an expert AI creative director for Brand Lens. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.`;
 
+    // Resolve deliverable specs — apply templates when deliverable_type is set
+    const resolvedDeliverables = (deliverables || []).map(d => {
+      if (d.deliverable_type && DELIVERABLE_TEMPLATES[d.deliverable_type]) {
+        const tmpl = DELIVERABLE_TEMPLATES[d.deliverable_type];
+        return {
+          name: d.name || tmpl.name,
+          description: d.description
+            ? `${d.description}\n\nImage: ${tmpl.image_instructions}\nCopy: ${tmpl.copy_instructions}`
+            : `Image: ${tmpl.image_instructions}\nCopy: ${tmpl.copy_instructions}`,
+          aspect_ratio: d.aspect_ratio || tmpl.default_aspect_ratio,
+        };
+      }
+      return d as { name: string; description: string; aspect_ratio: string };
+    });
+
     // Build the deliverables prompt
     let deliverablePrompt = brief;
-    if (deliverables && deliverables.length > 0) {
+    if (resolvedDeliverables.length > 0) {
       deliverablePrompt += '\n\nGenerate the following deliverables:\n';
-      deliverables.forEach((d, i) => {
+      resolvedDeliverables.forEach((d, i) => {
         deliverablePrompt += `${i + 1}. ${d.name}: ${d.description} (${d.aspect_ratio} format)\n`;
       });
-      deliverablePrompt += '\nFor each deliverable, write the creative copy first, then generate the image.';
+      deliverablePrompt += '\nFor each deliverable, write the creative copy first (as plain text), then immediately generate the corresponding image.';
     }
 
     // Call Gemini with interleaved output
