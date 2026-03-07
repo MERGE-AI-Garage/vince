@@ -466,10 +466,10 @@ serve(async (req) => {
       }
     }
 
-    // Description and logo: only fill when currently empty
+    // Description, logo, brand_voice, visual_identity: only fill when currently empty
     const { data: currentBrand } = await supabase
       .from('creative_studio_brands')
-      .select('description, logo_url')
+      .select('description, logo_url, brand_voice, visual_identity')
       .eq('id', brand_id)
       .single();
 
@@ -485,12 +485,41 @@ serve(async (req) => {
       brandSync.logo_url = logoAnalyses[0].source_image_url;
     }
 
+    if (!currentBrand?.brand_voice && synthesized.tone_of_voice) {
+      const tov = synthesized.tone_of_voice as any;
+      const parts = [tov.formality, tov.personality, tov.energy].filter(Boolean);
+      if (parts.length > 0) brandSync.brand_voice = parts.join('. ');
+    }
+
+    if (!currentBrand?.visual_identity && synthesized.visual_dna) {
+      const vdna = synthesized.visual_dna as any;
+      const summary = vdna.signature_style || vdna.key_differentiators || vdna.visual_principles;
+      if (summary) brandSync.visual_identity = String(summary).slice(0, 500);
+    }
+
     if (Object.keys(brandSync).length > 0) {
       await supabase
         .from('creative_studio_brands')
         .update(brandSync)
         .eq('id', brand_id);
     }
+
+    // Auto-chain: generate brand prompt from the newly synthesized profile
+    const genPromptUrl = `${supabaseUrl}/functions/v1/synthesize-generation-prompt`;
+    fetch(genPromptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
+      body: JSON.stringify({ brand_id }),
+    }).then(async (resp) => {
+      if (!resp.ok) {
+        const err = await resp.text().catch(() => 'unknown');
+        console.error(`[Synthesize] Generation prompt failed (${resp.status}):`, err.slice(0, 200));
+      } else {
+        console.log(`[Synthesize] Generation prompt created for brand ${brand_id}`);
+      }
+    }).catch((err) => {
+      console.error('[Synthesize] Failed to trigger generation prompt synthesis:', err);
+    });
 
     // Audit log
     await supabase.from('creative_studio_audit_log').insert({
