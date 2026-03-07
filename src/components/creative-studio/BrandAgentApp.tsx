@@ -3,11 +3,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip } from 'lucide-react';
+import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, InputArea, type Message, type Attachment } from '@/components/shared-chat';
-import { VoiceOverlay, type TranscriptItem } from '@/components/shared-chat/VoiceOverlay';
+import { type TranscriptItem } from '@/components/shared-chat/VoiceOverlay';
+import { CompactAudioIndicator } from '@/components/shared-chat/CompactAudioIndicator';
 import { supabase } from '@/integrations/supabase/client';
 import {
   generateBrandAgentGreeting,
@@ -567,6 +568,12 @@ export function BrandAgentApp({
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  // Derive current transcript text for the voice bar
+  const currentModelTranscript = voiceTranscript.find(t => t.id === 'current-model')?.text || '';
+  const currentUserTranscript = voiceTranscript.find(t => t.id === 'current-user')?.text || '';
+  const isModelSpeaking = currentModelTranscript.length > 0;
+  const isUserSpeaking = currentUserTranscript.length > 0;
+  const liveTranscriptText = isUserSpeaking ? currentUserTranscript : currentModelTranscript;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -584,7 +591,7 @@ export function BrandAgentApp({
           )}
         </div>
         <div className="flex items-center gap-1">
-          {enableImageUpload && !isVoiceMode && (
+          {enableImageUpload && (
             <Button
               variant="ghost"
               size="icon"
@@ -629,6 +636,16 @@ export function BrandAgentApp({
               reader.onload = async (ev) => {
                 if (!ev.target?.result) return;
                 const base64 = (ev.target.result as string).split(',')[1];
+
+                // Voice mode: stream file directly to the live session
+                if (isVoiceMode && liveControlRef.current?.sendFile) {
+                  liveControlRef.current.sendFile({
+                    name: file.name,
+                    mimeType: file.type,
+                    data: base64,
+                  }).catch(err => console.error('[Vince] Voice file upload failed:', err));
+                  return;
+                }
 
                 // Documents: upload to Storage first so Vince has a URL for import_brand_document
                 if (isDocument && brandId) {
@@ -862,27 +879,40 @@ export function BrandAgentApp({
         </div>
       )}
 
-      {/* Full-screen voice overlay */}
-      <VoiceOverlay
-        isActive={isVoiceMode}
-        onClose={handleCloseVoice}
-        onFileUpload={(file) => {
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            if (!ev.target?.result) return;
-            const base64 = (ev.target.result as string).split(',')[1];
-            if (liveControlRef.current?.sendFile) {
-              liveControlRef.current.sendFile({ name: file.name, mimeType: file.type, data: base64 })
-                .catch(err => console.error('[Vince] Voice file upload failed:', err));
-            }
-          };
-          reader.readAsDataURL(file);
-        }}
-        volumeRef={voiceVolumeRef}
-        transcript={voiceTranscript}
-        agentName="Vince"
-        agentLabel="Creative Director"
-      />
+      {/* Inline voice bar — replaces input area during voice mode */}
+      {isVoiceMode && (
+        <div className="flex-shrink-0 border-t bg-muted/40 px-3 py-2.5">
+          {/* Live transcript — wraps up to 3 lines so Vince's response is readable */}
+          {liveTranscriptText && (
+            <p className={`text-xs leading-relaxed mb-2 line-clamp-3 ${
+              isUserSpeaking ? 'text-cyan-400 italic' : 'text-foreground/90'
+            }`}>
+              {liveTranscriptText}
+            </p>
+          )}
+          {/* Controls row */}
+          <div className="flex items-center gap-3">
+            <CompactAudioIndicator
+              volumeRef={voiceVolumeRef}
+              isModelSpeaking={isModelSpeaking}
+              isUserSpeaking={isUserSpeaking}
+            />
+            <span className="text-[10px] text-muted-foreground flex-1">
+              {!liveControlRef.current ? 'Connecting...' : isModelSpeaking ? 'Vince is speaking...' : isUserSpeaking ? 'Listening...' : 'Waiting...'}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+              onClick={handleCloseVoice}
+              aria-label="Switch to chat"
+            >
+              <X className="w-3 h-3" />
+              Chat
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Text input — hidden during voice mode */}
       {!isVoiceMode && (

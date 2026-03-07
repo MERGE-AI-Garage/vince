@@ -1144,12 +1144,52 @@ async function generateBrandPlaybook(
     steps.push('→ Card images skipped');
   }
 
+  // Step 5: Generate quick starters (Director Mode templates)
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const startersRes = await fetch(`${supabaseUrl}/functions/v1/generate-brand-starters`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+      body: JSON.stringify({ brand_id: context.brand_id }),
+    });
+    const startersData = await startersRes.json();
+    if (startersRes.ok && startersData.success && startersData.starters?.length) {
+      // Replace existing auto-generated starters
+      await supabase
+        .from('creative_studio_brand_prompts')
+        .delete()
+        .eq('brand_id', context.brand_id)
+        .eq('is_auto_generated', true);
+      await supabase.from('creative_studio_brand_prompts').insert(
+        startersData.starters.map((s: Record<string, unknown>) => ({
+          brand_id: context.brand_id,
+          name: s.name,
+          description: s.description,
+          category: s.category,
+          content_type: 'image',
+          prompt_template: s.prompt_template,
+          variable_fields: (s.variable_fields as unknown[]) ?? [],
+          camera_preset: s.camera_preset ?? null,
+          locked_parameters: {},
+          is_auto_generated: true,
+        }))
+      );
+      steps.push(`✓ ${startersData.starters.length} Director Mode starters generated`);
+    } else {
+      steps.push(`⚠ Starters: ${startersData.error || 'no starters returned'}`);
+    }
+  } catch (err: any) {
+    errors.push(`Starters: ${err.message}`);
+    steps.push(`⚠ Starters: ${err.message}`);
+  }
+
   return {
-    success: errors.length < 4,
+    success: errors.length < 5,
     steps,
     errors: errors.length > 0 ? errors : undefined,
     message: errors.length === 0
-      ? `Brand playbook complete! All 4 steps finished:\n${steps.join('\n')}\n\nThe brand is fully configured and ready for creative work.`
+      ? `Brand playbook complete! All 5 steps finished:\n${steps.join('\n')}\n\nThe brand is fully configured and ready for creative work.`
       : `Brand playbook done with ${errors.length} issue(s):\n${steps.join('\n')}`,
   };
 }
@@ -1193,7 +1233,10 @@ When a user asks to set up a new brand, you need TWO things: the brand name and 
 1. If the user gives you a brand name WITHOUT a website URL, infer it for well-known brands (e.g., "Google" → "google.com", "Nike" → "nike.com"). If you can't infer it, ask for the website URL — it's required.
 2. Call create_brand with both the name and website_url. Do NOT call it without a website URL.
 3. Website analysis is triggered AUTOMATICALLY after brand creation — you do NOT need to call analyze_brand_website yourself. The system chains it for you. Tell the user: "I've created the brand and kicked off the website analysis — it takes about 30 seconds to extract colors, fonts, and visual identity."
-4. If they provide documents (PDFs, brand guidelines), use import_brand_document for each one.
+4. If they provide documents (PDFs, brand guidelines, style guides), call import_brand_document for each one.
+   After ALL documents are imported, ALWAYS call synthesize_brand_profile to merge the intelligence,
+   then call generate_brand_playbook to generate directives, generation prompt, starters, and cards.
+   Tell the user: "I've imported your documents and rebuilt the brand intelligence — running the full playbook now."
 5. After DNA is loaded and profile looks solid, offer to generate the brand visuals: "Want me to build out the brand visuals? I'll generate the header image and card icons using your brand colors."
 6. When the user confirms (or says "build it out", "finish the brand", "generate the brand images"), call generate_brand_header and generate_brand_cards to complete the brand setup.
 
