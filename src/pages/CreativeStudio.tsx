@@ -55,6 +55,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { checkPromptCompliance } from '@/utils/brandComplianceCheck';
 import { useBrandReferenceSuggestions } from '@/hooks/useBrandReferenceSuggestions';
+import { ShowcaseModal } from '@/components/onboarding/ShowcaseModal';
+import { useBrandLensTour } from '@/components/onboarding/BrandLensTour';
+import { useDemoExperience } from '@/hooks/useDemoExperience';
 
 // Delimiter for camera preset text injected into the prompt textarea
 const CAMERA_MARKER = '\n\n[Camera] ';
@@ -184,6 +187,32 @@ export default function CreativeStudio() {
     imageParams.prompt,
     activeCollectionNames,
   );
+
+  // ── Demo experience (showcase modal + spotlight tour) ────────────────────────
+
+  const {
+    showcaseOpen, openShowcase, closeShowcase,
+    hasSeenShowcase, hasSeenTour, markTourSeen,
+  } = useDemoExperience();
+
+  const { startTour } = useBrandLensTour({ onComplete: markTourSeen });
+
+  // Auto-start showcase on first visit
+  useEffect(() => {
+    if (!hasSeenShowcase()) {
+      const t = setTimeout(openShowcase, 1800);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleShowcaseClose = useCallback(() => {
+    closeShowcase();
+  }, [closeShowcase]);
+
+  const handleOpenShowcase = useCallback(() => {
+    openShowcase();
+  }, [openShowcase]);
 
   const handleBrandChange = useCallback((brandId: string | null) => {
     if (brandId !== selectedBrandId) {
@@ -487,12 +516,12 @@ export default function CreativeStudio() {
     setCurrentError(null);
 
     let elapsedSeconds = 0;
-    if (generationType === 'video') {
-      elapsedTimerRef.current = setInterval(() => {
-        elapsedSeconds++;
-        setCurrentProgress(0, elapsedSeconds);
-      }, 1000);
-    }
+    const estimatedTime = generationType.includes('video') ? 60 : 15;
+    elapsedTimerRef.current = setInterval(() => {
+      elapsedSeconds++;
+      const pct = Math.min(Math.round((elapsedSeconds / estimatedTime) * 100), 95);
+      setCurrentProgress(pct, elapsedSeconds);
+    }, 1000);
 
     const startTime = Date.now();
 
@@ -998,6 +1027,7 @@ export default function CreativeStudio() {
         onOpenBrandStandards={() => setStandardsDialogOpen(true)}
         onOpenGuidelines={() => setGuidelinesOpen(true)}
         onOpenMediaLibrary={() => setShowLibrary(true)}
+        onStartTour={startTour}
         studioTheme={theme as 'light' | 'dark'}
         onToggleTheme={handleToggleStudioTheme}
         statusText={status.text}
@@ -1070,6 +1100,7 @@ export default function CreativeStudio() {
                   onOpenBrandAgent={handleToggleVince}
                   onOpenGuidelines={() => setGuidelinesOpen(true)}
                   onQuickPromptClick={setPrompt}
+                  onDemoClick={handleOpenShowcase}
                 />
               </div>
 
@@ -1251,6 +1282,7 @@ export default function CreativeStudio() {
                         setSelectedBrandId(newBrandId);
                         toast.success('Brand created — switched to new brand');
                       }}
+                      onSetImage={setCurrentImage}
                     />
                   </div>
                 </div>
@@ -1434,6 +1466,13 @@ export default function CreativeStudio() {
           onOpenChange={setGuidelinesOpen}
         />
       )}
+
+      {/* Demo showcase modal — onStartTour opens Vince voice mode */}
+      <ShowcaseModal
+        open={showcaseOpen}
+        onClose={handleShowcaseClose}
+        onStartTour={handleToggleVince}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { GoogleGenAI } from 'https://esm.sh/@google/genai@1.0.0';
+import { registerMediaImage } from '../_shared/media-registration.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -94,6 +95,14 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) throw new Error('Missing authorization header');
 
+    // Extract user_id from JWT for generation records
+    let userId: string | null = null;
+    try {
+      const token = authHeader.replace('Bearer ', '');
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.sub || null;
+    } catch { /* non-critical */ }
+
     const { brand_id, brief, deliverables, system_context } = await req.json() as PackageRequest;
     if (!brand_id || !brief) throw new Error('brand_id and brief are required');
 
@@ -119,8 +128,15 @@ serve(async (req) => {
       ? `${system_context}\n\n${brandContext}`
       : `You are Vince, an expert AI creative director for Brand Lens. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.`;
 
+    // Default to 3 standard deliverables when none are specified
+    const effectiveDeliverables = (deliverables && deliverables.length > 0) ? deliverables : [
+      { deliverable_type: 'display_banner' as DeliverableType },
+      { deliverable_type: 'linkedin_post' as DeliverableType },
+      { deliverable_type: 'product_shot_with_text' as DeliverableType },
+    ];
+
     // Resolve deliverable specs — apply templates when deliverable_type is set
-    const resolvedDeliverables = (deliverables || []).map(d => {
+    const resolvedDeliverables = effectiveDeliverables.map(d => {
       if (d.deliverable_type && DELIVERABLE_TEMPLATES[d.deliverable_type]) {
         const tmpl = DELIVERABLE_TEMPLATES[d.deliverable_type];
         return {
@@ -197,6 +213,24 @@ serve(async (req) => {
             // Replace base64 with URL in the part to reduce response size
             parts[parts.length - 1].image_base64 = undefined;
             parts[parts.length - 1].content = publicUrl.publicUrl;
+
+            // Register in media library (non-blocking)
+            registerMediaImage({
+              supabase,
+              url: publicUrl.publicUrl,
+              storagePath: filename,
+              filename: `${brand.slug}-package-${Date.now()}.${ext}`,
+              mimeType,
+              sizeBytes: buffer.length,
+              folderPath: '/AI Generated/Brand Cards',
+              title: `${brand.name} Creative Package`,
+              autoTags: ['creative-studio', 'ai-generated', 'creative-package'],
+              customMetadata: {
+                generation_type: 'creative_package',
+                brand_id,
+                brand_name: brand.name,
+              },
+            }).catch(err => console.error('[generate-creative-package] Media registration failed:', err));
           }
         } catch (uploadErr) {
           console.error('Image upload failed:', uploadErr);
@@ -205,10 +239,37 @@ serve(async (req) => {
       }
     }
 
+    const deliverableNames = resolvedDeliverables.length > 0
+      ? resolvedDeliverables.map((d, i) => d.name || `Deliverable ${i + 1}`)
+      : [];
+
+    const brandAlignment = computeBrandAlignment(brand, profile);
+
+    // Record generation in history (non-blocking)
+    if (userId && imageUrls.length > 0) {
+      supabase.from('creative_studio_generations').insert({
+        user_id: userId,
+        brand_id: brand_id || null,
+        generation_type: 'creative_package',
+        model_used: 'gemini-3.1-flash-image-preview',
+        prompt_text: brief,
+        status: 'completed',
+        output_urls: imageUrls,
+        completed_at: new Date().toISOString(),
+        parameters: { deliverable_count: imageUrls.length },
+        metadata: { package: true },
+      }).then(({ error }) => {
+        if (error) console.error('[generate-creative-package] Generation record insert failed:', error.message);
+      });
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         brand_name: brand.name,
+        brief,
+        deliverable_names: deliverableNames,
+        brand_alignment: brandAlignment,
         parts,
         image_urls: imageUrls,
         latency_ms: latencyMs,
@@ -229,6 +290,54 @@ serve(async (req) => {
     );
   }
 });
+
+interface BrandAlignment {
+  score: number;
+  dimensions: {
+    visual_identity: boolean;
+    photography: boolean;
+    color_system: boolean;
+    brand_voice: boolean;
+  };
+}
+
+function computeBrandAlignment(
+  brand: Record<string, unknown>,
+  profile: Record<string, unknown> | null,
+): BrandAlignment {
+  const hasVisualIdentity = !!(profile?.visual_dna &&
+    typeof profile.visual_dna === 'object' &&
+    Object.keys(profile.visual_dna as object).length > 0);
+
+  const hasPhotography = !!(profile?.photography_style &&
+    typeof profile.photography_style === 'object' &&
+    Object.values(profile.photography_style as object).some(v => v));
+
+  const hasColorSystem = !!(
+    (brand.color_palette && Array.isArray(brand.color_palette) && (brand.color_palette as string[]).length > 0) ||
+    brand.primary_color
+  );
+
+  const hasVoice = !!(
+    (profile?.tone_of_voice &&
+      typeof profile.tone_of_voice === 'object' &&
+      (profile.tone_of_voice as Record<string, unknown>).personality) ||
+    brand.brand_voice
+  );
+
+  const dimensionValues = [hasVisualIdentity, hasPhotography, hasColorSystem, hasVoice];
+  const score = Math.round((dimensionValues.filter(Boolean).length / dimensionValues.length) * 100);
+
+  return {
+    score,
+    dimensions: {
+      visual_identity: hasVisualIdentity,
+      photography: hasPhotography,
+      color_system: hasColorSystem,
+      brand_voice: hasVoice,
+    },
+  };
+}
 
 function buildBrandContext(brand: Record<string, unknown>, profile: Record<string, unknown> | null): string {
   const lines: string[] = [

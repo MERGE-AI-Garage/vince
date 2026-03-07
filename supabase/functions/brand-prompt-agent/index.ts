@@ -253,6 +253,56 @@ const VINCE_TOOLS = [
     },
   },
   {
+    name: 'analyze_competitor_content',
+    description: 'Analyze a competitor\'s video (YouTube URL or direct video URL) to extract strategic intelligence. Use when the user shares a competitor video. Returns a competitor summary, key messages, visual style, weaknesses, and a suggested counter-brief. After presenting the analysis findings, ask the user if they want to proceed with building a counter-campaign. Do NOT automatically call generate_creative_package — wait for the user to confirm.',
+    parameters: {
+      type: 'object',
+      properties: {
+        video_url: {
+          type: 'string',
+          description: 'YouTube URL (youtube.com/watch?v=... or youtu.be/...) or direct video file URL to analyze',
+        },
+        analysis_context: {
+          type: 'string',
+          description: 'Optional context about the competitive situation (e.g., "This is Apple\'s latest iPhone ad. We want to counter with our AI features story.")',
+        },
+      },
+      required: ['video_url'],
+    },
+  },
+  {
+    name: 'generate_video',
+    description: 'Generate a brand-aligned video using Veo 3. Use when the user asks for a video, motion concept, or moving campaign asset. Defaults to Veo 3 Fast (quick turnaround, great quality). Generates a short 5-8 second video clip from a text prompt. The prompt should describe the scene, motion, mood, lighting, and brand visual direction. For brand-aligned output, incorporate the brand color palette, visual style, and photography DNA into the scene description. After the video generates, it appears in the History panel. You can optionally use image_to_video mode by specifying input_image_url if there is a current canvas image to animate.',
+    parameters: {
+      type: 'object',
+      properties: {
+        prompt: {
+          type: 'string',
+          description: 'Detailed scene description for the video. Include motion direction, lighting, mood, color palette, subject behavior, camera movement (e.g., slow push in, aerial drift, handheld energy). More detail = better results.',
+        },
+        aspect_ratio: {
+          type: 'string',
+          enum: ['16:9', '9:16', '1:1'],
+          description: 'Video format. 16:9 for hero/cinematic, 9:16 for social stories/reels, 1:1 for square feed posts. Default: 16:9.',
+        },
+        duration: {
+          type: 'number',
+          description: 'Duration in seconds. Veo 3 supports 5 or 8 seconds. Default: 5.',
+        },
+        generation_type: {
+          type: 'string',
+          enum: ['text_to_video', 'image_to_video'],
+          description: 'text_to_video (default) generates from the prompt alone. image_to_video animates an existing image — only use this when the user explicitly wants to animate a specific image.',
+        },
+        input_image_url: {
+          type: 'string',
+          description: 'URL of an image to animate. Only used when generation_type is image_to_video.',
+        },
+      },
+      required: ['prompt'],
+    },
+  },
+  {
     name: 'create_brand',
     description: 'Create a new brand in the system. Requires a name and website URL. For well-known brands, infer the URL (e.g., "Google" → "google.com"). Call this immediately after the user provides a brand name — do not ask for additional details beyond the website.',
     parameters: {
@@ -378,6 +428,10 @@ async function executeTool(
       return await synthesizeBrandProfile(context, supabase);
     case 'generate_brand_playbook':
       return await generateBrandPlaybook(parameters, context, supabase);
+    case 'analyze_competitor_content':
+      return await analyzeCompetitorContent(parameters, context, supabase);
+    case 'generate_video':
+      return await generateVideo(parameters, context, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
@@ -685,7 +739,108 @@ async function generateCreativePackage(
     image_urls: result.image_urls,
     latency_ms: result.latency_ms,
     model: result.model,
+    brief: result.brief,
+    deliverable_names: result.deliverable_names,
+    brand_alignment: result.brand_alignment,
     message: `Generated creative package with ${result.image_urls?.length || 0} images in ${(result.latency_ms / 1000).toFixed(1)}s`,
+  };
+}
+
+// ── Competitive Intelligence ─────────────────────────────────────────────────
+
+async function analyzeCompetitorContent(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/analyze-competitor-video`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      video_url: params.video_url as string,
+      brand_id: context.brand_id,
+      analysis_context: (params.analysis_context as string) || undefined,
+    }),
+  });
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Competitor video analysis failed');
+  }
+
+  const { analysis } = result;
+
+  return {
+    success: true,
+    video_url: result.video_url,
+    competitor_summary: analysis.competitor_summary,
+    key_messages: analysis.key_messages,
+    visual_style: analysis.visual_style,
+    target_audience: analysis.target_audience,
+    emotional_hooks: analysis.emotional_hooks,
+    weaknesses: analysis.weaknesses,
+    counter_brief: analysis.counter_brief,
+    counter_deliverables: analysis.counter_deliverables,
+    latency_ms: result.latency_ms,
+    message: `Competitor analysis complete. I found ${analysis.weaknesses?.length || 0} strategic openings. Ready to build a counter-campaign when you are.`,
+  };
+}
+
+// ── Video Generation ─────────────────────────────────────────────────────────
+
+async function generateVideo(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/generate-creative-video`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      generation_type: (params.generation_type as string) || 'text_to_video',
+      prompt: params.prompt as string,
+      brand_id: context.brand_id,
+      user_id: context.user_id,
+      aspect_ratio: (params.aspect_ratio as string) || '16:9',
+      duration: (params.duration as number) || 5,
+      input_image: (params.input_image_url as string) || undefined,
+      // Default to Veo 3 Fast — no model_id means the function uses its default
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    let errorMessage = `Video generation failed (${response.status})`;
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMessage = errorJson.details || errorJson.error || errorMessage;
+    } catch { /* ignore */ }
+    throw new Error(errorMessage);
+  }
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Video generation failed');
+  }
+
+  return {
+    success: true,
+    generation_id: result.generation_id,
+    output_urls: result.output_urls,
+    generation_time_ms: result.generation_time_ms,
+    message: `Video generated successfully. ${result.output_urls?.length || 0} clip(s) ready.`,
   };
 }
 

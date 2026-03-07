@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip, X } from 'lucide-react';
+import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip, X, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, InputArea, type Message, type Attachment } from '@/components/shared-chat';
@@ -60,6 +60,14 @@ function formatToolAction(action: ToolAction): string {
       return action.success
         ? `Creative package: ${(result?.image_urls as string[])?.length || 0} images in ${(((result?.latency_ms as number) || 0) / 1000).toFixed(1)}s`
         : `Package generation failed: ${action.error}`;
+    case 'analyze_competitor_content':
+      return action.success
+        ? `Competitor analyzed — ${(result?.weaknesses as string[])?.length || 0} strategic openings found`
+        : `Competitor analysis failed: ${action.error}`;
+    case 'generate_video':
+      return action.success
+        ? `Video generated in ${(((result?.generation_time_ms as number) || 0) / 1000).toFixed(1)}s`
+        : `Video generation failed: ${action.error}`;
     case 'list_available_models':
       return action.success
         ? `Found ${(result?.count as number) || 0} available model(s)`
@@ -83,6 +91,28 @@ interface BrandAgentAppProps {
   onGenerate?: () => void;
   onClose?: () => void;
   onBrandCreated?: (brandId: string) => void;
+  onSetImage?: (imageUrl: string) => void;
+}
+
+interface BrandAlignment {
+  score: number;
+  dimensions: {
+    visual_identity: boolean;
+    photography: boolean;
+    color_system: boolean;
+    brand_voice: boolean;
+  };
+}
+
+interface CompetitorAnalysis {
+  competitor_summary: string;
+  key_messages: string[];
+  visual_style: string;
+  target_audience: string;
+  emotional_hooks: string[];
+  weaknesses: string[];
+  counter_brief: string;
+  video_url?: string;
 }
 
 interface CreativePackageResult {
@@ -91,6 +121,9 @@ interface CreativePackageResult {
   latency_ms: number;
   model: string;
   brand_name: string;
+  brief?: string;
+  deliverable_names?: string[];
+  brand_alignment?: BrandAlignment;
 }
 
 interface AgentResponse {
@@ -99,7 +132,9 @@ interface AgentResponse {
   recommended_model?: string;
   tool_actions?: ToolAction[];
   generated_images?: GeneratedImage[];
+  generated_videos?: string[];
   creative_package?: CreativePackageResult;
+  competitor_analysis?: CompetitorAnalysis;
 }
 
 export function BrandAgentApp({
@@ -111,6 +146,7 @@ export function BrandAgentApp({
   onGenerate,
   onClose,
   onBrandCreated,
+  onSetImage,
 }: BrandAgentAppProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -122,6 +158,8 @@ export function BrandAgentApp({
   const [liveApiKeyReady, setLiveApiKeyReady] = useState(false);
   const [brandCtx, setBrandCtx] = useState<BrandContext | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [pendingUrl, setPendingUrl] = useState('');
+  const [activeToolName, setActiveToolName] = useState<string | null>(null);
 
   // Map message IDs to structured agent responses
   const [agentResponses, setAgentResponses] = useState<Record<string, AgentResponse>>({});
@@ -344,12 +382,36 @@ export function BrandAgentApp({
             latency_ms: (r.latency_ms as number) || 0,
             model: (r.model as string) || 'gemini-3.1-flash-image-preview',
             brand_name: brandName,
+            brief: (r.brief as string) || undefined,
+            deliverable_names: (r.deliverable_names as string[]) || [],
+            brand_alignment: (r.brand_alignment as BrandAlignment) || undefined,
+          };
+        }
+      }
+
+      // Extract competitor analysis from tool actions if present
+      let competitorAnalysis: CompetitorAnalysis | undefined;
+      const competitorAction = response.tool_actions?.find(
+        (a: ToolAction) => a.toolName === 'analyze_competitor_content' && a.success
+      );
+      if (competitorAction?.result) {
+        const r = competitorAction.result as Record<string, unknown>;
+        if (r.competitor_summary) {
+          competitorAnalysis = {
+            competitor_summary: r.competitor_summary as string,
+            key_messages: (r.key_messages as string[]) || [],
+            visual_style: (r.visual_style as string) || '',
+            target_audience: (r.target_audience as string) || '',
+            emotional_hooks: (r.emotional_hooks as string[]) || [],
+            weaknesses: (r.weaknesses as string[]) || [],
+            counter_brief: (r.counter_brief as string) || '',
+            video_url: (r.video_url as string) || undefined,
           };
         }
       }
 
       // Store structured response data alongside the message
-      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length || creativePackage) {
+      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length || creativePackage || competitorAnalysis) {
         setAgentResponses(prev => ({
           ...prev,
           [agentMsgId]: {
@@ -359,6 +421,7 @@ export function BrandAgentApp({
             tool_actions: response.tool_actions,
             generated_images: response.generated_images,
             creative_package: creativePackage,
+            competitor_analysis: competitorAnalysis,
           },
         }));
       }
@@ -480,7 +543,11 @@ export function BrandAgentApp({
               }]);
             }
           },
+          onToolStart: (toolName) => {
+            setActiveToolName(toolName);
+          },
           onToolResult: (toolName, result) => {
+            setActiveToolName(null);
             if (toolName === 'generate_image' && result.output_urls) {
               const images = (result.output_urls as string[]).map(url => ({
                 url,
@@ -496,6 +563,66 @@ export function BrandAgentApp({
               setAgentResponses(prev => ({
                 ...prev,
                 [imgMsgId]: { generated_images: images },
+              }));
+            } else if (toolName === 'generate_creative_package' && result.parts && Array.isArray(result.parts)) {
+              const pkgMsgId = uuidv4();
+              setMessages(prev => [...prev, {
+                id: pkgMsgId,
+                role: 'model' as const,
+                content: `Creative package ready`,
+                timestamp: new Date(),
+              }]);
+              setAgentResponses(prev => ({
+                ...prev,
+                [pkgMsgId]: {
+                  creative_package: {
+                    parts: result.parts as PackagePart[],
+                    image_urls: (result.image_urls as string[]) || [],
+                    latency_ms: (result.latency_ms as number) || 0,
+                    model: (result.model as string) || 'gemini-3.1-flash-image-preview',
+                    brand_name: brandName,
+                    brief: (result.brief as string) || undefined,
+                    deliverable_names: (result.deliverable_names as string[]) || [],
+                    brand_alignment: (result.brand_alignment as BrandAlignment) || undefined,
+                  },
+                },
+              }));
+            } else if (toolName === 'analyze_competitor_content' && result.competitor_summary) {
+              const compMsgId = uuidv4();
+              setMessages(prev => [...prev, {
+                id: compMsgId,
+                role: 'model' as const,
+                content: `Competitor analysis complete`,
+                timestamp: new Date(),
+              }]);
+              setAgentResponses(prev => ({
+                ...prev,
+                [compMsgId]: {
+                  competitor_analysis: {
+                    competitor_summary: result.competitor_summary as string,
+                    key_messages: (result.key_messages as string[]) || [],
+                    visual_style: (result.visual_style as string) || '',
+                    target_audience: (result.target_audience as string) || '',
+                    emotional_hooks: (result.emotional_hooks as string[]) || [],
+                    weaknesses: (result.weaknesses as string[]) || [],
+                    counter_brief: (result.counter_brief as string) || '',
+                    video_url: (result.video_url as string) || undefined,
+                  },
+                },
+              }));
+            } else if (toolName === 'generate_video' && result.output_urls && Array.isArray(result.output_urls) && result.output_urls.length > 0) {
+              const vidMsgId = uuidv4();
+              setMessages(prev => [...prev, {
+                id: vidMsgId,
+                role: 'model' as const,
+                content: `Video ready`,
+                timestamp: new Date(),
+              }]);
+              setAgentResponses(prev => ({
+                ...prev,
+                [vidMsgId]: {
+                  generated_videos: (result.output_urls as string[]),
+                },
               }));
             }
           },
@@ -557,6 +684,7 @@ export function BrandAgentApp({
       liveControlRef.current = null;
     }
     setIsVoiceMode(false);
+    setActiveToolName(null);
     setVoiceTranscript([]);
     addedTranscriptIdsRef.current.clear();
   };
@@ -784,6 +912,39 @@ export function BrandAgentApp({
                   </div>
                 ))}
 
+                {/* Competitor Analysis */}
+                {agentResponses[message.id].competitor_analysis && (
+                  <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded-lg space-y-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Competitive Intel</span>
+                    </div>
+                    <p className="text-xs text-foreground/80 leading-relaxed">
+                      {agentResponses[message.id].competitor_analysis!.competitor_summary}
+                    </p>
+                    {agentResponses[message.id].competitor_analysis!.weaknesses?.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Strategic Openings</p>
+                        <ul className="space-y-1">
+                          {agentResponses[message.id].competitor_analysis!.weaknesses.map((w, i) => (
+                            <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
+                              <span className="text-orange-400 mt-0.5 shrink-0">›</span>
+                              {w}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {agentResponses[message.id].competitor_analysis!.counter_brief && (
+                      <div className="pt-2 border-t border-orange-500/15">
+                        <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Counter Brief</p>
+                        <p className="text-xs text-foreground/70 leading-relaxed">
+                          {agentResponses[message.id].competitor_analysis!.counter_brief}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Creative Package (interleaved text + images) */}
                 {agentResponses[message.id].creative_package && (
                   <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
@@ -793,7 +954,49 @@ export function BrandAgentApp({
                       latencyMs={agentResponses[message.id].creative_package!.latency_ms}
                       brandName={agentResponses[message.id].creative_package!.brand_name}
                       model={agentResponses[message.id].creative_package!.model}
+                      brief={agentResponses[message.id].creative_package!.brief}
+                      deliverableNames={agentResponses[message.id].creative_package!.deliverable_names}
+                      brandAlignment={agentResponses[message.id].creative_package!.brand_alignment}
+                      onLoadToCanvas={onSetImage}
                     />
+                  </div>
+                )}
+
+                {/* Generated Videos */}
+                {agentResponses[message.id].generated_videos && agentResponses[message.id].generated_videos!.length > 0 && (
+                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg space-y-2">
+                    <p className="text-[10px] font-medium text-purple-400">Generated Video</p>
+                    {agentResponses[message.id].generated_videos!.map((url, vidIdx) => (
+                      <div key={vidIdx} className="rounded-lg overflow-hidden border border-border/50">
+                        <video
+                          src={url}
+                          controls
+                          autoPlay
+                          loop
+                          muted
+                          className="w-full h-auto"
+                          playsInline
+                        />
+                        <div className="flex items-center justify-between px-2 py-1.5 bg-muted/20">
+                          {onSetImage && (
+                            <button
+                              onClick={() => onSetImage(url)}
+                              className="text-[10px] text-purple-400 hover:text-purple-300"
+                            >
+                              Use in Canvas
+                            </button>
+                          )}
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-muted-foreground hover:text-foreground ml-auto"
+                          >
+                            Open full size
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -881,15 +1084,43 @@ export function BrandAgentApp({
 
       {/* Inline voice bar — replaces input area during voice mode */}
       {isVoiceMode && (
-        <div className="flex-shrink-0 border-t bg-muted/40 px-3 py-2.5">
+        <div className="flex-shrink-0 border-t bg-muted/40 px-3 py-2.5 space-y-2">
           {/* Live transcript — wraps up to 3 lines so Vince's response is readable */}
           {liveTranscriptText && (
-            <p className={`text-xs leading-relaxed mb-2 line-clamp-3 ${
+            <p className={`text-xs leading-relaxed line-clamp-3 ${
               isUserSpeaking ? 'text-cyan-400 italic' : 'text-foreground/90'
             }`}>
               {liveTranscriptText}
             </p>
           )}
+          {/* URL inject row — paste a video or competitor link while in voice mode */}
+          <div className="flex items-center gap-1.5">
+            <Link className="w-3 h-3 text-muted-foreground/50 shrink-0" />
+            <input
+              type="url"
+              value={pendingUrl}
+              onChange={e => setPendingUrl(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && pendingUrl.trim() && liveControlRef.current) {
+                  liveControlRef.current.sendText(`Here is the URL to analyze: ${pendingUrl.trim()}`);
+                  setPendingUrl('');
+                }
+              }}
+              placeholder="Paste a URL and press Enter..."
+              className="flex-1 h-6 text-[11px] bg-background/50 border border-border/40 rounded px-2 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-purple-500/50"
+            />
+            {pendingUrl.trim() && liveControlRef.current && (
+              <button
+                onClick={() => {
+                  liveControlRef.current!.sendText(`Here is the URL to analyze: ${pendingUrl.trim()}`);
+                  setPendingUrl('');
+                }}
+                className="h-6 px-2 text-[10px] bg-purple-600 hover:bg-purple-500 text-white rounded shrink-0"
+              >
+                Send
+              </button>
+            )}
+          </div>
           {/* Controls row */}
           <div className="flex items-center gap-3">
             <CompactAudioIndicator
@@ -898,7 +1129,21 @@ export function BrandAgentApp({
               isUserSpeaking={isUserSpeaking}
             />
             <span className="text-[10px] text-muted-foreground flex-1">
-              {!liveControlRef.current ? 'Connecting...' : isModelSpeaking ? 'Vince is speaking...' : isUserSpeaking ? 'Listening...' : 'Waiting...'}
+              {!liveControlRef.current
+                ? 'Connecting...'
+                : activeToolName === 'analyze_competitor_content'
+                ? '⏳ Analyzing competitor video...'
+                : activeToolName === 'generate_creative_package'
+                ? '⏳ Generating creative package...'
+                : activeToolName === 'generate_video'
+                ? '⏳ Rendering video (1-3 min)...'
+                : activeToolName
+                ? `⏳ Working...`
+                : isModelSpeaking
+                ? 'Vince is speaking...'
+                : isUserSpeaking
+                ? 'Listening...'
+                : 'Waiting...'}
             </span>
             <Button
               variant="ghost"

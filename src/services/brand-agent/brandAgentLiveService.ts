@@ -36,6 +36,7 @@ export interface LiveSessionCallbacks {
   onError: (error: Error) => void;
   onVolumeUpdate: (volume: number) => void;
   onTranscriptUpdate: (item: TranscriptItem) => void;
+  onToolStart?: (toolName: string) => void;
   onToolResult?: (toolName: string, result: Record<string, unknown>) => void;
 }
 
@@ -324,11 +325,15 @@ CRITICAL STARTUP PROTOCOL:
 4. Do NOT wait for the user to say "Hello" or anything else first.
 
 TOOLS:
-You have access to tools including generate_image and check_generation_quota.
+You have access to tools including generate_image, generate_video, check_generation_quota, generate_creative_package, and analyze_competitor_content.
 When the user asks you to generate an image, call the generate_image tool with a detailed prompt.
+When the user asks for a video, motion concept, or moving asset, call generate_video. Default to 16:9, 5 seconds. Build the prompt from the brand's visual DNA: colors, photography style, motion direction, mood, lighting. Video takes 1-3 minutes — tell the user it's rendering.
 Check quota with check_generation_quota before generating.
+When the user asks for a campaign, multiple deliverables, or a creative package, call generate_creative_package. ALWAYS specify 3 deliverables: a display_banner (16:9 hero), a linkedin_post (4:3), and a product_shot_with_text (1:1 Instagram-ready). Add more if the user requests specific formats.
+When the user shares a competitor video URL (YouTube or other), call analyze_competitor_content with that URL. Present the findings conversationally, then ASK the user if they want to proceed with a counter-campaign. Do NOT automatically call generate_creative_package — wait for confirmation. When they confirm, call generate_creative_package with the counter_brief and the 3 standard deliverables.
 The system handles execution — you will receive the result and can describe it to the user.
-NEVER narrate or claim you are generating an image without actually calling the generate_image tool.
+NEVER narrate or claim you are generating without actually calling the tool.
+NEVER mention tool names to the user. Never say "there is a technical issue with a tool." If a tool fails, simply say you ran into a problem and offer to try a different approach.
 
 REFERENCE IMAGES:
 When the user uploads an image, it is automatically stored as a reference for image generation.
@@ -341,7 +346,9 @@ BEHAVIORAL RULES:
 3. Use photography and brand terminology naturally
 4. Reference brand-specific styling details when you know them
 5. When describing shots, include camera settings (aperture, focal length, lighting)
-6. Flag brand compliance concerns proactively`);
+6. Flag brand compliance concerns proactively
+7. Do NOT mention available tools or capabilities in your greeting. Do NOT list features proactively. Greet the user and wait for their direction.
+8. Never reference previous sessions or prior technical issues. Each session starts fresh.`);
 
   return sections.join('\n');
 }
@@ -601,6 +608,7 @@ export const connectVinceLiveSession = async (
                   }));
                   console.log(`[Vince Live] Injected ${sessionReferenceImages.length} reference image(s) into generate_image`);
                 }
+                callbacks.onToolStart?.(fc.name || '');
                 const result = await executeRemoteTool(
                   fc.name || '',
                   toolParams,
