@@ -405,7 +405,7 @@ export const connectVinceLiveSession = async (
 
     // Load brand context for voice system instruction
     let brandCtx: BrandContext | null = null;
-    const activeBrandId = brandId || settings.default_brand_id;
+    let activeBrandId = brandId || settings.default_brand_id;
     if (activeBrandId) {
       brandCtx = await fetchBrandContext(activeBrandId);
     }
@@ -607,6 +607,23 @@ export const connectVinceLiveSession = async (
                   activeBrandId || null,
                   userContext?.id
                 );
+
+                // After create_brand, update activeBrandId and trigger website analysis from client
+                if (fc.name === 'create_brand' && result?.brand_id) {
+                  activeBrandId = result.brand_id as string;
+                  const websiteUrl = result.website_url as string | undefined;
+                  console.log(`[Vince Live] Brand created, activeBrandId updated to: ${activeBrandId}`);
+                  if (websiteUrl) {
+                    console.log(`[Vince Live] Triggering website analysis for ${websiteUrl}`);
+                    supabase.functions.invoke('analyze-brand-website', {
+                      body: { brand_id: activeBrandId, url: websiteUrl },
+                    }).then(({ error }) => {
+                      if (error) console.error(`[Vince Live] Website analysis failed:`, error.message);
+                      else console.log(`[Vince Live] Website analysis completed for ${websiteUrl}`);
+                    });
+                  }
+                }
+
                 functionResponses.push({
                   id: fc.id || '',
                   name: fc.name || '',

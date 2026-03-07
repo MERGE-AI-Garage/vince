@@ -22,7 +22,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'fraunces': ['Fraunces', 'serif'],
+				'fraunces': ['Inter', 'system-ui', 'sans-serif'],
 				'epilogue': ['Epilogue', 'sans-serif'],
 				'product-sans': ['Product Sans', 'system-ui', 'sans-serif'],
 			},

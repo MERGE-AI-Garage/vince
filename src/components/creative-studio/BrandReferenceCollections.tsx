@@ -37,6 +37,8 @@ interface BrandReferenceCollectionsProps {
   brandSlug: string;
 }
 
+const PILL_BTN = 'rounded-full border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50 transition-all duration-150';
+
 const TYPE_OPTIONS: { value: ReferenceType; label: string; icon: typeof Package; description: string }[] = [
   { value: 'product', label: 'Product', icon: Package, description: 'Physical products, packaging, objects' },
   { value: 'character', label: 'Character', icon: User, description: 'People, mascots — maintains likeness across scenes' },
@@ -214,7 +216,7 @@ export function BrandReferenceCollections({ brandId, brandSlug }: BrandReference
           </p>
         </div>
         {!creating && (
-          <Button variant="outline" size="sm" onClick={() => setCreating(true)}>
+          <Button variant="outline" size="sm" className={PILL_BTN} onClick={() => setCreating(true)}>
             <Plus className="h-3 w-3 mr-1" />
             Add Collection
           </Button>

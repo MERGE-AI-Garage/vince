@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PromptTemplatesArt } from './SectionHeaderArt';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -57,6 +56,8 @@ const CATEGORIES = [
   { value: 'editorial', label: 'Editorial' },
   { value: 'cinematography', label: 'Cinematography' },
 ];
+
+const PILL_BTN = 'rounded-full border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50 transition-all duration-150';
 
 const STARTER_PRESETS: Array<{
   name: string;
@@ -218,8 +219,7 @@ export function PromptTemplateAdmin({ brandId }: PromptTemplateAdminProps) {
   };
 
   return (
-    <Card className="relative overflow-hidden">
-      <PromptTemplatesArt />
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -236,6 +236,7 @@ export function PromptTemplateAdmin({ brandId }: PromptTemplateAdminProps) {
               <Button
                 variant="outline"
                 size="sm"
+                className={PILL_BTN}
                 onClick={handleSeedStarters}
                 disabled={createMutation.isPending}
               >
@@ -246,6 +247,7 @@ export function PromptTemplateAdmin({ brandId }: PromptTemplateAdminProps) {
             <Button
               variant="outline"
               size="sm"
+              className={PILL_BTN}
               onClick={handleGenerateStarters}
               disabled={generateMutation.isPending}
             >
@@ -261,7 +263,7 @@ export function PromptTemplateAdmin({ brandId }: PromptTemplateAdminProps) {
                 </>
               )}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleCreate}>
+            <Button variant="outline" size="sm" className={PILL_BTN} onClick={handleCreate}>
               <Plus className="h-3 w-3 mr-1" />
               Add Template
             </Button>

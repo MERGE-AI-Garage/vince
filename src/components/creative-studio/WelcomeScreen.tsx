@@ -310,10 +310,10 @@ function SystemWelcome({
             <div className="absolute bottom-0 inset-x-0 px-6 pb-4 pt-8 bg-gradient-to-t from-black/80 to-transparent">
               <div className="flex items-end justify-between">
                 <div>
-                  <h2 className="font-fraunces text-xl font-semibold text-white tracking-tight">
-                    Creative Studio
+                  <h2 className="font-fraunces text-2xl font-semibold text-white tracking-tight">
+                    Brand Lens
                   </h2>
-                  <p className="font-epilogue text-[11px] text-white/50 mt-0.5">
+                  <p className="font-epilogue text-xs text-white/50 mt-1">
                     Image, video, and editing across eight Google models
                     <br />
                     All brand-aware, all in one place
@@ -337,19 +337,23 @@ function SystemWelcome({
                   <motion.div
                     variants={itemVariants}
                     className={cn(
-                      'group/cap flex flex-col p-4 rounded-xl cursor-default',
+                      'group/cap flex flex-col rounded-xl cursor-default overflow-hidden',
                       GLASS, GLASS_HOVER,
                     )}
                   >
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover/cap:scale-110 overflow-hidden bg-[#00856C]/15 text-[#00D26A]">
-                      {welcomeImages?.[cap.key] ? (
-                        <img src={welcomeImages[cap.key]} alt="" className="w-full h-full object-cover" />
-                      ) : (
+                    {welcomeImages?.[cap.key] ? (
+                      <div className="w-full h-32 overflow-hidden">
+                        <img src={welcomeImages[cap.key]} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover/cap:scale-105" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mt-4 mx-4 mb-0 bg-[#00856C]/15 text-[#00D26A]">
                         <cap.icon className="w-5 h-5" />
-                      )}
+                      </div>
+                    )}
+                    <div className="p-4 pt-3">
+                      <h3 className="font-epilogue text-xs font-semibold text-white/90 mb-1">{cap.title}</h3>
+                      <p className="font-epilogue text-[10px] text-white/40 leading-relaxed">{cap.desc}</p>
                     </div>
-                    <h3 className="font-epilogue text-xs font-semibold text-white/90 mb-1">{cap.title}</h3>
-                    <p className="font-epilogue text-[10px] text-white/40 leading-relaxed">{cap.desc}</p>
                   </motion.div>
                 </HoverCardTrigger>
                 <HoverCardContent
@@ -644,22 +648,16 @@ function BrandWelcome({
               className="w-2 shrink-0"
               style={{ background: `linear-gradient(to bottom, ${brand.primary_color}, ${brand.primary_color}50)` }}
             />
-            <div className="flex-1 p-5 space-y-3">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center shrink-0 group-hover/bd:scale-110 transition-transform"
-                  style={{ background: `${brand.primary_color}30` }}
-                >
-                  {brand.card_images?.brand_dna ? (
-                    <img src={brand.card_images.brand_dna} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Dna className="w-5 h-5" style={{ color: brand.primary_color }} />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-fraunces text-base font-semibold text-white">Brand DNA</h3>
-                  <p className="font-epilogue text-[11px] text-white/50">Visual intelligence & creative direction</p>
-                </div>
+            <div className="flex-1 p-5 space-y-3 relative">
+              <div
+                className="absolute top-4 right-4 w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
+                style={{ background: `${brand.primary_color}30` }}
+              >
+                <Dna className="w-11 h-11" style={{ color: brand.primary_color }} />
+              </div>
+              <div className="pr-20">
+                <h3 className="font-fraunces text-base font-semibold text-white">Brand DNA</h3>
+                <p className="font-epilogue text-[11px] text-white/50">Visual intelligence & creative direction</p>
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
@@ -703,22 +701,16 @@ function BrandWelcome({
               className="w-2 shrink-0"
               style={{ background: `linear-gradient(to bottom, ${brand.primary_color}90, ${brand.primary_color}30)` }}
             />
-            <div className="flex-1 p-5 space-y-3">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-11 h-11 rounded-xl overflow-hidden flex items-center justify-center shrink-0 group-hover/gl:scale-110 transition-transform"
-                  style={{ background: `${brand.primary_color}30` }}
-                >
-                  {brand.card_images?.ai_guidelines ? (
-                    <img src={brand.card_images.ai_guidelines} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <Shield className="w-5 h-5" style={{ color: brand.primary_color }} />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-fraunces text-base font-semibold text-white">AI Guidelines</h3>
-                  <p className="font-epilogue text-[11px] text-white/50">Tool compliance & governance</p>
-                </div>
+            <div className="flex-1 p-5 space-y-3 relative">
+              <div
+                className="absolute top-4 right-4 w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
+                style={{ background: `${brand.primary_color}30` }}
+              >
+                <Shield className="w-11 h-11" style={{ color: brand.primary_color }} />
+              </div>
+              <div className="pr-20">
+                <h3 className="font-fraunces text-base font-semibold text-white">AI Guidelines</h3>
+                <p className="font-epilogue text-[11px] text-white/50">Tool compliance & governance</p>
               </div>
               {toolApprovals.length > 0 ? (
                 <div className="space-y-1.5">

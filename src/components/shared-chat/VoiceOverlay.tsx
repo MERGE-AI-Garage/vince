@@ -111,14 +111,14 @@ export const VoiceOverlay: React.FC<VoiceOverlayProps> = ({
               <span
                 key={i}
                 className="text-accent font-bold drop-shadow-[0_0_8px_hsl(var(--accent)/0.4)] font-fraunces"
-                style={{ fontFamily: "'Fraunces', serif" }}
+                style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
               >
                 {part}
               </span>
             );
           }
           return (
-            <span key={i} className="font-fraunces" style={{ fontFamily: "'Fraunces', serif" }}>
+            <span key={i} className="font-fraunces" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
               {part}
             </span>
           );

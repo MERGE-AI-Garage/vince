@@ -68,7 +68,7 @@ const BrandCard = memo(({
             <img
               src={brand.logo_url}
               alt={brand.name}
-              className="relative z-10 max-w-[200px] max-h-20 object-contain drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)] brightness-0 invert"
+              className="relative z-10 max-w-[200px] max-h-20 object-contain drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]"
             />
           ) : (
             <span className="relative z-10 text-3xl font-bold text-white drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)] font-serif tracking-tight">

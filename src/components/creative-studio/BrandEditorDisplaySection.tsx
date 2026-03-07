@@ -13,6 +13,7 @@ import { BRAND_CATEGORIES } from '@/types/creative-studio';
 import type { CreativeStudioBrand, QuickPrompt, CreateBrandInput } from '@/types/creative-studio';
 import type { BrandFormProps } from './BrandEditorDialog';
 import { BrandCardImagesSection } from './BrandCardImagesSection';
+import { BrandLogoLibrary } from './BrandLogoLibrary';
 
 interface Props extends BrandFormProps {
   brand: CreativeStudioBrand | null;
@@ -142,6 +143,11 @@ export function BrandEditorDisplaySection({ form, updateField, brand, onSave }: 
             await onSave(data as Partial<CreateBrandInput>);
           }}
         />
+      )}
+
+      {/* Logo Variants */}
+      {brand && (
+        <BrandLogoLibrary brandId={brand.id} brandSlug={brand.slug} />
       )}
 
       {/* Quick Prompts */}
