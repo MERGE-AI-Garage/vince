@@ -10,9 +10,16 @@
 
 **Fix:** Each connection attempt now gets a numeric token. `handleCloseVoice` sets the token to `-1` before disconnecting. When `connectVinceLiveSession` resolves, the token mismatch causes the session to self-abort (`control.disconnect()` called immediately). No ghost sessions.
 
-**Voice-first startup:** Vince now opens in voice mode automatically. When the Gemini API key is fetched and ready, a one-time `useEffect` fires `handleStartVoice()`. No manual mic click required.
+**Voice-first startup:** Not implemented — browser `AudioContext` requires a direct user gesture to resume. An auto-start `useEffect` fires outside the gesture window, which means the WebSocket connects (transcripts work) but audio playback stays silenced. Voice must be started by clicking the mic button.
 
-**Button label:** The exit button now reads "Chat" with an X icon instead of just an X. More obvious what it does.
+**Compact inline voice bar:** Replaced the full-screen `VoiceOverlay` with an inline bar at the bottom of the chat panel — matches the AI Garage creative studio pattern. Shows:
+- Live transcript (up to 3 lines, cyan italic for user, white for Vince)
+- URL input field — paste a competitor or video URL and press Enter to send it to the live session
+- `CompactAudioIndicator` (5-bar animated waveform, emerald=model, cyan=user)
+- Status text — shows active tool name when Vince is working (`analyze_competitor_content`, `generate_creative_package`, `generate_video`)
+- "Chat" exit button with X icon
+
+**File upload in voice mode:** Paperclip button visible during voice mode. Files are routed to `liveControlRef.current.sendFile()` instead of the chat message pipeline.
 
 ---
 
@@ -54,21 +61,24 @@ Trigger phrases: "get this brand ready", "prepare the full playbook", "set up br
 | `generate_brand_header` | Generate a header image for the brand |
 | `generate_brand_cards` | Generate brand card images (welcome screen) |
 | `generate_brand_guardrails` | Generate focused or general governance directives |
-| `synthesize_brand_profile` | **NEW** — merge all intelligence into unified Brand DNA |
-| `generate_brand_playbook` | **NEW** — full 4-step brand preparation sequence |
+| `synthesize_brand_profile` | Merge all intelligence into unified Brand DNA |
+| `generate_brand_playbook` | Full 4-step brand preparation sequence |
+| `analyze_competitor_content` | Fetch + analyze a competitor video/ad URL; returns strategic openings + counter brief |
+| `generate_video` | Queue a Veo video generation; fire-and-forget, appears in History when ready |
 
 ---
 
 ## Demo Strategy
 
 ### Voice-First Flow (Recommended for Hackathon Demo)
-1. Open Vince — voice starts automatically, Vince greets by name
+1. Open Vince → click mic button → Vince greets by name
 2. "Hey Vince, let's build out the [brand] profile. Synthesize the playbook."
    → Vince calls `generate_brand_playbook`, reports each step as it completes
 3. "Great. Now create me a LinkedIn post for their Q2 campaign launch."
    → Vince calls `generate_creative_package` with `deliverable_type: linkedin_post`
    → Interleaved text + 4:3 image returns, showing Gemini rendering headline INTO the image
-4. Show the brand governance enforcement: attempt off-brand request → Vince refuses
+4. "Analyze this competitor ad" → paste URL into the URL field in the voice bar → Vince calls `analyze_competitor_content` → Competitive Intel card appears in chat with strategic openings + counter brief
+5. Show brand governance enforcement: attempt off-brand request → Vince refuses
 
 ### Document Ingestion (Voice)
 File upload works in voice mode via the paperclip button in the Vince header. The file is sent through `liveControlRef.current.sendFile()`, which streams it to the Gemini Live session. Vince can then call `import_brand_document` with the file data.
@@ -100,8 +110,9 @@ Tools Vince is currently missing that would strengthen the demo:
 ---
 
 ## Hackathon Submission Critical Path
-1. [ ] Deploy brand-prompt-agent with new tools
+1. [x] Deploy brand-prompt-agent with new tools
 2. [ ] E2E test: voice → `generate_brand_playbook` → `generate_creative_package`
 3. [ ] Verify interleaved output renders in chat (text + image alternating)
-4. [ ] Record demo video
-5. [ ] DevPost writeup
+4. [ ] Test competitor analysis flow: paste URL in voice bar → Competitive Intel card
+5. [ ] Record demo video
+6. [ ] DevPost writeup
