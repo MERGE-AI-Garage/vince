@@ -72,6 +72,30 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 - [x] Directive cards show focus area badge alongside active/review status
 - [x] `DirectiveFocusArea` + `DIRECTIVE_FOCUS_AREAS` exported from `creative-studio.ts`
 
+### Voice Mode — Compact Inline Bar + Exit Fix (Mar 7)
+- [x] Ghost session bug fixed: connection token pattern prevents pending connections from activating after user exits
+- [x] Full-screen `VoiceOverlay` replaced with compact inline bar (matches AI Garage creative studio pattern)
+- [x] Live transcript up to 3 lines, URL input field, `CompactAudioIndicator`, active tool status, Chat exit button
+- [x] File upload during voice mode: paperclip routes to `sendFile()` on the live session
+- [x] Doc: `2026-03-07-vince-playbook-voice-fixes.md`
+
+### Brand Playbook Tools (Mar 7)
+- [x] `synthesize_brand_profile` — merges all raw intelligence into unified Brand DNA
+- [x] `generate_brand_playbook` — 4-step chained sequence: synthesize → all 6 guardrail sets → generation prompt → brand cards
+- [x] `brand-prompt-agent` deployed with new tools
+- [x] Doc: `2026-03-07-vince-playbook-voice-fixes.md`
+
+### Competitive Intelligence (Mar 7)
+- [x] `analyze_competitor_content` — analyzes competitor video URL, returns strategic openings + counter-brief
+- [x] Competitive Intel card (orange) in chat thread; voice mode URL injection flow
+- [x] Vince pauses after analysis and asks before building counter-campaign
+- [x] Doc: `2026-03-07-competitor-intelligence.md`
+
+### Video Generation — Veo 3 (Mar 7)
+- [x] `generate_video` — fire-and-forget Veo 3 Fast/Quality, parameters: prompt, aspect ratio, duration, model, reference image
+- [x] Elapsed-time rendering indicator in chat; real-time completion via `useRealtimeGenerations`
+- [x] Doc: `2026-03-07-video-generation.md`
+
 ---
 
 ## Not Done / Not Tested
