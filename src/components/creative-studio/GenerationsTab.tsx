@@ -956,14 +956,14 @@ function GenerationDetailDialog({
                   <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
                   <h3 className="text-sm font-medium">Parameters</h3>
                 </div>
-                <div className="bg-muted/50 border rounded-lg p-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-xs">
+                <div className="bg-muted/50 border rounded-lg p-4 max-h-[200px] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
                     {Object.entries(generation.parameters as Record<string, unknown>)
                       .filter(([, val]) => val !== undefined && val !== null && val !== '')
                       .map(([key, val]) => (
-                        <div key={key} className="flex justify-between gap-2">
-                          <span className="text-muted-foreground whitespace-nowrap">{key.replace(/_/g, ' ')}</span>
-                          <span className="font-medium truncate font-mono">
+                        <div key={key} className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">{key.replace(/_/g, ' ')}</span>
+                          <span className="font-medium font-mono break-all">
                             {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                           </span>
                         </div>

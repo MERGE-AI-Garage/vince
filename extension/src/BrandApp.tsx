@@ -343,21 +343,26 @@ function TabLayout() {
 
           {/* Right side: platform badge + Vince mic */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 8px 0 4px' }}>
-            {detectedPlatform && (
-              <span style={{
-                fontSize: '8px',
-                fontWeight: 700,
-                color: theme.accent,
-                background: accentAlpha(0.1),
-                padding: '3px 7px',
-                borderRadius: '10px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                whiteSpace: 'nowrap',
-              }}>
-                {detectedPlatform}
-              </span>
-            )}
+            {detectedPlatform && (() => {
+              const isGoogle = ['Gemini', 'AI Studio', 'NotebookLM'].includes(detectedPlatform);
+              const badgeColor = isGoogle ? '#4285F4' : theme.accent;
+              return (
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  color: badgeColor,
+                  background: `${badgeColor}18`,
+                  border: `1px solid ${badgeColor}30`,
+                  padding: '2px 7px',
+                  borderRadius: '10px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {detectedPlatform}
+                </span>
+              );
+            })()}
             {vince.isReady && (
               <button
                 onClick={() => vince.voiceState === 'idle' ? vince.startVoice() : vince.stopVoice()}

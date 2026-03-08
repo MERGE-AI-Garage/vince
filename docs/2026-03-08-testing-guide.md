@@ -70,10 +70,10 @@ Expected: All functions listed with status `active` or equivalent.
 
 ### 2.2 Navigation
 1. Confirm nav bar shows: Brand Lens (home), Creative Studio Admin, Vince Control Panel
-2. No references to "AI Garage", "MERGE", other agents, or internal platform names
+2. Confirm all nav labels, headings, and greetings are consistent with Brand Lens
 
-**Pass:** Navigation clean, brand-neutral.
-**Fail:** Any internal references visible → check agency neutralization in nav components.
+**Pass:** Navigation clean, all copy consistent with Brand Lens identity.
+**Fail:** Any unexpected product names or labels visible → check nav components and seed data.
 
 ---
 
@@ -422,7 +422,7 @@ Run these immediately before recording the demo video:
 - [ ] One complete creative package generated successfully
 - [ ] Video render confirmed (one queued, appears in History)
 - [ ] Competitor analysis tested with real URL
-- [ ] No MERGE or AI Garage references visible anywhere in UI
+- [ ] All UI copy, labels, and demo data look clean and product-ready
 
 ---
 

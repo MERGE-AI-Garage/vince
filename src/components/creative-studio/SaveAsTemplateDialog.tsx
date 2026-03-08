@@ -254,7 +254,7 @@ export function SaveAsTemplateDialog({
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Hero Sandwich Shot"
+              placeholder="e.g., Product Hero Shot"
               className="h-8 text-xs"
             />
           </div>

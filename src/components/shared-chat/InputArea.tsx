@@ -18,6 +18,7 @@ interface InputAreaProps {
   voiceButtonLabel?: string;
   placeholder?: string;
   disclaimer?: string;
+  sendButtonClassName?: string;
   inModal?: boolean;
   compact?: boolean;
 }
@@ -39,6 +40,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
   voiceButtonLabel,
   placeholder = 'Type your message...',
   disclaimer = 'AI can make mistakes. Review responses carefully.',
+  sendButtonClassName,
   inModal = false,
   compact = false,
 }) => {
@@ -323,17 +325,19 @@ export const InputArea: React.FC<InputAreaProps> = ({
               onClick={handleSend}
               disabled={isLoading || (!text.trim() && attachments.length === 0)}
               className={`flex-shrink-0 flex items-center justify-center transition-all ${
-                compact
-                  ? `h-9 w-9 rounded-lg ${
-                      isLoading
-                        ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:scale-105 active:scale-95'
-                    }`
-                  : `h-12 w-12 rounded-xl ${
-                      isLoading
-                        ? 'bg-primary text-muted/30 cursor-not-allowed'
-                        : 'bg-primary hover:bg-accent text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95'
-                    }`
+                sendButtonClassName
+                  ? `h-9 w-9 ${isLoading ? 'opacity-40 cursor-not-allowed' : `${sendButtonClassName} hover:scale-110 active:scale-95`}`
+                  : compact
+                    ? `h-9 w-9 rounded-lg ${
+                        isLoading
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:scale-105 active:scale-95'
+                      }`
+                    : `h-12 w-12 rounded-xl ${
+                        isLoading
+                          ? 'bg-primary text-muted/30 cursor-not-allowed'
+                          : 'bg-primary hover:bg-accent text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95'
+                      }`
               }`}
             >
               {isLoading ? (

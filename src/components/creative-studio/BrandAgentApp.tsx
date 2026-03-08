@@ -160,6 +160,8 @@ export function BrandAgentApp({
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [pendingUrl, setPendingUrl] = useState('');
   const [activeToolName, setActiveToolName] = useState<string | null>(null);
+  const [videoRenderingAt, setVideoRenderingAt] = useState<Date | null>(null);
+  const [elapsedVideoSeconds, setElapsedVideoSeconds] = useState(0);
 
   // Map message IDs to structured agent responses
   const [agentResponses, setAgentResponses] = useState<Record<string, AgentResponse>>({});
@@ -308,6 +310,15 @@ export function BrandAgentApp({
       if (container) container.scrollTop = container.scrollHeight;
     }
   }, [messages]);
+
+  // Tick elapsed seconds while video is rendering
+  useEffect(() => {
+    if (!videoRenderingAt) { setElapsedVideoSeconds(0); return; }
+    const interval = setInterval(() => {
+      setElapsedVideoSeconds(Math.floor((Date.now() - videoRenderingAt.getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [videoRenderingAt]);
 
   // Cleanup on unmount — disconnect voice but preserve conversation
   useEffect(() => {
@@ -610,7 +621,11 @@ export function BrandAgentApp({
                   },
                 },
               }));
+            } else if (toolName === 'generate_video' && result.queued) {
+              // Fire-and-forget video — start elapsed timer
+              setVideoRenderingAt(new Date());
             } else if (toolName === 'generate_video' && result.output_urls && Array.isArray(result.output_urls) && result.output_urls.length > 0) {
+              setVideoRenderingAt(null);
               const vidMsgId = uuidv4();
               setMessages(prev => [...prev, {
                 id: vidMsgId,
@@ -810,6 +825,14 @@ export function BrandAgentApp({
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-1 scroll-smooth">
         {messages.map((message, idx) => (
           <React.Fragment key={message.id}>
+            {message.content === 'Voice session ended.' ? (
+              <div className="flex items-center justify-center py-2 my-1">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/40 bg-muted/30 text-[10px] text-muted-foreground">
+                  <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+                  Voice session ended
+                </div>
+              </div>
+            ) : (
             <ChatMessage
               message={message}
               agentName="Vince"
@@ -825,6 +848,7 @@ export function BrandAgentApp({
                 }
               } : undefined}
             />
+            )}
 
             {/* Structured Response Card — prompt, camera preset, model recommendation */}
             {message.role === 'model' && agentResponses[message.id] && (
@@ -1035,6 +1059,43 @@ export function BrandAgentApp({
           </React.Fragment>
         ))}
 
+        {isVoiceMode && activeToolName && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+            <div className="flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 rounded-full px-3 py-1.5">
+              <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+              <span>
+                {activeToolName === 'generate_creative_package' ? 'Generating creative package...' :
+                 activeToolName === 'analyze_competitor_content' ? 'Analyzing competitor content...' :
+                 activeToolName === 'generate_video' ? 'Queueing video render...' :
+                 'Vince is working...'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {videoRenderingAt && (
+          <div className="flex items-center gap-2 text-xs py-2">
+            <div className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 rounded-lg px-3 py-2 w-full">
+              <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse flex-shrink-0" />
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="text-purple-300 font-medium">Video rendering</span>
+                <span className="text-muted-foreground">
+                  {elapsedVideoSeconds < 60
+                    ? `${elapsedVideoSeconds}s elapsed · appears in History when ready`
+                    : `${Math.floor(elapsedVideoSeconds / 60)}m ${elapsedVideoSeconds % 60}s elapsed · appears in History when ready`}
+                </span>
+              </div>
+              <button
+                onClick={() => setVideoRenderingAt(null)}
+                className="ml-auto text-muted-foreground hover:text-foreground flex-shrink-0"
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         {isLoading && messages.length > 0 && messages[messages.length - 1].role === 'model' && !messages[messages.length - 1].content && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
             <div className="flex items-center gap-1.5 bg-purple-500/10 rounded-full px-3 py-1.5">
@@ -1062,7 +1123,7 @@ export function BrandAgentApp({
                 key={`${promptOffset}-${idx}`}
                 variant="outline"
                 size="sm"
-                className="text-[11px] h-auto py-1 px-2 bg-background"
+                className="text-[11px] h-auto py-1 px-2.5 bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200 hover:border-purple-400/50 rounded-full"
                 onClick={() => handleSendMessage(prompt, [])}
                 disabled={isLoading}
               >
@@ -1073,7 +1134,7 @@ export function BrandAgentApp({
             <Button
               variant="ghost"
               size="sm"
-              className="h-5 text-[10px] text-muted-foreground hover:text-foreground px-1.5"
+              className="h-5 text-[10px] text-purple-400/60 hover:text-purple-300 px-1.5"
               onClick={() => setPromptOffset(prev => (prev + 3) % quickPrompts.length)}
             >
               More
@@ -1171,6 +1232,7 @@ export function BrandAgentApp({
           placeholder={`Describe your ${brandName || 'brand'} shot...`}
           disclaimer=""
           compact
+          sendButtonClassName="text-purple-400 hover:text-purple-300"
         />
       )}
     </div>

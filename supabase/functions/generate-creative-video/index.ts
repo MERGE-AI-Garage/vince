@@ -369,18 +369,23 @@ serve(async (req) => {
     const textBasedModes: VideoGenerationType[] = ['text_to_video', 'json_prompt_video', 'scene_extension'];
     const personGen = textBasedModes.includes(generation_type) ? 'allow_all' : 'allow_adult';
 
-    // Resolve duration — enforce 8s for 1080p/4k, use target_duration for extensions
+    // Resolve duration — Veo only accepts exactly 4, 6, or 8 seconds
     const effectiveDuration = target_duration || duration;
     const effectiveResolution = generation_type === 'scene_extension' ? '720p' : resolution;
-    if ((effectiveResolution === '1080p' || effectiveResolution === '4k') && effectiveDuration !== 8) {
-      log('API_CALL', 'Enforcing 8s duration for high-res output', { resolution: effectiveResolution });
+    // Snap requested duration to nearest valid Veo value
+    const validDurations = [4, 6, 8];
+    const snappedDuration = validDurations.reduce((prev, curr) =>
+      Math.abs(curr - effectiveDuration) < Math.abs(prev - effectiveDuration) ? curr : prev
+    );
+    // High-res and extensions require exactly 8s
+    const finalDuration = (effectiveResolution === '1080p' || effectiveResolution === '4k') ? 8 : snappedDuration;
+    if (snappedDuration !== effectiveDuration) {
+      log('API_CALL', 'Duration snapped to nearest valid Veo value', { requested: effectiveDuration, snapped: snappedDuration, final: finalDuration });
     }
-    const finalDuration = (effectiveResolution === '1080p' || effectiveResolution === '4k') ? 8 : effectiveDuration;
 
     // json_prompt_video only supports sampleCount = 1
     const effectiveSampleCount = generation_type === 'json_prompt_video' ? 1 : sample_count;
-    // generateAudio is only supported on the quality model, not fast
-    const audioSupported = include_audio && modelUsed === 'veo-3.1-generate-preview';
+    // Veo 3 generates audio natively — no explicit parameter needed
 
     const parameters: Record<string, unknown> = {
       aspectRatio: aspect_ratio,
@@ -390,7 +395,6 @@ serve(async (req) => {
       ...(negative_prompt ? { negativePrompt: negative_prompt } : {}),
       ...(effectiveSampleCount > 1 ? { sampleCount: effectiveSampleCount } : {}),
       ...(seed ? { seed } : {}),
-      ...(audioSupported ? { generateAudio: true } : {}),
     };
 
     // Add last frame for keyframe interpolation (goes in parameters, not instance)
@@ -400,27 +404,23 @@ serve(async (req) => {
       };
     }
 
-    // Add reference images (Veo 3.1 Quality only — fast model does not support them)
-    if (reference_images && reference_images.length > 0 &&
-        (generation_type === 'ingredients_to_video' || generation_type === 'json_prompt_video')) {
+    // Add reference images (Veo 3.1 Quality only — fast model silently skips)
+    if (reference_images && reference_images.length > 0) {
       if (modelUsed.includes('fast')) {
-        await supabase
-          .from('creative_studio_generations')
-          .update({
-            status: 'failed',
-            error_message: 'Reference images require the Veo 3.1 Quality model. Please switch from Fast to Quality and try again.',
-            generation_time_ms: Date.now() - startTime,
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', generation.id);
-        throw new Error('Reference images require the Veo 3.1 Quality model. Please switch from Fast to Quality and try again.');
+        log('API_CALL', 'Reference images skipped — not supported by fast model, use quality model');
+      } else {
+        // Reference images require 8-second videos
+        if (parameters.durationSeconds !== 8) {
+          parameters.durationSeconds = 8;
+          log('API_CALL', 'Duration forced to 8s for reference image generation');
+        }
+        parameters.referenceImages = reference_images.slice(0, 3).map((img: string) => ({
+          image: {
+            inlineData: { mimeType: 'image/png', data: stripImageDataUri(img) },
+          },
+          referenceType: 'asset',
+        }));
       }
-      parameters.referenceImages = reference_images.slice(0, 3).map((img: string) => ({
-        image: {
-          inlineData: { mimeType: 'image/png', data: stripImageDataUri(img) },
-        },
-        referenceType: 'asset',
-      }));
     }
 
     const requestBody = {

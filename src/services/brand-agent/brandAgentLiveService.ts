@@ -327,10 +327,14 @@ CRITICAL STARTUP PROTOCOL:
 TOOLS:
 You have access to tools including generate_image, generate_video, check_generation_quota, generate_creative_package, and analyze_competitor_content.
 When the user asks you to generate an image, call the generate_image tool with a detailed prompt.
-When the user asks for a video, motion concept, or moving asset, call generate_video. Default to 16:9, 5 seconds. Build the prompt from the brand's visual DNA: colors, photography style, motion direction, mood, lighting. Video takes 1-3 minutes — tell the user it's rendering.
+When the user asks for a video, motion concept, or moving asset, call generate_video. Duration must be exactly 4, 6, or 8 seconds — never 5 or 7. Default: 16:9, 8 seconds, fast model. Build the prompt from the brand's visual DNA: colors, photography style, motion direction, mood, lighting. Tell the user it's rendering and will appear in the History panel in 1-3 minutes.
+- Audio is automatic on both models — always included, no parameter needed.
+- Use model: "quality" when the user wants the best cinematic output or provides reference images.
+- Use reference_image_url to pass a brand logo or product reference when the user says "use the logo" or "show our product" — quality model only.
+- aspect_ratio supports only "16:9" or "9:16" (video does not support 1:1).
 Check quota with check_generation_quota before generating.
 When the user asks for a campaign, multiple deliverables, or a creative package, call generate_creative_package. ALWAYS specify 3 deliverables: a display_banner (16:9 hero), a linkedin_post (4:3), and a product_shot_with_text (1:1 Instagram-ready). Add more if the user requests specific formats.
-When the user shares a competitor video URL (YouTube or other), call analyze_competitor_content with that URL. Present the findings conversationally, then ASK the user if they want to proceed with a counter-campaign. Do NOT automatically call generate_creative_package — wait for confirmation. When they confirm, call generate_creative_package with the counter_brief and the 3 standard deliverables.
+When the user shares a competitor video URL (YouTube or other), call analyze_competitor_content with that URL ONCE. Do NOT call analyze_competitor_content again for the same URL — use the results you already received. Present the findings conversationally, then ASK the user if they want to proceed with a counter-campaign. Do NOT automatically call generate_creative_package — wait for confirmation. When they confirm, call generate_creative_package with the counter_brief and the 3 standard deliverables.
 The system handles execution — you will receive the result and can describe it to the user.
 NEVER narrate or claim you are generating without actually calling the tool.
 NEVER mention tool names to the user. Never say "there is a technical issue with a tool." If a tool fails, simply say you ran into a problem and offer to try a different approach.
@@ -459,6 +463,13 @@ export const connectVinceLiveSession = async (
       tools.push({ googleSearch: {} });
     }
 
+    // Track processed tool call IDs to prevent duplicate execution from streaming chunks
+    const processedFunctionCallIds = new Set<string>();
+    // Track analyzed competitor URLs to prevent re-analysis within the same session
+    const analyzedCompetitorUrls = new Set<string>();
+    // Cache the last competitor analysis result for instant replay
+    let lastCompetitorResult: Record<string, unknown> | null = null;
+
     sessionPromise = ai.live.connect({
       model: settings.voice_model,
       config: {
@@ -474,7 +485,6 @@ export const connectVinceLiveSession = async (
         inputAudioTranscription: {},
         outputAudioTranscription: {},
         enableAffectiveDialog: true,
-        proactivity: { proactiveAudio: true },
         thinkingConfig: { thinkingBudget: 2048 },
         contextWindowCompression: { slidingWindow: {} },
         ...(resumeHandle ? { sessionResumption: { handle: resumeHandle } } : {}),
@@ -593,11 +603,73 @@ export const connectVinceLiveSession = async (
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if ((msg as any).toolCall?.functionCalls) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const functionCalls = (msg as any).toolCall.functionCalls as Array<{ id?: string; name?: string; args?: Record<string, unknown> }>;
+            const allFunctionCalls = (msg as any).toolCall.functionCalls as Array<{ id?: string; name?: string; args?: Record<string, unknown> }>;
+            // Deduplicate: the Live API may stream the same tool call across multiple message chunks
+            const functionCalls = allFunctionCalls.filter(fc => {
+              if (!fc.id) return true;
+              if (processedFunctionCallIds.has(fc.id)) return false;
+              processedFunctionCallIds.add(fc.id);
+              return true;
+            });
+            if (functionCalls.length === 0) return;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const functionResponses: any[] = [];
             for (const fc of functionCalls) {
               console.log(`[Vince Live] Tool call: ${fc.name}`, fc.args);
+
+              // generate_video: fire-and-forget directly to avoid session timeout risk
+              if (fc.name === 'generate_video') {
+                const videoModel = (fc.args?.model as string) || 'fast';
+                const videoModelId = videoModel === 'quality' ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
+                const videoReferenceImages: string[] = [];
+                if (fc.args?.reference_image_url) videoReferenceImages.push(fc.args.reference_image_url as string);
+                // Also include session reference images when using quality model
+                if (videoModel === 'quality' && sessionReferenceImages.length > 0) {
+                  sessionReferenceImages.slice(0, 3 - videoReferenceImages.length).forEach(img => {
+                    videoReferenceImages.push(`data:${img.mimeType};base64,${img.base64}`);
+                  });
+                }
+                supabase.functions.invoke('generate-creative-video', {
+                  body: {
+                    generation_type: (fc.args?.generation_type as string) || 'text_to_video',
+                    prompt: fc.args?.prompt,
+                    model_id: videoModelId,
+                    brand_id: activeBrandId,
+                    user_id: userContext?.id,
+                    aspect_ratio: (fc.args?.aspect_ratio as string) || '16:9',
+                    duration: (fc.args?.duration as number) || 8,
+                    resolution: (fc.args?.resolution as string) || '720p',
+                    ...(videoReferenceImages.length > 0 ? { reference_images: videoReferenceImages } : {}),
+                  }
+                }).then(({ error }) => {
+                  if (error) console.error('[Vince Live] Video generation failed:', error.message);
+                  else console.log('[Vince Live] Video generation queued');
+                });
+                const modelLabel = videoModel === 'quality' ? 'Veo 3.1 Quality' : 'Veo 3 Fast';
+                functionResponses.push({
+                  id: fc.id || '',
+                  name: 'generate_video',
+                  response: { success: true, queued: true, message: `Video is rendering — ${modelLabel}, 1-3 minutes. Check the History panel when it's ready.` },
+                });
+                callbacks.onToolResult?.('generate_video', { queued: true });
+                continue;
+              }
+
+              // analyze_competitor_content: skip re-analysis of the same URL in the same session
+              if (fc.name === 'analyze_competitor_content') {
+                const url = (fc.args?.url as string) || '';
+                if (url && analyzedCompetitorUrls.has(url) && lastCompetitorResult) {
+                  console.log('[Vince Live] Skipping duplicate competitor analysis for:', url);
+                  functionResponses.push({
+                    id: fc.id || '',
+                    name: 'analyze_competitor_content',
+                    response: lastCompetitorResult,
+                  });
+                  callbacks.onToolResult?.('analyze_competitor_content', lastCompetitorResult);
+                  continue;
+                }
+              }
+
               try {
                 // Inject stored reference images into generate_image calls
                 const toolParams = { ...(fc.args || {}) } as Record<string, unknown>;
@@ -630,6 +702,13 @@ export const connectVinceLiveSession = async (
                       else console.log(`[Vince Live] Website analysis completed for ${websiteUrl}`);
                     });
                   }
+                }
+
+                // Cache competitor analysis results to avoid re-analysis within the session
+                if (fc.name === 'analyze_competitor_content') {
+                  const url = (fc.args?.url as string) || '';
+                  if (url) analyzedCompetitorUrls.add(url);
+                  lastCompetitorResult = result;
                 }
 
                 functionResponses.push({

@@ -9,6 +9,7 @@ import {
   Settings,
   Sun,
   Moon,
+  HelpCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +37,7 @@ interface BrandShopTopBarProps {
   onOpenBrandStandards?: () => void;
   onOpenGuidelines?: () => void;
   onOpenMediaLibrary: () => void;
+  onStartTour?: () => void;
   // Theme
   studioTheme: 'light' | 'dark';
   onToggleTheme: () => void;
@@ -58,6 +60,7 @@ export function BrandShopTopBar({
   onOpenBrandStandards,
   onOpenGuidelines,
   onOpenMediaLibrary,
+  onStartTour,
   studioTheme,
   onToggleTheme,
   statusText,
@@ -174,6 +177,25 @@ export function BrandShopTopBar({
             </TooltipContent>
           </Tooltip>
 
+          {/* Tour help */}
+          {onStartTour && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={onStartTour}
+                >
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">Feature tour</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+
           {/* Vince */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -182,6 +204,7 @@ export function BrandShopTopBar({
                 size="icon"
                 className={cn('h-7 w-7', vinceActive && 'text-purple-500')}
                 onClick={onToggleVince}
+                data-tour="brand-agent-toggle"
               >
                 <Bot className="h-3.5 w-3.5" />
               </Button>

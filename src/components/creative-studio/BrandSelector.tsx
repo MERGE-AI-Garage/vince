@@ -53,7 +53,7 @@ export function BrandSelector({
   const { data: collections } = useBrandReferenceCollections(selectedBrandId ?? undefined);
 
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div className="flex items-center gap-2 min-w-0" data-tour="brand-selector">
       <Select
         value={selectedBrandId || 'none'}
         onValueChange={(value) => onSelectBrand(value === 'none' ? null : value)}
@@ -98,7 +98,7 @@ export function BrandSelector({
       {/* Brand intelligence badges with tooltips */}
       {selectedBrand && stats && (
         <TooltipProvider delayDuration={200}>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5" data-tour="brand-intel-badges">
             {stats.promptCount > 0 && (
               <Tooltip>
                 <TooltipTrigger asChild>

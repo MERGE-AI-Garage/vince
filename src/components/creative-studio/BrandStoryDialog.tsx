@@ -13,11 +13,12 @@ import {
   Target, History, Leaf, Lightbulb, Heart, Users, Star, Trophy,
   BookOpen, X, Globe, FileText, BarChart3, ChevronDown, ChevronUp,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBrandProfile, useBrandAnalyses } from '@/hooks/useCreativeStudioBrandIntelligence';
 import type { BrandVisualProfile, CreativeStudioBrand } from '@/types/creative-studio';
 import type { LucideIcon } from 'lucide-react';
 import { BrandDialogNav, type BrandDialogView } from './BrandDialogNav';
+import { supabase } from '@/integrations/supabase/client';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -195,6 +196,26 @@ export function CorporateDNADialog({ brand, open, onOpenChange, onNavigate }: Co
   const story = profile?.brand_story as BrandStory | null | undefined;
   const headerTextLight = !isLightColor(brand.primary_color);
 
+  // Curated logos from brand logo library
+  const [primaryLogo, setPrimaryLogo] = useState<string | null>(null);
+  const [badgeLogo, setBadgeLogo] = useState<string | null>(null);
+  useEffect(() => {
+    supabase
+      .from('creative_studio_brand_logos' as any)
+      .select('url, lockup, is_default')
+      .eq('brand_id', brand.id)
+      .order('is_default', { ascending: false })
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const primary = (data as any[]).find((l: any) => l.is_default) ?? data[0];
+        setPrimaryLogo((primary as any).url);
+        const badge = (data as any[]).find((l: any) => l.lockup === 'mark_only' && l.url !== (primary as any).url);
+        if (badge) setBadgeLogo((badge as any).url);
+      });
+  }, [brand.id]);
+  const logoSrc = primaryLogo ?? brand.logo_url;
+
   // Header image from source_metadata
   const headerImageUrl = (profile?.source_metadata as Record<string, unknown>)?.header_image_url as string | undefined;
 
@@ -259,13 +280,22 @@ export function CorporateDNADialog({ brand, open, onOpenChange, onNavigate }: Co
 
           <div className="relative z-10 px-6 pt-6 pb-5 flex flex-col justify-center" style={{ minHeight: '130px' }}>
             <div className="flex items-center gap-5">
-              {/* Logo */}
-              {brand.logo_url ? (
-                <img
-                  src={brand.logo_url}
-                  alt={brand.name}
-                  className="h-16 max-w-[220px] rounded-xl object-contain bg-white/95 backdrop-blur-sm shadow-lg p-2.5 shrink-0"
-                />
+              {/* Logo — primary from logo library, fallback to brand record */}
+              {logoSrc ? (
+                <div className="flex items-center gap-2 shrink-0">
+                  <img
+                    src={logoSrc}
+                    alt={brand.name}
+                    className="h-16 max-w-[220px] rounded-xl object-contain bg-white/95 backdrop-blur-sm shadow-lg p-2.5"
+                  />
+                  {badgeLogo && (
+                    <img
+                      src={badgeLogo}
+                      alt={`${brand.name} mark`}
+                      className="h-10 w-10 rounded-lg object-contain bg-white/95 backdrop-blur-sm shadow-md p-1.5"
+                    />
+                  )}
+                </div>
               ) : (
                 <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-white/20 backdrop-blur-sm shadow-lg shrink-0">
                   <span className="text-white text-2xl font-bold">{brand.name.charAt(0)}</span>
@@ -333,7 +363,7 @@ export function CorporateDNADialog({ brand, open, onOpenChange, onNavigate }: Co
 
         {/* ── Content with brand-tinted background ── */}
         <ScrollArea
-          className="max-h-[calc(88vh-160px)]"
+          className="h-[calc(88vh-130px)]"
           style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
         >
           {isLoading ? (

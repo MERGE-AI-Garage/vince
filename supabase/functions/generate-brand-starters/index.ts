@@ -14,11 +14,21 @@ interface GenerateStartersRequest {
   brand_id: string;
 }
 
+interface VariableField {
+  key: string;
+  label: string;
+  type: 'select' | 'text';
+  options?: string[];
+  default_value?: string;
+  required?: boolean;
+}
+
 interface GeneratedStarter {
   name: string;
   description: string;
   category: string;
   prompt_template: string;
+  variable_fields?: VariableField[];
   camera_preset?: {
     aperture?: number;
     focal_length?: number;
@@ -180,6 +190,13 @@ RULES:
 9. Vary the shot types: hero shots, in-situ, macro details, lifestyle, editorial, campaign concepts
 10. If the brand has sustainability/CSR themes, include at least one campaign starter for those
 11. If the brand has multiple product lines, ensure starters cover different products
+12. VARIABLE FIELDS: If the brand has a product_catalog with 2+ distinct products, create at least 2 starters
+    with a {{product}} variable. Use {{product}} literally in prompt_template where the product name goes.
+    Set variable_fields to [{key:"product", label:"Product", type:"select", options:[list of product names], required:true}].
+    Set the most common product as default_value.
+13. For campaign/lifestyle starters where tone or theme varies, you may add a {{campaign_theme}} select field
+    with options drawn from the brand's actual themes (e.g., sustainability, innovation, community).
+14. For starters WITHOUT variable dimensions, set variable_fields to [].
 
 Return a JSON array of objects with this schema:
 [
@@ -187,7 +204,17 @@ Return a JSON array of objects with this schema:
     "name": "Short Evocative Name",
     "description": "When to use this starter — one sentence",
     "category": "one of: product, lifestyle, campaign, social, hero, editorial, cinematography",
-    "prompt_template": "2-4 sentences of vivid, brand-specific creative direction for AI image generation. Reference actual products, materials, settings, and brand aesthetic.",
+    "prompt_template": "2-4 sentences of creative direction. Use {{variable_key}} syntax for user-selectable values.",
+    "variable_fields": [
+      {
+        "key": "product",
+        "label": "Product",
+        "type": "select",
+        "options": ["Product A", "Product B"],
+        "default_value": "Product A",
+        "required": true
+      }
+    ],
     "camera_preset": {
       "aperture": 2.8,
       "focal_length": 85,

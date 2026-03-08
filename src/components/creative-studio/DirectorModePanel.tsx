@@ -220,7 +220,7 @@ export function DirectorModePanel({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-tour="director-mode-panel">
       <div className="flex items-center gap-2">
         <Clapperboard className="w-4 h-4 text-primary" />
         <h3 className="text-sm font-semibold">Director Mode</h3>
@@ -291,7 +291,7 @@ export function DirectorModePanel({
                               callEnhance('full', s.prompt, s.name, s.id);
                             }
                           }}
-                          className="w-full text-left px-2 py-1.5 rounded text-[11px] hover:bg-muted/80 transition-colors flex items-start gap-1.5"
+                          className="w-full text-left px-2 py-1.5 rounded text-[11px] text-foreground hover:bg-muted/80 transition-colors flex items-start gap-1.5"
                         >
                           {hasVars ? (
                             isExpanded
@@ -417,7 +417,7 @@ export function DirectorModePanel({
               <div className="space-y-0.5">
                 <button
                   onClick={() => callEnhance('quick')}
-                  className="w-full text-left px-2 py-1.5 rounded text-[11px] hover:bg-muted/80 transition-colors flex items-start gap-1.5"
+                  className="w-full text-left px-2 py-1.5 rounded text-[11px] text-foreground hover:bg-muted/80 transition-colors flex items-start gap-1.5"
                 >
                   <Wand2 className="w-3 h-3 mt-0.5 text-primary shrink-0" />
                   <div>
@@ -427,7 +427,7 @@ export function DirectorModePanel({
                 </button>
                 <button
                   onClick={() => callEnhance('full')}
-                  className="w-full text-left px-2 py-1.5 rounded text-[11px] hover:bg-muted/80 transition-colors flex items-start gap-1.5"
+                  className="w-full text-left px-2 py-1.5 rounded text-[11px] text-foreground hover:bg-muted/80 transition-colors flex items-start gap-1.5"
                 >
                   <RefreshCw className="w-3 h-3 mt-0.5 text-primary shrink-0" />
                   <div>

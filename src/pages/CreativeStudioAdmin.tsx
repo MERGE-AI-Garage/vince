@@ -71,6 +71,7 @@ import {
   Bell,
   MessageSquare,
   Chrome,
+  HelpCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { GoogleLogo, MergeLogo } from '@/components/ai-pulse/vendorLogos';
@@ -83,6 +84,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AdminHeroHeader from '@/components/headers/AdminHeroHeader';
 import type { ModelType, ModelCapability, ModelParameters } from '@/types/creative-studio';
+import { useBrandLensAdminTour } from '@/components/onboarding/BrandLensAdminTour';
 
 import {
   useAllCreativeStudioModels,
@@ -128,6 +130,7 @@ export default function CreativeStudioAdmin() {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('brands');
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  const { startAdminTour } = useBrandLensAdminTour();
 
   // Data queries
   const { data: models, isLoading: modelsLoading, refetch: refetchModels } = useAllCreativeStudioModels();
@@ -457,12 +460,23 @@ export default function CreativeStudioAdmin() {
         backgroundImages={HERO_IMAGES}
         cinematic
         actions={
-          <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20" asChild>
-            <a href="/creative-studio" target="_blank">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open Studio
-            </a>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={startAdminTour}
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Admin Tour
+            </Button>
+            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20" asChild>
+              <a href="/creative-studio" target="_blank">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Studio
+              </a>
+            </Button>
+          </div>
         }
         stats={[
           {
@@ -505,11 +519,11 @@ export default function CreativeStudioAdmin() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-center">
             <TabsList>
-              <TabsTrigger value="brands">
+              <TabsTrigger value="brands" data-tour="admin-brands-tab">
                 <Palette className="h-3.5 w-3.5" />
                 Brands
               </TabsTrigger>
-              <TabsTrigger value="intelligence">
+              <TabsTrigger value="intelligence" data-tour="admin-intelligence-tab">
                 <Brain className="h-3.5 w-3.5" />
                 Brand DNA
               </TabsTrigger>
@@ -517,7 +531,7 @@ export default function CreativeStudioAdmin() {
                 <Camera className="h-3.5 w-3.5" />
                 Camera
               </TabsTrigger>
-              <TabsTrigger value="models">
+              <TabsTrigger value="models" data-tour="admin-models-tab">
                 <Sparkles className="h-3.5 w-3.5" />
                 Models
               </TabsTrigger>
@@ -525,7 +539,7 @@ export default function CreativeStudioAdmin() {
                 <Image className="h-3.5 w-3.5" />
                 Generations
               </TabsTrigger>
-              <TabsTrigger value="analytics">
+              <TabsTrigger value="analytics" data-tour="admin-analytics-tab">
                 <TrendingUp className="h-3.5 w-3.5" />
                 Analytics
               </TabsTrigger>

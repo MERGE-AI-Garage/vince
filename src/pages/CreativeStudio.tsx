@@ -101,7 +101,7 @@ export default function CreativeStudio() {
 
   // Panel state
   type RightSidebarMode = 'settings' | 'vince';
-  const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>('settings');
+  const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>('vince');
   const [promptLibraryOpen, setPromptLibraryOpen] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [brandDNAOpen, setBrandDNAOpen] = useState(false);

@@ -22,6 +22,7 @@ interface EditorCanvasProps {
   onOpenBrandAgent?: () => void;
   onOpenGuidelines?: () => void;
   onQuickPromptClick?: (prompt: string) => void;
+  onDemoClick?: () => void;
 }
 
 export function EditorCanvas({
@@ -32,6 +33,7 @@ export function EditorCanvas({
   onOpenBrandAgent,
   onOpenGuidelines,
   onQuickPromptClick,
+  onDemoClick,
 }: EditorCanvasProps) {
   const {
     currentImage,
@@ -405,6 +407,7 @@ export function EditorCanvas({
             onOpenBrandAgent={onOpenBrandAgent}
             onOpenGuidelines={onOpenGuidelines}
             onQuickPromptClick={onQuickPromptClick}
+            onDemoClick={onDemoClick}
           />
           <input
             ref={fileInputRef}

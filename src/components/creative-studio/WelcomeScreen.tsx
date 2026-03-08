@@ -46,6 +46,7 @@ interface WelcomeScreenProps {
   onOpenBrandAgent?: () => void;
   onOpenGuidelines?: () => void;
   onQuickPromptClick?: (prompt: string) => void;
+  onDemoClick?: () => void;
 }
 
 // ── Shared styles & animation ─────────────────────────────────────────────────
@@ -220,6 +221,7 @@ export function WelcomeScreen({
   onOpenBrandAgent,
   onOpenGuidelines,
   onQuickPromptClick,
+  onDemoClick,
 }: WelcomeScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -240,7 +242,7 @@ export function WelcomeScreen({
   }
 
   return (
-    <SystemWelcome onUploadClick={onUploadClick} fileInputRef={fileInputRef} />
+    <SystemWelcome onUploadClick={onUploadClick} fileInputRef={fileInputRef} onDemoClick={onDemoClick} />
   );
 }
 
@@ -251,9 +253,11 @@ const SYSTEM_HERO_IMAGE = '/images/studio-hero.jpeg';
 function SystemWelcome({
   onUploadClick,
   fileInputRef,
+  onDemoClick,
 }: {
   onUploadClick: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onDemoClick?: () => void;
 }) {
   const navigate = useNavigate();
   const { data: welcomeImages } = useStudioWelcomeImages();
@@ -442,7 +446,7 @@ function SystemWelcome({
               Upload an image
             </span>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
             <Button
               variant="ghost"
               onClick={onUploadClick}
@@ -451,6 +455,16 @@ function SystemWelcome({
               <Upload className="w-4 h-4" />
               Upload Image to Edit
             </Button>
+            {onDemoClick && (
+              <Button
+                variant="ghost"
+                onClick={onDemoClick}
+                className="gap-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/50 hover:bg-white/[0.07] hover:text-white/80"
+              >
+                <Wand2 className="w-4 h-4" />
+                Platform Demo
+              </Button>
+            )}
           </div>
           <p className="font-epilogue text-[10px] text-white/30">
             {navigator.platform.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter to generate

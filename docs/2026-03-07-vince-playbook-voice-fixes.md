@@ -3,7 +3,7 @@
 
 ---
 
-## What Changed
+## Overview
 
 ### Voice Mode — Bug Fix + UX
 **Problem:** Clicking the exit button (X) while a voice connection was still being established didn't fully close the session. The UI correctly switched to text mode, but the pending `connectVinceLiveSession()` call would resolve afterward and set up an active live session in the background — microphone running, audio callbacks firing — with no visible UI. This created a ghost session that sounded like "exit didn't work."
@@ -12,7 +12,7 @@
 
 **Voice-first startup:** Not implemented — browser `AudioContext` requires a direct user gesture to resume. An auto-start `useEffect` fires outside the gesture window, which means the WebSocket connects (transcripts work) but audio playback stays silenced. Voice must be started by clicking the mic button.
 
-**Compact inline voice bar:** Replaced the full-screen `VoiceOverlay` with an inline bar at the bottom of the chat panel — matches the AI Garage creative studio pattern. Shows:
+**Compact inline voice bar:** Replaced the full-screen `VoiceOverlay` with an inline bar at the bottom of the chat panel — matches the compact voice bar pattern used in the main Creative Studio. Shows:
 - Live transcript (up to 3 lines, cyan italic for user, white for Vince)
 - URL input field — paste a competitor or video URL and press Enter to send it to the live session
 - `CompactAudioIndicator` (5-bar animated waveform, emerald=model, cyan=user)

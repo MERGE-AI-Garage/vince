@@ -320,14 +320,12 @@ export function BrandShopPromptBar({
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <div className="flex flex-col items-start">
                   <span className="text-xs text-foreground">
-                    {generationType === 'video' ? 'Video' : 'Generating'}... {Math.round(currentProgress)}%
+                    {generationType === 'video' ? 'Video' : 'Generating'}... {currentElapsedSeconds > 0 ? `${currentElapsedSeconds}s` : `${Math.round(currentProgress)}%`}
                   </span>
-                  {generationType === 'video' && currentElapsedSeconds > 0 && (
+                  {currentElapsedSeconds > 0 && (
                     <span className="text-[9px] opacity-70 flex items-center gap-0.5">
                       <Clock className="w-2.5 h-2.5" />
-                      {currentElapsedSeconds < 60
-                        ? `${currentElapsedSeconds}s`
-                        : `${Math.floor(currentElapsedSeconds / 60)}m ${currentElapsedSeconds % 60}s`}
+                      {Math.round(currentProgress)}% — ~{generationType.includes('video') ? '30-60' : '10-20'}s estimated
                     </span>
                   )}
                 </div>

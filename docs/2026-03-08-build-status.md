@@ -44,7 +44,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 - Vince Control Panel — prompt, voice, chat settings
 - `BrandAgentApp` — text chat with brand context, tool action cards, quick prompts
 - `CreativePackageDisplay` — renders interleaved TEXT + IMAGE blocks
-- Simplified navigation (Brand Lens, no AI Garage references)
+- Simplified, focused navigation (Brand Lens, Creative Studio, Vince)
 
 ### Edge Functions (19 deployed)
 
@@ -158,7 +158,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 | Audio context on fresh browser | Medium | AudioContext requires user gesture — demo must start with manual mic click, not auto-start |
 | 4-step playbook chain reliability | Medium | 9 concurrent/sequential edge calls — test multiple times before demo day |
 | WebSocket timeout during long generation | Low-Medium | Cloud Run has 60s idle WebSocket timeout — 40+ second generation could drop connection |
-| Agency neutralization completeness | Low | Code is cleaned up; verify DB seed data and stored prompt templates contain no MERGE references |
+| UI copy consistency | Low | Verify DB seed data and stored prompt templates all reflect Brand Lens identity |
 
 ---
 

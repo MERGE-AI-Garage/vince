@@ -1,0 +1,123 @@
+/* ABOUTME: Driver.js tour theme for Brand Lens — deep-space dark glass with Vince purple accent */
+/* ABOUTME: Overrides default Driver.js popover to match the studio's cinematic dark aesthetic */
+
+/* ── Popover container ─────────────────────────────────────────────────────── */
+.driver-popover {
+  background: rgba(7, 8, 20, 0.96) !important;
+  backdrop-filter: blur(22px) !important;
+  -webkit-backdrop-filter: blur(22px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.50), 0 0 0 1px rgba(255,255,255,0.05) !important;
+  border-radius: 14px !important;
+  padding: 20px !important;
+  min-width: 280px !important;
+  max-width: 360px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* ── Title ─────────────────────────────────────────────────────────────────── */
+.driver-popover-title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.3 !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  margin-bottom: 8px !important;
+}
+
+/* ── Description ───────────────────────────────────────────────────────────── */
+.driver-popover-description {
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  color: rgba(255, 255, 255, 0.48) !important;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────────── */
+.driver-popover-footer {
+  margin-top: 16px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+/* ── Progress ──────────────────────────────────────────────────────────────── */
+.driver-popover-progress-text {
+  font-size: 11px !important;
+  color: rgba(255, 255, 255, 0.28) !important;
+  letter-spacing: 0.04em !important;
+  margin-right: auto !important;
+}
+
+/* ── Next / Done button ────────────────────────────────────────────────────── */
+.driver-popover-next-btn {
+  background: linear-gradient(135deg, #7C3AED, #6D28D9) !important;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.35) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  height: 30px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: box-shadow 150ms, transform 150ms !important;
+  white-space: nowrap !important;
+}
+.driver-popover-next-btn:hover {
+  box-shadow: 0 5px 14px rgba(124, 58, 237, 0.50) !important;
+  transform: translateY(-1px) !important;
+}
+.driver-popover-next-btn:active {
+  transform: translateY(0) !important;
+}
+
+/* ── Prev button ───────────────────────────────────────────────────────────── */
+.driver-popover-prev-btn {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.40) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  height: 30px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 150ms !important;
+}
+.driver-popover-prev-btn:hover {
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  color: rgba(255, 255, 255, 0.80) !important;
+}
+
+/* ── Close button ──────────────────────────────────────────────────────────── */
+.driver-popover-close-btn {
+  color: rgba(255, 255, 255, 0.30) !important;
+  background: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  transition: color 150ms !important;
+}
+.driver-popover-close-btn:hover {
+  color: rgba(255, 255, 255, 0.80) !important;
+}
+
+/* ── Spotlight ring on the highlighted element ─────────────────────────────── */
+.driver-active-element {
+  outline: 2px solid #7C3AED !important;
+  outline-offset: 3px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.14) !important;
+}
+
+/* ── Overlay ───────────────────────────────────────────────────────────────── */
+#driver-overlay {
+  background: rgba(0, 0, 0, 0.78) !important;
+}
+
+/* ── Arrow (hide — cleaner for this UI) ────────────────────────────────────── */
+.driver-popover-arrow {
+  display: none !important;
+}

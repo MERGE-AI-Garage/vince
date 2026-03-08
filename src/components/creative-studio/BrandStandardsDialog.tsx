@@ -733,7 +733,7 @@ function StandardsSnapshotCard({
 
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Sections Populated</span>
-          <span className="font-medium text-foreground">{populatedCount} of 8</span>
+          <span className="font-medium text-foreground">{populatedCount} of 7</span>
         </div>
 
         {manualSources.length > 0 && (
@@ -773,10 +773,30 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
   const standards = profile?.brand_standards as BrandStandards | null | undefined;
   const headerTextLight = !isLightColor(brand.primary_color);
 
+  // Curated logos from brand logo library
+  const [primaryLogo, setPrimaryLogo] = useState<string | null>(null);
+  const [badgeLogo, setBadgeLogo] = useState<string | null>(null);
+  useEffect(() => {
+    supabase
+      .from('creative_studio_brand_logos' as any)
+      .select('url, lockup, is_default')
+      .eq('brand_id', brand.id)
+      .order('is_default', { ascending: false })
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const primary = (data as any[]).find((l: any) => l.is_default) ?? data[0];
+        setPrimaryLogo((primary as any).url);
+        const badge = (data as any[]).find((l: any) => l.lockup === 'mark_only' && l.url !== (primary as any).url);
+        if (badge) setBadgeLogo((badge as any).url);
+      });
+  }, [brand.id]);
+  const logoSrc = primaryLogo ?? brand.logo_url;
+
   // Header image from source_metadata
   const headerImageUrl = (profile?.source_metadata as Record<string, unknown>)?.header_image_url as string | undefined;
 
-  // Count populated sections
+  // Count populated sections (glossary excluded — most brands don't publish one)
   const populatedCount = standards
     ? [
         standards.color_system,
@@ -786,7 +806,6 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
         standards.writer_guidelines,
         standards.social_media_voice,
         standards.competitive_landscape,
-        standards.glossary,
       ].filter(s => hasSectionData(s as Record<string, unknown> | unknown[] | null)).length
     : 0;
 
@@ -840,13 +859,22 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
 
           <div className="relative z-10 px-6 pt-6 pb-5 flex flex-col justify-center" style={{ minHeight: '130px' }}>
             <div className="flex items-center gap-5">
-              {/* Logo */}
-              {brand.logo_url ? (
-                <img
-                  src={brand.logo_url}
-                  alt={brand.name}
-                  className="h-16 max-w-[220px] rounded-xl object-contain bg-white/95 backdrop-blur-sm shadow-lg p-2.5 shrink-0"
-                />
+              {/* Logo — primary from logo library, fallback to brand record */}
+              {logoSrc ? (
+                <div className="flex items-center gap-2 shrink-0">
+                  <img
+                    src={logoSrc}
+                    alt={brand.name}
+                    className="h-16 max-w-[220px] rounded-xl object-contain bg-white/95 backdrop-blur-sm shadow-lg p-2.5"
+                  />
+                  {badgeLogo && (
+                    <img
+                      src={badgeLogo}
+                      alt={`${brand.name} mark`}
+                      className="h-10 w-10 rounded-lg object-contain bg-white/95 backdrop-blur-sm shadow-md p-1.5"
+                    />
+                  )}
+                </div>
               ) : (
                 <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-white/20 backdrop-blur-sm shadow-lg shrink-0">
                   <span className="text-white text-2xl font-bold">{brand.name.charAt(0)}</span>
@@ -897,7 +925,7 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
                     className="text-xs font-product-sans"
                     style={{ color: headerTextLight ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)' }}
                   >
-                    {populatedCount} of 8 sections populated
+                    {populatedCount} of 7 sections populated
                   </p>
                 )}
                 {onNavigate && (
@@ -914,7 +942,7 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
 
         {/* ── Content with brand-tinted background ── */}
         <ScrollArea
-          className="max-h-[calc(88vh-160px)]"
+          className="h-[calc(88vh-130px)]"
           style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
         >
           {isLoading ? (

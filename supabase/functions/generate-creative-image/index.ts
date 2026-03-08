@@ -884,7 +884,7 @@ serve(async (req) => {
       };
 
       if (temperature !== undefined) generationConfig.temperature = temperature;
-      if (thinking_level && modelUsed.includes('flash')) generationConfig.thinkingConfig = { thinkingLevel: thinking_level.toLowerCase() };
+      if (thinking_level && modelUsed === 'gemini-3.1-flash-image-preview') generationConfig.thinkingConfig = { thinkingLevel: thinking_level.toLowerCase() };
 
       requestBody = { contents, generationConfig } as Record<string, unknown>;
       if (use_grounding) {
@@ -998,7 +998,7 @@ serve(async (req) => {
       };
 
       if (temperature !== undefined) generationConfig.temperature = temperature;
-      if (thinking_level && modelUsed.includes('flash')) generationConfig.thinkingConfig = { thinkingLevel: thinking_level.toLowerCase() };
+      if (thinking_level && modelUsed === 'gemini-3.1-flash-image-preview') generationConfig.thinkingConfig = { thinkingLevel: thinking_level.toLowerCase() };
 
       requestBody = {
         contents: [{ parts }],

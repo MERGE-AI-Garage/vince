@@ -20,7 +20,6 @@ import {
   Eye,
   Scale,
 } from 'lucide-react';
-import { MergeLogo } from '@/components/ai-pulse/vendorLogos';
 import { useBrandToolApprovals, type BrandToolApproval } from '@/hooks/useBrandToolApprovals';
 import {
   resolveEffectiveCompliance,
@@ -206,14 +205,40 @@ export function AIGuidelinesDialog({ brand, open, onOpenChange }: AIGuidelinesDi
           AI tool approval status and compliance guidelines for {brand.name} client work
         </DialogDescription>
 
-        {/* MERGE-branded header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#00856C] to-[#133B34] px-6 py-5">
-          {/* Watermark logo */}
-          <MergeLogo className="absolute -bottom-4 -right-4 w-32 h-32 text-white/[0.06] transform -rotate-12" />
+        {/* Brand-aware header */}
+        <div
+          className="relative overflow-hidden px-6 py-5 bg-gray-950"
+          style={{ borderBottom: `1px solid ${brand.primary_color}40` }}
+        >
+          {/* Subtle brand color wash */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: `radial-gradient(ellipse at top right, ${brand.primary_color}33, transparent 70%)` }}
+          />
+
+          {/* Watermark — full wordmark logo preferred, else initial */}
+          {brand.logo_url ? (
+            <img
+              src={brand.logo_url}
+              alt=""
+              className="absolute bottom-0 -right-2 h-20 w-auto object-contain opacity-[0.08] pointer-events-none"
+            />
+          ) : (
+            <span className="absolute -bottom-4 -right-6 text-[120px] font-bold text-white/[0.05] leading-none select-none pointer-events-none">
+              {brand.name.charAt(0)}
+            </span>
+          )}
 
           <div className="relative z-10 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
-              <MergeLogo className="w-6 h-6 text-white" />
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
+              style={{ background: `${brand.primary_color}30`, border: `1px solid ${brand.primary_color}50` }}
+            >
+              {brand.logo_mark_url ? (
+                <img src={brand.logo_mark_url} alt={brand.name} className="w-7 h-7 object-contain" />
+              ) : (
+                <span className="font-bold text-lg text-white">{brand.name.charAt(0)}</span>
+              )}
             </div>
             <div>
               <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/60">

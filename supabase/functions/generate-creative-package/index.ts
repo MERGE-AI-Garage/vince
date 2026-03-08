@@ -70,6 +70,7 @@ interface PackageRequest {
   brief: string;
   deliverables?: DeliverableSpec[];
   system_context?: string;
+  user_id?: string;
 }
 
 interface PackagePart {
@@ -103,8 +104,12 @@ serve(async (req) => {
       userId = payload.sub || null;
     } catch { /* non-critical */ }
 
-    const { brand_id, brief, deliverables, system_context } = await req.json() as PackageRequest;
+    const body = await req.json() as PackageRequest;
+    const { brand_id, brief, deliverables, system_context } = body;
     if (!brand_id || !brief) throw new Error('brand_id and brief are required');
+
+    // Fallback: when called via service role (no JWT sub), use user_id from body
+    if (!userId && body.user_id) userId = body.user_id;
 
     // Fetch brand data
     const { data: brand } = await supabase
@@ -246,7 +251,7 @@ serve(async (req) => {
     const brandAlignment = computeBrandAlignment(brand, profile);
 
     // Record generation in history (non-blocking)
-    if (userId && imageUrls.length > 0) {
+    if (userId) {
       supabase.from('creative_studio_generations').insert({
         user_id: userId,
         brand_id: brand_id || null,
@@ -256,7 +261,7 @@ serve(async (req) => {
         status: 'completed',
         output_urls: imageUrls,
         completed_at: new Date().toISOString(),
-        parameters: { deliverable_count: imageUrls.length },
+        parameters: { deliverable_count: resolvedDeliverables.length },
         metadata: { package: true },
       }).then(({ error }) => {
         if (error) console.error('[generate-creative-package] Generation record insert failed:', error.message);

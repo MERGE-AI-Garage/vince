@@ -272,7 +272,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'generate_video',
-    description: 'Generate a brand-aligned video using Veo 3. Use when the user asks for a video, motion concept, or moving campaign asset. Defaults to Veo 3 Fast (quick turnaround, great quality). Generates a short 5-8 second video clip from a text prompt. The prompt should describe the scene, motion, mood, lighting, and brand visual direction. For brand-aligned output, incorporate the brand color palette, visual style, and photography DNA into the scene description. After the video generates, it appears in the History panel. You can optionally use image_to_video mode by specifying input_image_url if there is a current canvas image to animate.',
+    description: 'Generate a brand-aligned video using Veo 3. Use when the user asks for a video, motion concept, or moving campaign asset. Defaults to Veo 3 Fast for quick turnaround. Use Quality model when the user wants better cinematic output or is supplying reference images. Both models generate audio natively — audio is always included, no special parameter needed. Generates a 4, 6, or 8 second video clip. The prompt should describe the scene, motion, mood, lighting, and brand visual direction — draw on the brand color palette, visual style, and photography DNA. Video takes 1-3 minutes to render and appears in the History panel when ready.',
     parameters: {
       type: 'object',
       properties: {
@@ -280,14 +280,19 @@ const VINCE_TOOLS = [
           type: 'string',
           description: 'Detailed scene description for the video. Include motion direction, lighting, mood, color palette, subject behavior, camera movement (e.g., slow push in, aerial drift, handheld energy). More detail = better results.',
         },
+        model: {
+          type: 'string',
+          enum: ['fast', 'quality'],
+          description: 'fast = Veo 3.1 Fast ($0.80, ~1-2 min render). quality = Veo 3.1 Quality ($2.00+, better cinematic output, supports reference images). Default: fast. Use quality when the user asks for the best output or provides reference images. Both models include audio automatically.',
+        },
         aspect_ratio: {
           type: 'string',
-          enum: ['16:9', '9:16', '1:1'],
-          description: 'Video format. 16:9 for hero/cinematic, 9:16 for social stories/reels, 1:1 for square feed posts. Default: 16:9.',
+          enum: ['16:9', '9:16'],
+          description: 'Video format. 16:9 for hero/cinematic (default), 9:16 for social stories/reels.',
         },
         duration: {
           type: 'number',
-          description: 'Duration in seconds. Veo 3 supports 5 or 8 seconds. Default: 5.',
+          description: 'Duration in seconds. Must be exactly 4, 6, or 8 — no other values are valid. Default: 8.',
         },
         generation_type: {
           type: 'string',
@@ -297,6 +302,15 @@ const VINCE_TOOLS = [
         input_image_url: {
           type: 'string',
           description: 'URL of an image to animate. Only used when generation_type is image_to_video.',
+        },
+        reference_image_url: {
+          type: 'string',
+          description: 'URL or base64 data URI of a reference image to guide the video output (e.g., brand logo, product, character). Quality model only. Good for brand consistency — if the brand has a logo or hero product, include it.',
+        },
+        resolution: {
+          type: 'string',
+          enum: ['720p', '1080p'],
+          description: 'Output resolution. 720p (default, faster), 1080p (higher quality, requires 8s duration). Default: 720p.',
         },
       },
       required: ['prompt'],
@@ -725,6 +739,7 @@ async function generateCreativePackage(
       brand_id: context.brand_id,
       brief: params.brief as string,
       deliverables: params.deliverables || undefined,
+      user_id: context.user_id,
     }),
   });
 
@@ -797,50 +812,48 @@ async function analyzeCompetitorContent(
 async function generateVideo(
   params: Record<string, unknown>,
   context: { brand_id: string; user_id: string },
-  supabase: ReturnType<typeof createClient>,
+  _supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/generate-creative-video`, {
+  const modelParam = (params.model as string) || 'fast';
+  const modelId = modelParam === 'quality' ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
+
+  const referenceImages: string[] = [];
+  if (params.reference_image_url) {
+    referenceImages.push(params.reference_image_url as string);
+  }
+
+  const body = JSON.stringify({
+    generation_type: (params.generation_type as string) || 'text_to_video',
+    prompt: params.prompt as string,
+    model_id: modelId,
+    brand_id: context.brand_id,
+    user_id: context.user_id,
+    aspect_ratio: (params.aspect_ratio as string) || '16:9',
+    duration: (params.duration as number) || 8,
+    resolution: (params.resolution as string) || '720p',
+    input_image: (params.input_image_url as string) || undefined,
+    ...(referenceImages.length > 0 ? { reference_images: referenceImages } : {}),
+  });
+
+  // Fire and forget — video generation takes 1-3 minutes via polling.
+  // Returning immediately keeps the voice session alive. The video will
+  // appear in the History panel when the generation completes.
+  fetch(`${supabaseUrl}/functions/v1/generate-creative-video`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${supabaseKey}`,
     },
-    body: JSON.stringify({
-      generation_type: (params.generation_type as string) || 'text_to_video',
-      prompt: params.prompt as string,
-      brand_id: context.brand_id,
-      user_id: context.user_id,
-      aspect_ratio: (params.aspect_ratio as string) || '16:9',
-      duration: (params.duration as number) || 5,
-      input_image: (params.input_image_url as string) || undefined,
-      // Default to Veo 3 Fast — no model_id means the function uses its default
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `Video generation failed (${response.status})`;
-    try {
-      const errorJson = JSON.parse(errorText);
-      errorMessage = errorJson.details || errorJson.error || errorMessage;
-    } catch { /* ignore */ }
-    throw new Error(errorMessage);
-  }
-
-  const result = await response.json();
-  if (!result.success) {
-    throw new Error(result.error || 'Video generation failed');
-  }
+    body,
+  }).catch(err => console.error('[generate_video] Background generation failed:', err));
 
   return {
     success: true,
-    generation_id: result.generation_id,
-    output_urls: result.output_urls,
-    generation_time_ms: result.generation_time_ms,
-    message: `Video generated successfully. ${result.output_urls?.length || 0} clip(s) ready.`,
+    queued: true,
+    message: 'Video is rendering now — Veo 3 Fast, usually 1-2 minutes. It will appear in your History panel when ready.',
   };
 }
 
@@ -1460,6 +1473,17 @@ LOGO USAGE:
 - If the user says "include the logo", "add the brand logo", "put the logo on it", or similar — set include_logo: true.
 - Do NOT set include_logo for lifestyle photography, product hero shots, food photography, mood boards, or other images where a logo would be unnatural.
 - When unsure, ask: "Want the brand logo included in this one?"
+
+VIDEO GENERATION:
+Use generate_video when the user asks for a video, motion concept, or moving campaign asset.
+- Duration must be exactly 4, 6, or 8 seconds — never 5 or 7.
+- aspect_ratio supports only "16:9" (cinematic/hero) or "9:16" (stories/reels) — no 1:1 for video.
+- Default: fast model, 8 seconds, 720p, 16:9.
+- Audio is automatic on both models — always included, no parameter needed.
+- Use model: "quality" when the user wants the best cinematic output or provides reference images. Costs more but looks better.
+- Use reference_image_url when the user wants consistent subject/logo/product in the video — quality model only.
+- Video renders in 1-3 minutes and appears in the History panel automatically.
+- NEVER narrate generating a video without calling generate_video — text descriptions do nothing.
 
 CRITICAL — TOOL USAGE FOR GENERATION:
 - NEVER say "I've generated", "here are your images", or "I created the image" unless you have ACTUALLY called the generate_image tool.
