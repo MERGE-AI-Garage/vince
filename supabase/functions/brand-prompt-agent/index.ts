@@ -254,7 +254,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'analyze_competitor_content',
-    description: 'Analyze a competitor\'s video (YouTube URL or direct video URL) to extract strategic intelligence. Use when the user shares a competitor video. Returns a competitor summary, key messages, visual style, weaknesses, and a suggested counter-brief. After presenting the analysis findings, ask the user if they want to proceed with building a counter-campaign. Do NOT automatically call generate_creative_package — wait for the user to confirm.',
+    description: 'Analyze a competitor\'s video (YouTube URL or direct video URL) to extract strategic intelligence. Use when the user shares a competitor video. Returns a competitor summary, key messages, visual style, weaknesses, scene breakdown, and 3 campaign directions. Present the analysis and the 3 directions — the user will pick one before you call generate_creative_package. Do NOT automatically generate assets.',
     parameters: {
       type: 'object',
       properties: {
@@ -265,6 +265,20 @@ const VINCE_TOOLS = [
         analysis_context: {
           type: 'string',
           description: 'Optional context about the competitive situation (e.g., "This is Apple\'s latest iPhone ad. We want to counter with our AI features story.")',
+        },
+      },
+      required: ['video_url'],
+    },
+  },
+  {
+    name: 'analyze_self_demo',
+    description: 'Watch a screen recording of a Brand Lens / Vince demo and analyze it as a product designer and UX critic. Use when the user shares a YouTube link to a Brand Lens demo recording and wants feedback on the product experience, demo flow, or workflow improvements. Returns a demo score and structured feedback.',
+    parameters: {
+      type: 'object',
+      properties: {
+        video_url: {
+          type: 'string',
+          description: 'YouTube URL of the Brand Lens demo screen recording to analyze',
         },
       },
       required: ['video_url'],
@@ -444,6 +458,8 @@ async function executeTool(
       return await generateBrandPlaybook(parameters, context, supabase);
     case 'analyze_competitor_content':
       return await analyzeCompetitorContent(parameters, context, supabase);
+    case 'analyze_self_demo':
+      return await analyzeSelfDemo(parameters, context, supabase);
     case 'generate_video':
       return await generateVideo(parameters, context, supabase);
     default:
@@ -800,10 +816,53 @@ async function analyzeCompetitorContent(
     target_audience: analysis.target_audience,
     emotional_hooks: analysis.emotional_hooks,
     weaknesses: analysis.weaknesses,
+    scenes: analysis.scenes || [],
+    campaign_directions: analysis.campaign_directions || [],
     counter_brief: analysis.counter_brief,
     counter_deliverables: analysis.counter_deliverables,
     latency_ms: result.latency_ms,
-    message: `Competitor analysis complete. I found ${analysis.weaknesses?.length || 0} strategic openings. Ready to build a counter-campaign when you are.`,
+    message: `Competitor analysis complete. I found ${analysis.weaknesses?.length || 0} strategic openings and generated 3 campaign directions. Pick the direction that resonates most and I'll build the creative package.`,
+  };
+}
+
+async function analyzeSelfDemo(
+  params: Record<string, unknown>,
+  _context: { brand_id: string; user_id: string },
+  _supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/analyze-competitor-video`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({
+      video_url: params.video_url as string,
+      mode: 'self_critique',
+    }),
+  });
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Self-demo analysis failed');
+  }
+
+  const { analysis } = result;
+
+  return {
+    success: true,
+    video_url: result.video_url,
+    product_summary: analysis.product_summary,
+    demo_score: analysis.demo_score,
+    ux_observations: analysis.ux_observations,
+    missed_opportunities: analysis.missed_opportunities,
+    demo_narrative_issues: analysis.demo_narrative_issues,
+    recommended_improvements: analysis.recommended_improvements,
+    latency_ms: result.latency_ms,
+    message: `Demo analysis complete. Overall demo score: ${analysis.demo_score}/100. I found ${analysis.recommended_improvements?.length || 0} specific improvements.`,
   };
 }
 

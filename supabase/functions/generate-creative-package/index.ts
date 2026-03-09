@@ -250,23 +250,30 @@ serve(async (req) => {
 
     const brandAlignment = computeBrandAlignment(brand, profile);
 
-    // Record generation in history (non-blocking)
-    if (userId) {
-      supabase.from('creative_studio_generations').insert({
-        user_id: userId,
-        brand_id: brand_id || null,
-        generation_type: 'creative_package',
-        model_used: 'gemini-3.1-flash-image-preview',
-        prompt_text: brief,
-        status: 'completed',
-        output_urls: imageUrls,
-        completed_at: new Date().toISOString(),
-        parameters: { deliverable_count: resolvedDeliverables.length },
-        metadata: { package: true },
-      }).then(({ error }) => {
-        if (error) console.error('[generate-creative-package] Generation record insert failed:', error.message);
-      });
-    }
+    // Look up model_id for generation record (model_id may be NOT NULL in schema)
+    const { data: modelRow } = await supabase
+      .from('creative_studio_models')
+      .select('id')
+      .eq('model_id', 'gemini-3.1-flash-image-preview')
+      .maybeSingle();
+
+    // Record generation in history (always, even without a userId)
+    const { error: insertError } = await supabase.from('creative_studio_generations').insert({
+      user_id: userId || null,
+      brand_id: brand_id || null,
+      generation_type: 'creative_package',
+      model_id: modelRow?.id || null,
+      model_used: 'gemini-3.1-flash-image-preview',
+      prompt_text: brief,
+      status: 'completed',
+      output_urls: imageUrls,
+      completed_at: new Date().toISOString(),
+      generation_time_ms: latencyMs,
+      estimated_cost_usd: 0,
+      parameters: { deliverable_count: resolvedDeliverables.length },
+      metadata: { package: true, deliverable_names: deliverableNames },
+    });
+    if (insertError) console.error('[generate-creative-package] Generation record insert failed:', insertError.message);
 
     return new Response(
       JSON.stringify({

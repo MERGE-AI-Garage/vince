@@ -1,5 +1,5 @@
-// ABOUTME: Analyzes competitor video content (YouTube URLs) using Gemini video understanding.
-// ABOUTME: Returns competitive intelligence + a brand-aware counter-campaign brief.
+// ABOUTME: Analyzes video content using Gemini video understanding.
+// ABOUTME: Competitor mode: returns competitive intelligence + counter-campaign brief. Self-critique mode: returns product/UX feedback.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
@@ -12,8 +12,9 @@ const corsHeaders = {
 
 interface AnalyzeRequest {
   video_url: string;
-  brand_id: string;
+  brand_id?: string;
   analysis_context?: string;
+  mode?: 'competitor' | 'self_critique';
 }
 
 interface CompetitiveAnalysis {
@@ -23,6 +24,18 @@ interface CompetitiveAnalysis {
   target_audience: string;
   emotional_hooks: string[];
   weaknesses: string[];
+  scenes: Array<{
+    timestamp: string;
+    scene_type: string;
+    emotional_signal: string;
+    marketing_intent: string;
+  }>;
+  campaign_directions: Array<{
+    title: string;
+    concept: string;
+    emotional_angle: string;
+    tagline: string;
+  }>;
   counter_brief: string;
   counter_deliverables: Array<{
     name: string;
@@ -30,6 +43,15 @@ interface CompetitiveAnalysis {
     deliverable_type: string;
     aspect_ratio: string;
   }>;
+}
+
+interface SelfCritiqueAnalysis {
+  product_summary: string;
+  ux_observations: string[];
+  missed_opportunities: string[];
+  demo_narrative_issues: string[];
+  recommended_improvements: string[];
+  demo_score: number;
 }
 
 serve(async (req) => {
@@ -45,10 +67,20 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { video_url, brand_id, analysis_context } = await req.json() as AnalyzeRequest;
-    if (!video_url || !brand_id) throw new Error('video_url and brand_id are required');
+    const { video_url, brand_id, analysis_context, mode = 'competitor' } = await req.json() as AnalyzeRequest;
+    if (!video_url) throw new Error('video_url is required');
+    if (mode === 'competitor' && !brand_id) throw new Error('brand_id is required for competitor mode');
 
-    // Fetch brand data for context
+    // Normalize YouTube URL formats to standard watch URL
+    const normalizedUrl = normalizeVideoUrl(video_url);
+    const ai = new GoogleGenAI({ apiKey });
+    const startTime = Date.now();
+
+    if (mode === 'self_critique') {
+      return await handleSelfCritique(ai, normalizedUrl, startTime, corsHeaders);
+    }
+
+    // Competitor mode: fetch brand context
     const { data: brand } = await supabase
       .from('creative_studio_brands')
       .select('name, primary_color, secondary_color, visual_identity, brand_voice, brand_category')
@@ -65,23 +97,19 @@ serve(async (req) => {
 
     const brandContext = buildBrandContext(brand, profile);
 
-    // Normalize YouTube URL formats to standard watch URL
-    const normalizedUrl = normalizeVideoUrl(video_url);
-
-    const ai = new GoogleGenAI({ apiKey });
-
     const systemPrompt = `You are Vince, an expert AI creative director for Brand Lens. You are analyzing a competitor's video to help the client craft a superior brand-aligned counter-campaign.
 
 ${brandContext}
 
 Your job:
-1. Analyze the competitor video's messaging, visual style, tone, and emotional hooks
+1. Analyze the competitor video's messaging, visual style, tone, emotional hooks, and scene-by-scene narrative arc
 2. Identify their strategic weaknesses and where the client's brand can win
-3. Generate a complete counter-campaign brief that leverages the client's brand DNA
+3. Generate 3 distinct campaign direction options (the user will pick one before generating assets)
+4. Generate a complete counter-campaign brief that leverages the client's brand DNA
 
 Always respond with valid JSON matching the schema exactly.`;
 
-    const userPrompt = `Analyze this competitor video and generate a counter-campaign brief for ${brand.name}.
+    const userPrompt = `Analyze this competitor video and generate a counter-campaign strategy for ${brand.name}.
 ${analysis_context ? `\nContext: ${analysis_context}` : ''}
 
 Return a JSON object with this exact structure:
@@ -91,8 +119,36 @@ Return a JSON object with this exact structure:
   "visual_style": "description of the visual style, color palette, production quality",
   "target_audience": "who this video is targeting",
   "emotional_hooks": ["hook 1", "hook 2"],
-  "weaknesses": ["weakness 1", "weakness 2", "weakness 3"],
-  "counter_brief": "A complete 2-3 paragraph creative brief for a counter-campaign that leverages ${brand.name}'s brand DNA to win against this competitor. Be specific about the strategy, tone, and visual direction.",
+  "weaknesses": ["strategic weakness 1", "strategic weakness 2", "strategic weakness 3"],
+  "scenes": [
+    {
+      "timestamp": "0:00–0:06",
+      "scene_type": "Product reveal",
+      "emotional_signal": "anticipation",
+      "marketing_intent": "Establish hero product positioning"
+    }
+  ],
+  "campaign_directions": [
+    {
+      "title": "Direction name (3-5 words)",
+      "concept": "1-2 sentence description of this campaign approach",
+      "emotional_angle": "The core emotion this direction targets",
+      "tagline": "A punchy 5-7 word tagline for this direction"
+    },
+    {
+      "title": "Second direction name",
+      "concept": "1-2 sentence description of the second approach",
+      "emotional_angle": "The core emotion this direction targets",
+      "tagline": "A punchy 5-7 word tagline"
+    },
+    {
+      "title": "Third direction name",
+      "concept": "1-2 sentence description of the third approach",
+      "emotional_angle": "The core emotion this direction targets",
+      "tagline": "A punchy 5-7 word tagline"
+    }
+  ],
+  "counter_brief": "A complete 2-3 paragraph creative brief for a counter-campaign that leverages ${brand.name}'s brand DNA. Be specific about the strategy, tone, and visual direction.",
   "counter_deliverables": [
     {
       "name": "Hero Banner",
@@ -113,11 +169,11 @@ Return a JSON object with this exact structure:
       "aspect_ratio": "4:3"
     }
   ]
-}`;
+}
 
-    const startTime = Date.now();
+Generate exactly 3 campaign_directions. Generate scene entries for each distinct scene you can identify.`;
 
-    console.log('[analyze-competitor-video] Calling Gemini with URL:', normalizedUrl);
+    console.log('[analyze-competitor-video] Calling Gemini competitor mode, URL:', normalizedUrl);
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
@@ -125,35 +181,23 @@ Return a JSON object with this exact structure:
         {
           role: 'user',
           parts: [
-            {
-              fileData: {
-                mimeType: 'video/mp4',
-                fileUri: normalizedUrl,
-              },
-            },
+            { fileData: { mimeType: 'video/mp4', fileUri: normalizedUrl } },
             { text: userPrompt },
           ],
         },
       ],
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.7,
-      },
+      config: { systemInstruction: systemPrompt, temperature: 0.7 },
     });
 
     const latencyMs = Date.now() - startTime;
-    const candidate = response.candidates?.[0];
-    const text = candidate?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('') || '';
-    console.log('[analyze-competitor-video] Response received, length:', text.length);
+    const text = response.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('') || '';
+    console.log('[analyze-competitor-video] Response length:', text.length);
 
     let analysis: CompetitiveAnalysis;
-
     try {
-      // Strip markdown code fences if present
       const cleaned = text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
       analysis = JSON.parse(cleaned);
     } catch {
-      // Try to extract JSON object from free text
       const match = text.match(/\{[\s\S]*\}/);
       if (!match) throw new Error(`Failed to parse analysis. Raw response: ${text.slice(0, 200)}`);
       analysis = JSON.parse(match[0]);
@@ -168,9 +212,7 @@ Return a JSON object with this exact structure:
         latency_ms: latencyMs,
         model: 'gemini-2.0-flash',
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error: any) {
     console.error('Competitor video analysis error:', error?.message || error, error?.status, error?.statusText);
@@ -183,6 +225,83 @@ Return a JSON object with this exact structure:
     );
   }
 });
+
+async function handleSelfCritique(
+  ai: GoogleGenAI,
+  videoUrl: string,
+  startTime: number,
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  const systemPrompt = `You are watching a screen recording demo of an AI creative director product called Vince (Brand Lens).
+Analyze it as a product designer, UX critic, creative director, and AI engineer combined.
+Be direct, specific, and actionable. Cite timestamps where possible.
+Always respond with valid JSON matching the schema exactly.`;
+
+  const userPrompt = `Watch this Brand Lens demo recording and provide structured product feedback.
+
+Return a JSON object with this exact structure:
+{
+  "product_summary": "2-3 sentence overall impression of the demo and product experience",
+  "demo_score": 75,
+  "ux_observations": [
+    "Specific UX friction or confusion moment with timestamp if possible"
+  ],
+  "missed_opportunities": [
+    "Feature or capability that wasn't shown but would have strengthened the demo"
+  ],
+  "demo_narrative_issues": [
+    "Pacing problem, unclear explanation, or weak hook moment"
+  ],
+  "recommended_improvements": [
+    "Specific actionable improvement with enough detail to act on"
+  ]
+}
+
+demo_score is 0-100 where 100 = flawless demo that clearly communicates product value.
+Provide 3-5 items in each array. Be honest and specific, not generic.`;
+
+  console.log('[analyze-competitor-video] Calling Gemini self_critique mode, URL:', videoUrl);
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.0-flash',
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { fileData: { mimeType: 'video/mp4', fileUri: videoUrl } },
+          { text: userPrompt },
+        ],
+      },
+    ],
+    config: { systemInstruction: systemPrompt, temperature: 0.6 },
+  });
+
+  const latencyMs = Date.now() - startTime;
+  const text = response.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('') || '';
+  console.log('[analyze-competitor-video] Self-critique response length:', text.length);
+
+  let analysis: SelfCritiqueAnalysis;
+  try {
+    const cleaned = text.replace(/^```(?:json)?\n?/m, '').replace(/\n?```$/m, '').trim();
+    analysis = JSON.parse(cleaned);
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error(`Failed to parse self-critique. Raw response: ${text.slice(0, 200)}`);
+    analysis = JSON.parse(match[0]);
+  }
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      mode: 'self_critique',
+      video_url: videoUrl,
+      analysis,
+      latency_ms: latencyMs,
+      model: 'gemini-2.0-flash',
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+  );
+}
 
 function normalizeVideoUrl(url: string): string {
   // youtu.be/ID → youtube.com/watch?v=ID

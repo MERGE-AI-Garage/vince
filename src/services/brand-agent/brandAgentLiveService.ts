@@ -436,8 +436,10 @@ export const connectVinceLiveSession = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sessionPromise: Promise<any> | null = null;
     let isConnected = false;
+    let sessionCancelled = false;
 
     const cleanup = () => {
+      sessionCancelled = true;
       console.log('[Vince Live] Running cleanup...');
       if (volumeInterval) { clearInterval(volumeInterval); volumeInterval = null; }
       sources.forEach(s => { try { s.stop(); } catch { /* ignore */ } });
@@ -655,9 +657,11 @@ export const connectVinceLiveSession = async (
                 continue;
               }
 
-              // analyze_competitor_content: skip re-analysis of the same URL in the same session
+              // analyze_competitor_content: fire-and-forget to avoid blocking the session
               if (fc.name === 'analyze_competitor_content') {
                 const url = (fc.args?.url as string) || '';
+
+                // Return cached result immediately if already analyzed in this session
                 if (url && analyzedCompetitorUrls.has(url) && lastCompetitorResult) {
                   console.log('[Vince Live] Skipping duplicate competitor analysis for:', url);
                   functionResponses.push({
@@ -668,6 +672,35 @@ export const connectVinceLiveSession = async (
                   callbacks.onToolResult?.('analyze_competitor_content', lastCompetitorResult);
                   continue;
                 }
+
+                // Immediately unblock the session — fire analysis in background
+                functionResponses.push({
+                  id: fc.id || '',
+                  name: 'analyze_competitor_content',
+                  response: { success: true, analyzing: true, message: "I'm analyzing the competitor video now — this takes about 20 seconds. Keep talking, I'll brief you on what I find." },
+                });
+                callbacks.onToolStart?.('analyze_competitor_content');
+
+                // Run analysis async, inject results via sendText when done
+                executeRemoteTool('analyze_competitor_content', fc.args || {}, activeBrandId || null, userContext?.id)
+                  .then(result => {
+                    if (sessionCancelled) return;
+                    if (url) analyzedCompetitorUrls.add(url);
+                    lastCompetitorResult = result;
+                    callbacks.onToolResult?.('analyze_competitor_content', result);
+                    // Inject findings into the live session so Vince can narrate
+                    const summary = (result as Record<string, unknown>).competitor_summary as string || '';
+                    const weaknesses = (result as Record<string, unknown>).weaknesses as string[] || [];
+                    const directions = (result as Record<string, unknown>).campaign_directions as Array<{ title: string }> || [];
+                    const briefing = `Competitor analysis complete. Here's what I found: ${summary} Key weaknesses: ${weaknesses.slice(0, 2).join('; ')}. I have 3 campaign directions ready: ${directions.map((d, i) => `${i + 1}. ${d.title}`).join(', ')}. The full breakdown is in the chat. Which direction do you want to go with?`;
+                    sessionPromise?.then(s => s.sendText(briefing)).catch(err => console.error('[Vince Live] Failed to send analysis briefing:', err));
+                  })
+                  .catch(err => {
+                    if (sessionCancelled) return;
+                    console.error('[Vince Live] Competitor analysis failed:', err);
+                    sessionPromise?.then(s => s.sendText('I ran into a problem analyzing that video. Try a different URL or we can work from your brand profile directly.')).catch(() => {});
+                  });
+                continue;
               }
 
               try {

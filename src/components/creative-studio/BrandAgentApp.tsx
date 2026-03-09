@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip, X, Link } from 'lucide-react';
+import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip, X, Link, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, InputArea, type Message, type Attachment } from '@/components/shared-chat';
@@ -14,6 +14,7 @@ import {
   generateBrandAgentGreeting,
   sendMessageToBrandAgent,
   createBrandAgentConversation,
+  saveVoiceConversation,
   fetchBrandContext,
   deriveBrandContextPrompts,
   type UserContext,
@@ -32,6 +33,7 @@ import {
 } from '@/services/brand-agent/brandAgentSettings';
 import type { CameraPreset } from '@/types/creative-studio';
 import { CreativePackageDisplay, type PackagePart } from './CreativePackageDisplay';
+import { useInvalidateGenerations } from '@/hooks/useCreativeStudioGenerations';
 
 function formatToolAction(action: ToolAction): string {
   const result = action.result as Record<string, unknown> | undefined;
@@ -104,6 +106,20 @@ interface BrandAlignment {
   };
 }
 
+interface CompetitorScene {
+  timestamp: string;
+  scene_type: string;
+  emotional_signal: string;
+  marketing_intent: string;
+}
+
+interface CampaignDirection {
+  title: string;
+  concept: string;
+  emotional_angle: string;
+  tagline: string;
+}
+
 interface CompetitorAnalysis {
   competitor_summary: string;
   key_messages: string[];
@@ -111,7 +127,25 @@ interface CompetitorAnalysis {
   target_audience: string;
   emotional_hooks: string[];
   weaknesses: string[];
+  scenes: CompetitorScene[];
+  campaign_directions: CampaignDirection[];
   counter_brief: string;
+  counter_deliverables?: Array<{
+    name: string;
+    description: string;
+    deliverable_type: string;
+    aspect_ratio: string;
+  }>;
+  video_url?: string;
+}
+
+interface SelfDemoAnalysis {
+  product_summary: string;
+  demo_score: number;
+  ux_observations: string[];
+  missed_opportunities: string[];
+  demo_narrative_issues: string[];
+  recommended_improvements: string[];
   video_url?: string;
 }
 
@@ -135,6 +169,7 @@ interface AgentResponse {
   generated_videos?: string[];
   creative_package?: CreativePackageResult;
   competitor_analysis?: CompetitorAnalysis;
+  self_demo_analysis?: SelfDemoAnalysis;
 }
 
 export function BrandAgentApp({
@@ -148,6 +183,7 @@ export function BrandAgentApp({
   onBrandCreated,
   onSetImage,
 }: BrandAgentAppProps) {
+  const invalidateGenerations = useInvalidateGenerations();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -162,6 +198,8 @@ export function BrandAgentApp({
   const [activeToolName, setActiveToolName] = useState<string | null>(null);
   const [videoRenderingAt, setVideoRenderingAt] = useState<Date | null>(null);
   const [elapsedVideoSeconds, setElapsedVideoSeconds] = useState(0);
+  const [analyzingVideoAt, setAnalyzingVideoAt] = useState<Date | null>(null);
+  const [elapsedAnalysisSeconds, setElapsedAnalysisSeconds] = useState(0);
 
   // Map message IDs to structured agent responses
   const [agentResponses, setAgentResponses] = useState<Record<string, AgentResponse>>({});
@@ -174,6 +212,10 @@ export function BrandAgentApp({
   // Token-based guard: each connection attempt gets a unique token;
   // handleCloseVoice resets it to -1 so pending connections self-abort.
   const activeConnectionTokenRef = useRef<number>(0);
+  // Refs for stale-closure-safe voice session persistence
+  const conversationIdRef = useRef<string | null>(null);
+  const messagesRef = useRef<Message[]>([]);
+  const voiceToolCallsRef = useRef(0);
 
   // Settings state
   const [quickPrompts, setQuickPrompts] = useState<string[]>(DEFAULT_QUICK_PROMPTS);
@@ -320,6 +362,19 @@ export function BrandAgentApp({
     return () => clearInterval(interval);
   }, [videoRenderingAt]);
 
+  // Tick elapsed seconds while analyzing a video
+  useEffect(() => {
+    if (!analyzingVideoAt) { setElapsedAnalysisSeconds(0); return; }
+    const interval = setInterval(() => {
+      setElapsedAnalysisSeconds(Math.floor((Date.now() - analyzingVideoAt.getTime()) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [analyzingVideoAt]);
+
+  // Keep refs in sync for stale-closure-safe voice session persistence
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+  useEffect(() => { conversationIdRef.current = conversationId; }, [conversationId]);
+
   // Cleanup on unmount — disconnect voice but preserve conversation
   useEffect(() => {
     return () => {
@@ -342,6 +397,9 @@ export function BrandAgentApp({
     };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
+    if (/youtu\.?be|youtube\.com|\.mp4|\.mov/.test(text)) {
+      setAnalyzingVideoAt(new Date());
+    }
 
     const agentMsgId = uuidv4();
     const agentMsg: Message = {
@@ -415,14 +473,37 @@ export function BrandAgentApp({
             target_audience: (r.target_audience as string) || '',
             emotional_hooks: (r.emotional_hooks as string[]) || [],
             weaknesses: (r.weaknesses as string[]) || [],
+            scenes: (r.scenes as CompetitorScene[]) || [],
+            campaign_directions: (r.campaign_directions as CampaignDirection[]) || [],
             counter_brief: (r.counter_brief as string) || '',
+            counter_deliverables: (r.counter_deliverables as CompetitorAnalysis['counter_deliverables']) || undefined,
+            video_url: (r.video_url as string) || undefined,
+          };
+        }
+      }
+
+      // Extract self-demo analysis from tool actions if present
+      let selfDemoAnalysis: SelfDemoAnalysis | undefined;
+      const selfDemoAction = response.tool_actions?.find(
+        (a: ToolAction) => a.toolName === 'analyze_self_demo' && a.success
+      );
+      if (selfDemoAction?.result) {
+        const r = selfDemoAction.result as Record<string, unknown>;
+        if (r.product_summary) {
+          selfDemoAnalysis = {
+            product_summary: r.product_summary as string,
+            demo_score: (r.demo_score as number) || 0,
+            ux_observations: (r.ux_observations as string[]) || [],
+            missed_opportunities: (r.missed_opportunities as string[]) || [],
+            demo_narrative_issues: (r.demo_narrative_issues as string[]) || [],
+            recommended_improvements: (r.recommended_improvements as string[]) || [],
             video_url: (r.video_url as string) || undefined,
           };
         }
       }
 
       // Store structured response data alongside the message
-      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length || creativePackage || competitorAnalysis) {
+      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length || creativePackage || competitorAnalysis || selfDemoAnalysis) {
         setAgentResponses(prev => ({
           ...prev,
           [agentMsgId]: {
@@ -433,8 +514,10 @@ export function BrandAgentApp({
             generated_images: response.generated_images,
             creative_package: creativePackage,
             competitor_analysis: competitorAnalysis,
+            self_demo_analysis: selfDemoAnalysis,
           },
         }));
+        if (creativePackage) invalidateGenerations();
       }
 
       // If a brand was created, notify the parent so it can switch to the new brand
@@ -484,12 +567,38 @@ export function BrandAgentApp({
       );
     } finally {
       setIsLoading(false);
+      setAnalyzingVideoAt(null);
     }
   };
 
   // Track reconnection attempts
   const reconnectAttemptsRef = useRef(0);
   const MAX_RECONNECT_ATTEMPTS = 2;
+
+  // Persist voice session to chatbot_conversations — safe to call from stale closures
+  const persistVoiceSession = () => {
+    const convId = conversationIdRef.current;
+    const msgs = messagesRef.current;
+    if (!convId) return;
+    const substantiveMessages = msgs.filter(m =>
+      m.content &&
+      m.content.length > 0 &&
+      !m.isError &&
+      !m.isStreaming &&
+      !['Reconnecting voice...', 'Voice session ended.', 'Voice mode unavailable. Using chat instead.', 'Voice connection lost. Chat mode active.'].includes(m.content)
+    );
+    if (substantiveMessages.length === 0) return;
+    const dbMessages = substantiveMessages.map(m => ({
+      role: m.role === 'user' ? 'user' as const : 'model' as const,
+      content: m.content,
+      timestamp: m.timestamp,
+    }));
+    saveVoiceConversation(convId, dbMessages, {
+      brand_id: brandCtx?.brand?.id ?? null,
+      brand_name: brandCtx?.brand?.name,
+      tool_calls_count: voiceToolCallsRef.current,
+    });
+  };
 
   const connectVoice = async (resumeHandle?: string) => {
     const token = Date.now();
@@ -500,6 +609,9 @@ export function BrandAgentApp({
           onClose: () => {
             const handle = liveControlRef.current?.getResumeHandle?.();
             liveControlRef.current = null;
+
+            // Persist before reconnect or end
+            persistVoiceSession();
 
             // Try auto-reconnect with resume handle
             if (handle && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
@@ -559,6 +671,7 @@ export function BrandAgentApp({
           },
           onToolResult: (toolName, result) => {
             setActiveToolName(null);
+            voiceToolCallsRef.current++;
             if (toolName === 'generate_image' && result.output_urls) {
               const images = (result.output_urls as string[]).map(url => ({
                 url,
@@ -598,6 +711,7 @@ export function BrandAgentApp({
                   },
                 },
               }));
+              invalidateGenerations();
             } else if (toolName === 'analyze_competitor_content' && result.competitor_summary) {
               const compMsgId = uuidv4();
               setMessages(prev => [...prev, {
@@ -616,7 +730,10 @@ export function BrandAgentApp({
                     target_audience: (result.target_audience as string) || '',
                     emotional_hooks: (result.emotional_hooks as string[]) || [],
                     weaknesses: (result.weaknesses as string[]) || [],
+                    scenes: (result.scenes as CompetitorScene[]) || [],
+                    campaign_directions: (result.campaign_directions as CampaignDirection[]) || [],
                     counter_brief: (result.counter_brief as string) || '',
+                    counter_deliverables: (result.counter_deliverables as CompetitorAnalysis['counter_deliverables']) || undefined,
                     video_url: (result.video_url as string) || undefined,
                   },
                 },
@@ -683,9 +800,22 @@ export function BrandAgentApp({
     setIsVoiceMode(true);
     setVoiceTranscript([]);
     voiceVolumeRef.current = 0;
+    voiceToolCallsRef.current = 0;
     addedTranscriptIdsRef.current.clear();
     reconnectAttemptsRef.current = 0;
     activeConnectionTokenRef.current = 0; // reset so new connection isn't blocked
+
+    // Ensure we have a conversation record (created at init, but create now if missing)
+    if (!conversationIdRef.current && userId) {
+      try {
+        const newId = await createBrandAgentConversation(userId);
+        setConversationId(newId);
+        conversationIdRef.current = newId;
+      } catch {
+        console.warn('[Vince] Could not create voice conversation record');
+      }
+    }
+
     connectVoice();
   };
 
@@ -700,6 +830,10 @@ export function BrandAgentApp({
     }
     setIsVoiceMode(false);
     setActiveToolName(null);
+
+    // Persist full message thread before clearing — fire-and-forget, non-blocking
+    persistVoiceSession();
+
     setVoiceTranscript([]);
     addedTranscriptIdsRef.current.clear();
   };
@@ -709,6 +843,11 @@ export function BrandAgentApp({
     navigator.clipboard.writeText(prompt);
     setCopiedIndex(messages.findIndex(m => m.id === msgId));
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleDirectionSelect = (direction: CampaignDirection, analysis: CompetitorAnalysis) => {
+    const text = `Let's go with the "${direction.title}" direction. ${direction.concept} Tagline: "${direction.tagline}"`;
+    handleSendMessage(text, []);
   };
 
   // Derive current transcript text for the voice bar
@@ -936,38 +1075,164 @@ export function BrandAgentApp({
                   </div>
                 ))}
 
-                {/* Competitor Analysis */}
-                {agentResponses[message.id].competitor_analysis && (
-                  <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded-lg space-y-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Competitive Intel</span>
-                    </div>
-                    <p className="text-xs text-foreground/80 leading-relaxed">
-                      {agentResponses[message.id].competitor_analysis!.competitor_summary}
-                    </p>
-                    {agentResponses[message.id].competitor_analysis!.weaknesses?.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Strategic Openings</p>
-                        <ul className="space-y-1">
-                          {agentResponses[message.id].competitor_analysis!.weaknesses.map((w, i) => (
-                            <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
-                              <span className="text-orange-400 mt-0.5 shrink-0">›</span>
-                              {w}
-                            </li>
+                {/* Competitor Analysis — Beat This Ad */}
+                {agentResponses[message.id].competitor_analysis && (() => {
+                  const analysis = agentResponses[message.id].competitor_analysis!;
+                  return (
+                    <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded-lg space-y-3">
+                      {/* Header */}
+                      <div className="flex items-center gap-1.5">
+                        <Target className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Beat This Ad</span>
+                      </div>
+
+                      {/* Summary */}
+                      <p className="text-xs text-foreground/80 leading-relaxed">{analysis.competitor_summary}</p>
+
+                      {/* Scene Timeline */}
+                      {analysis.scenes?.length > 0 && (
+                        <div className="pt-2 border-t border-orange-500/15">
+                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Scene Breakdown</p>
+                          <div className="space-y-1">
+                            {analysis.scenes.map((scene, i) => (
+                              <div key={i} className="flex items-start gap-2 text-xs">
+                                <span className="text-orange-400/60 shrink-0 font-mono text-[10px] pt-0.5">{scene.timestamp}</span>
+                                <span className="text-foreground/60 flex-1">{scene.scene_type}</span>
+                                <span className="text-orange-400/50 shrink-0 text-[10px] italic">{scene.emotional_signal}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Strategic Openings */}
+                      {analysis.weaknesses?.length > 0 && (
+                        <div className="pt-2 border-t border-orange-500/15">
+                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Strategic Openings</p>
+                          <ul className="space-y-1">
+                            {analysis.weaknesses.map((w, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
+                                <span className="text-orange-400 mt-0.5 shrink-0">›</span>
+                                {w}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* 3 Campaign Directions */}
+                      {analysis.campaign_directions?.length > 0 && (
+                        <div className="pt-2 border-t border-orange-500/15 space-y-2">
+                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">3 Ways to Beat It</p>
+                          {analysis.campaign_directions.map((dir, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleDirectionSelect(dir, analysis)}
+                              className="w-full text-left p-2 bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/40 rounded cursor-pointer transition-colors space-y-0.5"
+                            >
+                              <p className="text-xs font-semibold text-foreground/90">{dir.title}</p>
+                              <p className="text-[11px] text-foreground/60 leading-snug">{dir.concept}</p>
+                              <p className="text-[10px] text-orange-400/70 italic">"{dir.tagline}"</p>
+                            </button>
                           ))}
-                        </ul>
+                        </div>
+                      )}
+
+                      {/* Counter Deliverables */}
+                      {analysis.counter_deliverables && analysis.counter_deliverables.length > 0 && (
+                        <div className="pt-2 border-t border-orange-500/15 space-y-1.5">
+                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">Build These</p>
+                          {analysis.counter_deliverables.map((d, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleSendMessage(`Generate a creative package for a ${d.name} (${d.aspect_ratio}, deliverable_type: ${d.deliverable_type}) as part of the counter-campaign. Brief: ${d.description}`, [])}
+                              className="w-full text-left flex items-center gap-2 px-2 py-1.5 bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/40 rounded transition-colors"
+                            >
+                              <span className="text-xs font-medium text-foreground/80 flex-1">{d.name}</span>
+                              <span className="text-[10px] text-orange-400/50 shrink-0">{d.aspect_ratio}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Counter Brief (collapsible) */}
+                      {analysis.counter_brief && (
+                        <details className="pt-2 border-t border-orange-500/15">
+                          <summary className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider cursor-pointer select-none">
+                            Full Counter Brief
+                          </summary>
+                          <p className="text-xs text-foreground/70 leading-relaxed mt-1.5">{analysis.counter_brief}</p>
+                        </details>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Self-Demo Analysis */}
+                {agentResponses[message.id].self_demo_analysis && (() => {
+                  const demo = agentResponses[message.id].self_demo_analysis!;
+                  return (
+                    <div className="p-3 bg-violet-500/5 border border-violet-500/20 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Self Analysis</span>
+                        <span className="text-[10px] font-bold text-violet-400">Demo Score: {demo.demo_score}/100</span>
                       </div>
-                    )}
-                    {agentResponses[message.id].competitor_analysis!.counter_brief && (
-                      <div className="pt-2 border-t border-orange-500/15">
-                        <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Counter Brief</p>
-                        <p className="text-xs text-foreground/70 leading-relaxed">
-                          {agentResponses[message.id].competitor_analysis!.counter_brief}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      <p className="text-xs text-foreground/80 leading-relaxed">{demo.product_summary}</p>
+                      {demo.ux_observations?.length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">UX Observations</p>
+                          <ul className="space-y-1">
+                            {demo.ux_observations.map((o, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
+                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                {o}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {demo.missed_opportunities?.length > 0 && (
+                        <div className="pt-2 border-t border-violet-500/15">
+                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">Missed Opportunities</p>
+                          <ul className="space-y-1">
+                            {demo.missed_opportunities.map((o, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
+                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                {o}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {demo.demo_narrative_issues?.length > 0 && (
+                        <div className="pt-2 border-t border-violet-500/15">
+                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">Narrative Issues</p>
+                          <ul className="space-y-1">
+                            {demo.demo_narrative_issues.map((n, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
+                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                {n}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {demo.recommended_improvements?.length > 0 && (
+                        <div className="pt-2 border-t border-violet-500/15">
+                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">Recommended Improvements</p>
+                          <ul className="space-y-1">
+                            {demo.recommended_improvements.map((r, i) => (
+                              <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
+                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                {r}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Creative Package (interleaved text + images) */}
                 {agentResponses[message.id].creative_package && (
@@ -1069,6 +1334,22 @@ export function BrandAgentApp({
                  activeToolName === 'generate_video' ? 'Queueing video render...' :
                  'Vince is working...'}
               </span>
+            </div>
+          </div>
+        )}
+
+        {analyzingVideoAt && (
+          <div className="flex items-center gap-2 text-xs py-2">
+            <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2 w-full">
+              <div className="h-2 w-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span className="text-orange-300 font-medium">Analyzing video</span>
+                <span className="text-muted-foreground">
+                  {elapsedAnalysisSeconds < 60
+                    ? `${elapsedAnalysisSeconds}s · Gemini is watching the video...`
+                    : `${Math.floor(elapsedAnalysisSeconds / 60)}m ${elapsedAnalysisSeconds % 60}s · almost there...`}
+                </span>
+              </div>
             </div>
           </div>
         )}

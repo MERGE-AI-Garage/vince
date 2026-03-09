@@ -402,6 +402,49 @@ export async function createBrandAgentConversation(userId: string): Promise<stri
 }
 
 /**
+ * Persist voice session transcript to chatbot_conversations.
+ * Called when a voice session ends — non-throwing.
+ */
+export async function saveVoiceConversation(
+  conversationId: string,
+  messages: Array<{ role: 'user' | 'model'; content: string; timestamp: Date }>,
+  metadata: {
+    brand_id?: string | null;
+    brand_name?: string;
+    tool_calls_count?: number;
+  },
+): Promise<void> {
+  try {
+    const dbMessages = messages.map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content,
+      timestamp: m.timestamp.toISOString(),
+    }));
+
+    const { error } = await supabase
+      .from('chatbot_conversations')
+      .update({
+        messages: dbMessages,
+        tool_calls_count: metadata.tool_calls_count ?? 0,
+        updated_at: new Date().toISOString(),
+        metadata: {
+          assistant: 'vince',
+          mode: 'voice',
+          brand_id: metadata.brand_id,
+          brand_name: metadata.brand_name,
+        },
+      })
+      .eq('id', conversationId);
+
+    if (error) {
+      console.error('[Brand Agent] Failed to save voice conversation:', error.message);
+    }
+  } catch (err) {
+    console.error('[Brand Agent] Error saving voice conversation:', err);
+  }
+}
+
+/**
  * Delete a Brand Agent conversation record
  */
 export async function deleteBrandAgentConversation(conversationId: string): Promise<void> {

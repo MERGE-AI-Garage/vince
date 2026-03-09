@@ -19,6 +19,7 @@ import {
 import { Image, Video, Clock, ChevronRight, Loader2, ImageOff, Trash2, Info, PanelLeftClose } from 'lucide-react';
 import { useMyGenerations, useInvalidateGenerations } from '@/hooks/useCreativeStudioGenerations';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { GenerationInfoDialog } from './GenerationInfoDialog';
 import type { GenerationWithDetails } from '@/types/creative-studio';
 
@@ -50,9 +51,11 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
         .eq('id', generationId);
       if (error) {
         console.error('Failed to delete generation:', error);
+        toast.error('Delete failed: ' + error.message);
         return;
       }
       invalidateGenerations();
+      toast.success('Deleted');
     } finally {
       setDeletingIds(prev => {
         const next = new Set(prev);
@@ -74,10 +77,12 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
 
   const handleClearBrokenConfirmed = useCallback(async () => {
     if (!generations) return;
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const brokenIds = generations
       .filter(g =>
         g.status === 'failed' ||
         (g.status === 'completed' && (!g.output_urls || g.output_urls.length === 0)) ||
+        (g.status === 'processing' && new Date(g.created_at) < thirtyMinutesAgo) ||
         brokenThumbnails.has(g.id)
       )
       .map(g => g.id);
@@ -90,10 +95,12 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
         .in('id', brokenIds);
       if (error) {
         console.error('Failed to clear broken generations:', error);
+        toast.error('Clear failed: ' + error.message);
         return;
       }
       setBrokenThumbnails(new Set());
       invalidateGenerations();
+      toast.success(`Removed ${brokenIds.length} failed item${brokenIds.length !== 1 ? 's' : ''}`);
     } finally {
       setDeletingIds(new Set());
     }
@@ -169,7 +176,10 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">History</h3>
           <div className="flex items-center gap-1">
-            {(brokenThumbnails.size > 0 || generations?.some(g => g.status === 'failed')) && (
+            {(brokenThumbnails.size > 0 || generations?.some(g =>
+              g.status === 'failed' ||
+              (g.status === 'processing' && new Date(Date.now() - 30 * 60 * 1000) > new Date(g.created_at))
+            )) && (
               <Button
                 variant="ghost"
                 size="icon"

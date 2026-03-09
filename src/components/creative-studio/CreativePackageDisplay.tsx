@@ -1,7 +1,7 @@
 // ABOUTME: Displays interleaved creative package results (text + images).
 // ABOUTME: Renders alternating copy blocks and generated images from Gemini interleaved output.
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Download, Copy, Check, Clock, Layers, Sparkles, ShieldCheck, MonitorPlay } from 'lucide-react';
@@ -43,6 +43,69 @@ interface CreativePackageDisplayProps {
   onLoadToCanvas?: (imageUrl: string) => void;
 }
 
+function cleanCopyText(text: string): string {
+  return text
+    // Strip markdown headings (###, ##, #) at line start
+    .replace(/^#{1,6}\s*/gm, '')
+    // Strip Gemini deliverable section markers like "*** Deliverable 2: LinkedIn Post"
+    .replace(/^\*{2,3}\s*Deliverable\s*\d+[^*\n]*\*{0,3}\s*\n?/im, '')
+    // Strip leading numbered section labels like "1. Hero Banner\n"
+    .replace(/^\d+\.\s+[A-Z][^\n]*\n/m, '')
+    // Strip "Here is the complete creative package for... \n" intro sentences
+    .replace(/^Here is the complete creative package[^\n]*\n?/im, '')
+    // Strip leading **Copy:** label (redundant)
+    .replace(/^\*{1,2}Copy:\*{1,2}\s*/i, '')
+    // Strip trailing **Image:** labels
+    .replace(/\s*\*{1,2}Image:\*{1,2}\s*$/i, '')
+    .trim();
+}
+
+// Renders text with **bold** markdown and structured **Label:** field detection
+function renderCopyText(text: string): React.ReactNode {
+  // Check if text contains structured **Label:** fields
+  const hasStructuredFields = /\*{1,2}(Headline|Subheadline|CTA|Caption|Button|Body|Tagline)[^*]*\*{1,2}:/i.test(text);
+
+  if (hasStructuredFields) {
+    // Parse into label/value pairs
+    const lines = text.split(/(?=\*{1,2}(?:Headline|Subheadline|CTA|Caption|Button|Body|Tagline)[^*]*\*{1,2}:)/i);
+    return (
+      <div className="space-y-2">
+        {lines.map((line, i) => {
+          const fieldMatch = line.match(/^\*{1,2}([\w\s]+)\*{1,2}:\s*([\s\S]*)/i);
+          if (fieldMatch) {
+            const label = fieldMatch[1].trim();
+            const value = fieldMatch[2].trim().replace(/\*{1,2}/g, '');
+            const isHeadline = /headline/i.test(label);
+            const isCTA = /cta|button/i.test(label);
+            return (
+              <div key={i}>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-purple-400/60 block mb-0.5">{label}</span>
+                <p className={isHeadline ? 'text-sm font-bold text-foreground leading-tight' : isCTA ? 'text-xs font-semibold text-purple-300' : 'text-xs text-foreground/85 leading-relaxed'}>
+                  {value}
+                </p>
+              </div>
+            );
+          }
+          // Plain text before the first field
+          const stripped = line.replace(/\*{1,2}/g, '').trim();
+          return stripped ? <p key={i} className="text-xs text-foreground/85 leading-relaxed">{stripped}</p> : null;
+        })}
+      </div>
+    );
+  }
+
+  // Plain copy — render bold spans inline, preserve line breaks
+  const parts = text.split(/(\*{1,2}[^*]+\*{1,2})/g);
+  return (
+    <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-wrap">
+      {parts.map((part, i) => {
+        const bold = part.match(/^\*{1,2}([^*]+)\*{1,2}$/);
+        return bold ? <strong key={i} className="font-semibold text-foreground/95">{bold[1]}</strong> : <Fragment key={i}>{part}</Fragment>;
+      })}
+    </p>
+  );
+}
+
 function groupParts(parts: PackagePart[], deliverableNames: string[]): DeliverableGroup[] {
   const groups: DeliverableGroup[] = [];
   let pendingText: string | undefined;
@@ -58,7 +121,7 @@ function groupParts(parts: PackagePart[], deliverableNames: string[]): Deliverab
           text: pendingText,
         });
       }
-      pendingText = part.content;
+      pendingText = cleanCopyText(part.content);
     } else if (part.type === 'image') {
       const imageUrl = part.content || (part.image_base64
         ? `data:${part.mime_type || 'image/png'};base64,${part.image_base64}`
@@ -145,37 +208,68 @@ export function CreativePackageDisplay({
       </div>
 
       {/* Brand Alignment Score */}
-      {brandAlignment && (
-        <div className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-emerald-500/5 border border-emerald-500/15">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${brandAlignment.score >= 75 ? 'text-emerald-400' : brandAlignment.score >= 50 ? 'text-amber-400' : 'text-red-400'}`} />
-            <span className="text-xs font-medium text-foreground/80">Brand Alignment</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              {[
-                { key: 'visual_identity', label: 'Visual' },
-                { key: 'photography', label: 'Photo' },
-                { key: 'color_system', label: 'Color' },
-                { key: 'brand_voice', label: 'Voice' },
-              ].map(({ key, label }) => {
-                const active = brandAlignment.dimensions[key as keyof typeof brandAlignment.dimensions];
-                return (
-                  <span
-                    key={key}
-                    className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted/30 text-muted-foreground/40'}`}
-                  >
-                    {label}
-                  </span>
-                );
-              })}
+      {brandAlignment && (() => {
+        const { score, dimensions } = brandAlignment;
+        const tier = score >= 75 ? 'high' : score >= 50 ? 'mid' : 'low';
+        const color = tier === 'high' ? 'emerald' : tier === 'mid' ? 'amber' : 'red';
+        const containerCls = tier === 'high'
+          ? 'bg-emerald-500/5 border-emerald-500/20'
+          : tier === 'mid'
+          ? 'bg-amber-500/5 border-amber-500/20'
+          : 'bg-red-500/5 border-red-500/20';
+        const iconCls = tier === 'high' ? 'text-emerald-400' : tier === 'mid' ? 'text-amber-400' : 'text-red-400';
+        const scoreCls = iconCls;
+        const barCls = tier === 'high' ? 'bg-emerald-400' : tier === 'mid' ? 'bg-amber-400' : 'bg-red-400';
+        const pillActiveCls = tier === 'high'
+          ? 'bg-emerald-500/15 text-emerald-400'
+          : tier === 'mid'
+          ? 'bg-amber-500/15 text-amber-400'
+          : 'bg-red-500/15 text-red-400';
+
+        return (
+          <div className={`rounded-md border px-3 pt-2 pb-2 space-y-2 ${containerCls}`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${iconCls}`} />
+                <span className="text-xs font-medium text-foreground/80">Brand Alignment</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  {[
+                    { key: 'visual_identity', label: 'Visual' },
+                    { key: 'photography', label: 'Photo' },
+                    { key: 'color_system', label: 'Color' },
+                    { key: 'brand_voice', label: 'Voice' },
+                  ].map(({ key, label }) => {
+                    const active = dimensions[key as keyof typeof dimensions];
+                    return (
+                      <span
+                        key={key}
+                        className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full ${active ? pillActiveCls : 'bg-muted/20 text-muted-foreground/30 line-through'}`}
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+                <span className={`text-sm font-bold tabular-nums ${scoreCls}`}>
+                  {score}%
+                </span>
+              </div>
             </div>
-            <span className={`text-sm font-bold tabular-nums ${brandAlignment.score >= 75 ? 'text-emerald-400' : brandAlignment.score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
-              {brandAlignment.score}%
-            </span>
+            {/* Progress bar */}
+            <div className="h-0.5 w-full bg-muted/20 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all ${barCls}`} style={{ width: `${score}%` }} />
+            </div>
+            {/* Low score nudge */}
+            {score < 50 && (
+              <p className="text-[10px] text-muted-foreground/50">
+                Run brand analysis to improve alignment score
+              </p>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Deliverable sections */}
       <div className="space-y-6">
@@ -195,28 +289,9 @@ export function CreativePackageDisplay({
             {/* Copy block */}
             {group.text && (
               <div className="relative group/text">
-                {group.text.trim().length <= 120 ? (
-                  // Short text = headline — render large and bold
-                  <div className="bg-muted/10 rounded-md px-3 py-3 border border-border/20 pr-10">
-                    <p className="text-base font-bold text-foreground leading-tight tracking-tight">
-                      {group.text.trim()}
-                    </p>
-                  </div>
-                ) : group.text.trim().length <= 400 ? (
-                  // Medium text = subheadline / hook
-                  <div className="bg-muted/10 rounded-md px-3 py-2.5 border border-border/20 pr-10">
-                    <p className="text-sm font-semibold text-foreground/90 leading-snug">
-                      {group.text.trim()}
-                    </p>
-                  </div>
-                ) : (
-                  // Long text = body copy
-                  <div className="bg-muted/20 rounded-md p-3 pr-10 border border-border/30">
-                    <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-wrap">
-                      {group.text.trim()}
-                    </p>
-                  </div>
-                )}
+                <div className="bg-muted/10 rounded-md p-3 pr-10 border border-border/20">
+                  {renderCopyText(group.text)}
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
