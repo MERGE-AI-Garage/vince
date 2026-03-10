@@ -96,6 +96,32 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 - [x] Elapsed-time rendering indicator in chat; real-time completion via `useRealtimeGenerations`
 - [x] Doc: `2026-03-07-video-generation.md`
 
+### Beat This Ad — Enhanced Competitor Card (Mar 10)
+- [x] Scene breakdown timeline: timestamp + scene type + emotional signal per scene
+- [x] 3 Ways to Beat It: clickable `CampaignDirection` cards (title, concept, tagline) — clicking sends pre-filled message to Vince
+- [x] Build These: clickable `counter_deliverables` buttons — clicking sends full brief + deliverable_type to Vince
+- [x] Full Counter Brief collapsible section (`<details>`)
+- [x] Card header renamed "Beat This Ad" with Target icon
+- [x] Analyzing video orange elapsed indicator — fires immediately when YouTube/video URL detected in message
+- [x] Doc: `2026-03-10-beat-this-ad-self-demo.md`
+
+### Self-Demo Analysis (Mar 10)
+- [x] `analyze_self_demo` tool — analyzes a recording of your own demo, returns score + structured feedback
+- [x] Violet Self Analysis card: demo score, UX observations, missed opportunities, narrative issues, recommendations
+- [x] Extraction in both text (`handleSendMessage`) and voice (`onToolResult`) paths
+- [x] Doc: `2026-03-10-beat-this-ad-self-demo.md`
+
+### Voice Session Persistence (Mar 10)
+- [x] `persistVoiceSession()` — saves substantive messages to `chatbot_conversations` on session end or manual exit
+- [x] Uses refs (`conversationIdRef`, `messagesRef`) for stale-closure safety inside live session callbacks
+- [x] Metadata: `brand_id`, `brand_name`, `tool_calls_count`
+- [x] `voiceToolCallsRef` tracks tool call count across the session
+- [x] Doc: `2026-03-10-beat-this-ad-self-demo.md`
+
+### Generation History Auto-Refresh (Mar 10)
+- [x] `useInvalidateGenerations()` called after creative package generated (text + voice) — History panel updates automatically
+- [x] Doc: `2026-03-10-beat-this-ad-self-demo.md`
+
 ---
 
 ## Not Done / Not Tested

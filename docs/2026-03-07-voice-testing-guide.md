@@ -167,20 +167,25 @@ Expected:
 
 ---
 
-## Test 10: Competitor Analysis (Text Mode)
+## Test 10: Competitor Analysis — Beat This Ad Card (Text Mode)
 
-**What to verify:** `analyze_competitor_content` tool renders the orange Competitive Intel card.
+**What to verify:** `analyze_competitor_content` renders the full orange Beat This Ad card.
 
 Steps:
 1. In text chat, type: "Analyze this competitor video: [paste a YouTube URL]"
 
 Expected:
 - [ ] Green tool pill: "Competitor analyzed — N strategic openings found"
-- [ ] **Orange** Competitive Intel card appears with:
+- [ ] Orange "Beat This Ad" card appears (Target icon in header) with:
   - Competitor summary paragraph
-  - Strategic Openings list (bullet points)
-  - Counter Brief section
-- [ ] Vince asks "Want to build a counter-campaign?" — does NOT auto-generate images
+  - **Scene Breakdown** table (timestamp | scene type | emotional signal)
+  - **Strategic Openings** bullet list
+  - **3 Ways to Beat It** — up to 3 clickable campaign direction cards, each showing title, concept, and tagline
+  - **Build These** — clickable counter-deliverable buttons with aspect ratio labels
+  - **Full Counter Brief** — collapsed `<details>` element, expandable
+- [ ] Clicking a campaign direction card sends Vince a pre-filled message — check it arrives in chat
+- [ ] Clicking a "Build These" button sends a full creative brief — Vince should start generating
+- [ ] Vince asks "Want to build a counter-campaign?" — does NOT auto-generate images on its own
 
 ---
 
@@ -249,6 +254,81 @@ Steps:
 Expected:
 - [ ] Quick prompt row disappears when voice mode starts
 - [ ] Returns when you exit back to chat
+
+---
+
+## Test 15: Analyzing Video Indicator
+
+**What to verify:** Orange elapsed indicator appears immediately when a video URL is sent.
+
+Steps:
+1. In text chat, type any message containing a YouTube URL (e.g. "Analyze this: https://youtube.com/watch?v=xxx")
+
+Expected:
+- [ ] **Orange indicator** appears in the chat area as soon as Send is pressed (before the response):
+  - Orange pulsing dot
+  - "Analyzing video"
+  - "Xs · Gemini is watching the video..."
+- [ ] Counter ticks up every second while analysis runs
+- [ ] After 60s, message changes to "Xm Xs · almost there..."
+- [ ] Indicator disappears when the response arrives (success or error)
+
+---
+
+## Test 16: Self-Demo Analysis
+
+**What to verify:** `analyze_self_demo` tool renders the violet Self Analysis card.
+
+Steps:
+1. In text chat, type: "Analyze my demo recording: [paste a video URL of your own demo]"
+
+Expected:
+- [ ] Green tool pill for `analyze_self_demo`
+- [ ] **Violet** Self Analysis card appears with:
+  - "SELF ANALYSIS" header and "Demo Score: N/100" on the right
+  - Product summary paragraph
+  - UX Observations list
+  - Missed Opportunities list
+  - Narrative Issues list
+  - Recommended Improvements list
+- [ ] Score is a number 0–100
+
+---
+
+## Test 17: Voice Session Saved to DB
+
+**What to verify:** Voice conversations are persisted to `chatbot_conversations` on exit.
+
+Steps:
+1. Start voice
+2. Have a multi-turn conversation (at least 4 messages)
+3. Click **Chat** to exit
+
+Expected:
+- [ ] In Supabase → `chatbot_conversations` table, a row appears with:
+  - `metadata.assistant = 'vince'` (or similar)
+  - `metadata.brand_id` matching the active brand
+  - `metadata.tool_calls_count` showing how many tools were used
+  - Messages array containing the substantive turns (no "Reconnecting voice..." etc.)
+
+Also verify save fires on session drop (not just manual exit):
+1. Start voice, say something
+2. Kill the browser tab and reopen — check the DB for the partial session
+
+---
+
+## Test 18: History Refreshes After Creative Package (Text Mode)
+
+**What to verify:** `invalidateGenerations()` fires after a creative package, refreshing the History panel without needing a manual reload.
+
+Steps:
+1. Open the History panel
+2. Ask Vince (text chat): "Create a LinkedIn post for the brand"
+3. Wait for the creative package card to appear in chat
+
+Expected:
+- [ ] History panel updates automatically within ~2s of the package appearing
+- [ ] No manual refresh needed
 
 ---
 
