@@ -657,6 +657,34 @@ export const connectVinceLiveSession = async (
                 continue;
               }
 
+              // generate_brand_playbook: fire-and-forget — pipeline takes 2-3 min, would hang the session
+              if (fc.name === 'generate_brand_playbook') {
+                functionResponses.push({
+                  id: fc.id || '',
+                  name: 'generate_brand_playbook',
+                  response: { success: true, started: true, message: "Playbook is running in the background — synthesizing brand DNA, generating governance directives, the generation prompt, and brand card images. This takes about 2 minutes. I'll tell you when it's done." },
+                });
+                callbacks.onToolStart?.('generate_brand_playbook');
+
+                executeRemoteTool('generate_brand_playbook', fc.args || {}, activeBrandId || null, userContext?.id)
+                  .then(result => {
+                    if (sessionCancelled) return;
+                    callbacks.onToolResult?.('generate_brand_playbook', result);
+                    const steps = (result as Record<string, unknown>).steps as string[] || [];
+                    const errors = (result as Record<string, unknown>).errors as string[] | undefined;
+                    const completion = errors?.length
+                      ? `Brand playbook finished with ${errors.length} issue(s). The core setup is done — directives, prompt, and DNA are ready. Brand cards may have had a hiccup. You can check the History panel.`
+                      : `Brand playbook complete. Everything's set up: DNA, governance directives, generation prompt${steps.length > 3 ? ', brand cards' : ''}. You're ready to start creating. What's the first shot?`;
+                    sessionPromise?.then(s => s.sendText(completion)).catch(err => console.error('[Vince Live] Failed to send playbook completion:', err));
+                  })
+                  .catch(err => {
+                    if (sessionCancelled) return;
+                    console.error('[Vince Live] Playbook failed:', err);
+                    sessionPromise?.then(s => s.sendText("The playbook ran into an issue. The brand DNA and earlier steps may still have completed — check the brand profile. We can retry individual steps if needed.")).catch(() => {});
+                  });
+                continue;
+              }
+
               // analyze_competitor_content: fire-and-forget to avoid blocking the session
               if (fc.name === 'analyze_competitor_content') {
                 const url = (fc.args?.url as string) || '';
@@ -699,6 +727,84 @@ export const connectVinceLiveSession = async (
                     if (sessionCancelled) return;
                     console.error('[Vince Live] Competitor analysis failed:', err);
                     sessionPromise?.then(s => s.sendText('I ran into a problem analyzing that video. Try a different URL or we can work from your brand profile directly.')).catch(() => {});
+                  });
+                continue;
+              }
+
+              // generate_creative_package: fire-and-forget — multiple image generations, 30-60s
+              if (fc.name === 'generate_creative_package') {
+                functionResponses.push({
+                  id: fc.id || '',
+                  name: 'generate_creative_package',
+                  response: { success: true, generating: true, message: "Campaign package is generating — images, copy, and all deliverables. This takes about 30-60 seconds. I'll tell you when it's ready." },
+                });
+                callbacks.onToolStart?.('generate_creative_package');
+
+                executeRemoteTool('generate_creative_package', fc.args || {}, activeBrandId || null, userContext?.id)
+                  .then(result => {
+                    if (sessionCancelled) return;
+                    callbacks.onToolResult?.('generate_creative_package', result);
+                    const count = (result as Record<string, unknown>).deliverable_count as number || 0;
+                    const completion = `Campaign package is ready — ${count > 0 ? `${count} deliverables` : 'full package'} in the History panel. Want to run another direction or refine anything?`;
+                    sessionPromise?.then(s => s.sendText(completion)).catch(err => console.error('[Vince Live] Failed to send package completion:', err));
+                  })
+                  .catch(err => {
+                    if (sessionCancelled) return;
+                    console.error('[Vince Live] Creative package failed:', err);
+                    sessionPromise?.then(s => s.sendText("Package generation ran into an issue. Check the History panel — some assets may have completed. We can retry.")).catch(() => {});
+                  });
+                continue;
+              }
+
+              // generate_brand_guardrails: fire-and-forget — 6 sequential Gemini calls when all_areas=true, 60-90s
+              if (fc.name === 'generate_brand_guardrails') {
+                const allAreas = !!(fc.args?.all_areas);
+                const label = allAreas ? 'All 6 governance directive sets' : 'Brand guardrail';
+                functionResponses.push({
+                  id: fc.id || '',
+                  name: 'generate_brand_guardrails',
+                  response: { success: true, generating: true, message: `${label} generating in the background. ${allAreas ? "This covers visual identity, photography, tone, typography, product representation, and compliance — takes about a minute." : "This takes about 15 seconds."} I'll let you know when it's done.` },
+                });
+                callbacks.onToolStart?.('generate_brand_guardrails');
+
+                executeRemoteTool('generate_brand_guardrails', fc.args || {}, activeBrandId || null, userContext?.id)
+                  .then(result => {
+                    if (sessionCancelled) return;
+                    callbacks.onToolResult?.('generate_brand_guardrails', result);
+                    const generated = (result as Record<string, unknown>).generated as number || 0;
+                    sessionPromise?.then(s => s.sendText(`Brand guardrails complete — ${generated} directive set${generated !== 1 ? 's' : ''} created. The brand is governed and ready for compliant creative work.`)).catch(() => {});
+                  })
+                  .catch(err => {
+                    if (sessionCancelled) return;
+                    console.error('[Vince Live] Guardrails failed:', err);
+                    sessionPromise?.then(s => s.sendText("Guardrail generation ran into an issue. Some directive sets may have completed. Check the brand profile.")).catch(() => {});
+                  });
+                continue;
+              }
+
+              // analyze_self_demo: fire-and-forget — video analysis via Gemini, 20-30s
+              if (fc.name === 'analyze_self_demo') {
+                functionResponses.push({
+                  id: fc.id || '',
+                  name: 'analyze_self_demo',
+                  response: { success: true, analyzing: true, message: "Watching the demo now — I'll give you my honest product critique in about 20 seconds." },
+                });
+                callbacks.onToolStart?.('analyze_self_demo');
+
+                executeRemoteTool('analyze_self_demo', fc.args || {}, activeBrandId || null, userContext?.id)
+                  .then(result => {
+                    if (sessionCancelled) return;
+                    callbacks.onToolResult?.('analyze_self_demo', result);
+                    const score = (result as Record<string, unknown>).demo_score as number || 0;
+                    const summary = (result as Record<string, unknown>).product_summary as string || '';
+                    const improvements = (result as Record<string, unknown>).recommended_improvements as string[] || [];
+                    const briefing = `Self-analysis complete. Demo score: ${score}/100. ${summary} Top fix: ${improvements[0] || 'see the full breakdown in the chat'}.`;
+                    sessionPromise?.then(s => s.sendText(briefing)).catch(() => {});
+                  })
+                  .catch(err => {
+                    if (sessionCancelled) return;
+                    console.error('[Vince Live] Self-demo analysis failed:', err);
+                    sessionPromise?.then(s => s.sendText("Ran into a problem watching the demo. Make sure the URL is public and try again.")).catch(() => {});
                   });
                 continue;
               }

@@ -1358,15 +1358,13 @@ async function generateBrandPlaybook(
     steps.push(`⚠ Generation prompt: ${err.message}`);
   }
 
-  // Step 4: Generate brand card images (optional)
+  // Step 4: Generate brand card images (optional) — fire-and-forget to avoid timeout
+  // Each card is a Gemini image generation (~15s each × 5 = 75s+), so we don't await
   if (!params.skip_cards) {
-    try {
-      const cardResult = await generateBrandCards({}, context, supabase);
-      steps.push(`✓ ${cardResult.generated || 0} brand card image(s) generated`);
-    } catch (err: any) {
-      errors.push(`Cards: ${err.message}`);
-      steps.push(`⚠ Cards: ${err.message}`);
-    }
+    generateBrandCards({}, context, supabase)
+      .then(cardResult => console.log(`[playbook] Cards done: ${cardResult.generated || 0} generated`))
+      .catch(err => console.error(`[playbook] Cards failed: ${err.message}`));
+    steps.push('→ Brand card images queued (generating in background)');
   } else {
     steps.push('→ Card images skipped');
   }
