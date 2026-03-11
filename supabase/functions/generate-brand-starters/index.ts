@@ -112,7 +112,7 @@ serve(async (req) => {
 
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Authenticate
+    // Authenticate — service role key accepted for server-to-server calls
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
@@ -120,11 +120,18 @@ serve(async (req) => {
       });
     }
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // deno-lint-ignore no-explicit-any
+    let user: any;
+    if (token === supabaseServiceKey) {
+      user = { id: 'service-role', email: 'system' };
+    } else {
+      const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser(token);
+      if (authError || !authUser) {
+        return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      user = authUser;
     }
 
     const body: GenerateStartersRequest = await req.json();
