@@ -948,17 +948,8 @@ export function BrandAgentApp({
                 if (!ev.target?.result) return;
                 const base64 = (ev.target.result as string).split(',')[1];
 
-                // Voice mode: stream file directly to the live session
-                if (isVoiceMode && liveControlRef.current?.sendFile) {
-                  liveControlRef.current.sendFile({
-                    name: file.name,
-                    mimeType: file.type,
-                    data: base64,
-                  }).catch(err => console.error('[Vince] Voice file upload failed:', err));
-                  return;
-                }
-
-                // Documents: upload to Storage first so Vince has a URL for import_brand_document
+                // Documents (PDF, DOCX, etc.): upload to Storage first so Vince has a URL
+                // for import_brand_document. Never send raw base64 — PDFs can be megabytes.
                 if (isDocument && brandId) {
                   const path = `brand-documents/${brandId}/${Date.now()}-${file.name}`;
                   const { error } = await supabase.storage
@@ -967,12 +958,25 @@ export function BrandAgentApp({
                   if (!error) {
                     const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path);
                     const msg = `[Brand document uploaded: ${file.name}]\nURL: ${publicUrl}\n\nPlease import this document using import_brand_document with the URL above, then synthesize the brand profile and run the brand playbook.`;
-                    handleSendMessage(msg, [{ name: file.name, mimeType: file.type, data: base64 }]);
+                    if (isVoiceMode && liveControlRef.current?.sendText) {
+                      liveControlRef.current.sendText(msg).catch(err => console.error('[Vince] Voice text inject failed:', err));
+                    } else {
+                      handleSendMessage(msg, []);
+                    }
                   } else {
                     console.error('[Vince] Document storage upload failed:', error);
-                    // Fall back to inline-only so Vince can still read the content
-                    handleSendMessage(`[Uploaded: ${file.name}]`, [{ name: file.name, mimeType: file.type, data: base64 }]);
+                    handleSendMessage(`[Uploaded: ${file.name}] (storage failed — cannot import by URL)`, []);
                   }
+                  return;
+                }
+
+                // Images: stream directly in voice mode, or attach inline in chat mode
+                if (isVoiceMode && liveControlRef.current?.sendFile) {
+                  liveControlRef.current.sendFile({
+                    name: file.name,
+                    mimeType: file.type,
+                    data: base64,
+                  }).catch(err => console.error('[Vince] Voice file upload failed:', err));
                 } else {
                   handleSendMessage(`[Uploaded: ${file.name}]`, [{
                     name: file.name,
