@@ -1834,7 +1834,16 @@ serve(async (req) => {
 
     // Send message — use parts[] for multimodal, plain text otherwise
     const sendContent = parts || user_message;
-    let result = await chat.sendMessage(sendContent);
+    let result: Awaited<ReturnType<typeof chat.sendMessage>>;
+    try {
+      result = await chat.sendMessage(sendContent);
+    } catch (geminiErr) {
+      const msg = geminiErr instanceof Error ? geminiErr.message : String(geminiErr);
+      console.error('[Vince] Gemini sendMessage failed:', msg);
+      return new Response(JSON.stringify({ success: true, message: "I ran into a problem processing that request. Could you try rephrasing or try again?" }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     let response = result.response;
 
     const toolCalls: ToolCall[] = [];
@@ -1914,11 +1923,16 @@ serve(async (req) => {
         console.error(`[Vince] Tool failed: ${toolName}`, errorMessage);
         toolCalls.push({ toolName, parameters, error: errorMessage, success: false });
 
-        result = await chat.sendMessage([{
-          functionResponse: { name: toolName, response: { error: errorMessage } },
-        }]);
-        response = result.response;
-        functionCallsResult = response.functionCalls();
+        try {
+          result = await chat.sendMessage([{
+            functionResponse: { name: toolName, response: { error: errorMessage } },
+          }]);
+          response = result.response;
+          functionCallsResult = response.functionCalls();
+        } catch (recoveryErr) {
+          console.error('[Vince] Recovery sendMessage failed:', recoveryErr);
+          functionCallsResult = undefined;
+        }
       }
     }
 
