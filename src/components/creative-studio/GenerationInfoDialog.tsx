@@ -360,7 +360,7 @@ export function GenerationInfoDialog({ generation, onClose }: GenerationInfoDial
                       {params.person_generation && (
                         <MetaRow label="Person Generation" value={String(params.person_generation).replace(/_/g, ' ')} />
                       )}
-                      {params.seed != null && params.seed !== '' && (
+                      {params.seed != null && (
                         <MetaRow label="Seed" value={String(params.seed)} />
                       )}
                       {params.temperature != null && (

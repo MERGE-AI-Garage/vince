@@ -1050,7 +1050,7 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
                   <StandardsSnapshotCard
                     brand={brand}
                     populatedCount={populatedCount}
-                    profile={profile}
+                    profile={profile as unknown as Record<string, unknown>}
                   />
                 </div>
               </div>

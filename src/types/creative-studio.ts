@@ -7,6 +7,7 @@
 
 export type GenerationType =
   | 'text_to_image'
+  | 'image_to_image'
   | 'image_edit'
   | 'inpainting'
   | 'outpainting'

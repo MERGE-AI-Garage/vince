@@ -535,7 +535,7 @@ export function CorporateDNADialog({ brand, open, onOpenChange, onNavigate }: Co
                     brand={brand}
                     populatedCount={populatedCount}
                     documentAnalyses={documentAnalyses}
-                    profile={profile}
+                    profile={profile as unknown as Record<string, unknown>}
                   />
                 </div>
               </div>

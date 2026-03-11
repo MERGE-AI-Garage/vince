@@ -2,7 +2,7 @@
 // ABOUTME: Supports multiple visualizer presets selected via admin settings.
 
 import React from 'react';
-import { VisualizerProps, VisualizerStyle, LightPillarSettings, ClassicWaveSettings, Codrops3DOrbSettings } from './types';
+import { VisualizerProps, VisualizerStyle, LightPillarSettings, ClassicWaveSettings, Codrops3DOrbSettings, VrmAvatarSettings } from './types';
 import { ClassicWaveVisualizer } from './ClassicWaveVisualizer';
 import { Codrops3DOrbVisualizer } from './Codrops3DOrbVisualizer';
 import { LightPillarVisualizer } from './LightPillarVisualizer';
@@ -14,6 +14,7 @@ interface ScoutVisualizerProps extends VisualizerProps {
   hyperspeedSettings?: Partial<HyperspeedSettings>;
   classicWaveSettings?: Partial<ClassicWaveSettings>;
   codrops3DOrbSettings?: Partial<Codrops3DOrbSettings>;
+  vrmAvatarSettings?: Partial<VrmAvatarSettings>;
 }
 
 export const ScoutVisualizer: React.FC<ScoutVisualizerProps> = ({

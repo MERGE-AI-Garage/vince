@@ -697,6 +697,14 @@ const PRESETS: Record<HyperspeedPreset, PresetConfig> = {
       sticks: 0xdce0ee,
     },
   },
+  // Named aliases — same configs as the numbered presets
+  get cyberpunk() { return this.one; },
+  get akira() { return this.two; },
+  get golden() { return this.three; },
+  get highway() { return this.four; },
+  get neon() { return this.five; },
+  get deep() { return this.six; },
+  get vertigo() { return this.seven; },
 };
 
 // ============== SHADERS ==============
@@ -920,7 +928,7 @@ class CarLights {
     const curve = new THREE.LineCurve3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1));
     const geometry = new THREE.TubeGeometry(curve, 40, 1, 8, false);
 
-    const instanced = new THREE.InstancedBufferGeometry().copy(geometry);
+    const instanced = new THREE.InstancedBufferGeometry().copy(geometry as unknown as THREE.InstancedBufferGeometry);
     instanced.instanceCount = options.lightPairsPerRoadWay * 2;
 
     const laneWidth = options.roadWidth / options.lanesPerRoad;
@@ -1030,7 +1038,7 @@ class LightSticks {
   init(): THREE.Mesh {
     const options = this.options;
     const geometry = new THREE.PlaneGeometry(1, 1);
-    const instanced = new THREE.InstancedBufferGeometry().copy(geometry);
+    const instanced = new THREE.InstancedBufferGeometry().copy(geometry as unknown as THREE.InstancedBufferGeometry);
     const totalSticks = options.totalSideLightSticks;
     instanced.instanceCount = totalSticks;
 

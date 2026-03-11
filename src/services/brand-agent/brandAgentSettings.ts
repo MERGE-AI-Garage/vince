@@ -150,7 +150,7 @@ export type HyperspeedPreset = 'deep' | 'cosmic' | 'neon' | 'ocean';
 
 export const DEFAULT_VRM_AVATAR_SETTINGS = {
   filePath: '', mouthIntensity: 1.0, lipSensitivity: 0.5,
-  attackSpeed: 0.3, decaySpeed: 0.2, idleIntensity: 0.02, backgroundColor: '#0f0326',
+  attackSpeed: 0.3, decaySpeed: 0.2, idleIntensity: 0.02, cameraDistance: 2.0, backgroundColor: '#0f0326',
 };
 
 export const DEFAULT_LIGHT_PILLAR_SETTINGS: LightPillarSettings = {

@@ -276,9 +276,9 @@ export default function CreativeStudioAdmin() {
   const toggleCapability = (cap: string) => {
     setModelForm(prev => ({
       ...prev,
-      capabilities: prev.capabilities.includes(cap)
+      capabilities: prev.capabilities.includes(cap as ModelCapability)
         ? prev.capabilities.filter(c => c !== cap)
-        : [...prev.capabilities, cap],
+        : [...prev.capabilities, cap as ModelCapability],
     }));
   };
 

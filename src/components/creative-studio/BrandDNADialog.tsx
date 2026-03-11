@@ -307,7 +307,7 @@ export function BrandDNADialog({ brand, open, onOpenChange, onNavigate }: BrandD
                     </BentoCard>
                     <CorporateDNAPreviewCard
                       brand={brand}
-                      profile={profile}
+                      profile={profile as unknown as Record<string, unknown>}
                       stats={stats}
                       onNavigate={onNavigate}
                     />
@@ -318,7 +318,7 @@ export function BrandDNADialog({ brand, open, onOpenChange, onNavigate }: BrandD
                   {sections}
                   <CorporateDNAPreviewCard
                     brand={brand}
-                    profile={profile}
+                    profile={profile as unknown as Record<string, unknown>}
                     stats={stats}
                     onNavigate={onNavigate}
                   />

@@ -3,19 +3,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { VisualizerProps } from './types';
-
-export interface LightPillarSettings {
-  topColor: string;
-  bottomColor: string;
-  intensity: number;
-  rotationSpeed: number;
-  glowAmount: number;
-  pillarWidth: number;
-  pillarHeight: number;
-  noiseIntensity: number;
-  pillarRotation: number;
-}
+import { VisualizerProps, LightPillarSettings } from './types';
 
 export const DEFAULT_LIGHT_PILLAR_SETTINGS: LightPillarSettings = {
   topColor: '#5227FF',

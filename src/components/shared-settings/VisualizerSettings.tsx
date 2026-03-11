@@ -25,7 +25,7 @@ import {
 
 export interface VrmAvatarSettings {
   filePath: string; mouthIntensity: number; lipSensitivity: number;
-  attackSpeed: number; decaySpeed: number; idleIntensity: number; backgroundColor: string;
+  attackSpeed: number; decaySpeed: number; idleIntensity: number; cameraDistance: number; backgroundColor: string;
 }
 
 type VisualizerStyle = 'classic_wave' | 'codrops_3d_orb' | 'light_pillar' | 'hyperspeed' | 'vrm_avatar';

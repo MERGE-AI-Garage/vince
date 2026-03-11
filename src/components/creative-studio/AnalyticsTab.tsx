@@ -602,7 +602,7 @@ export function AnalyticsTab() {
                             })}`,
                           });
                         },
-                      }}
+                      } as any}
                     />
                   </LineChart>
                 </ResponsiveContainer>
