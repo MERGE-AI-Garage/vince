@@ -210,15 +210,18 @@ serve(async (req) => {
     const promptData = await getPromptWithModel(supabase, 'brand-document-analysis');
     const basePrompt = promptData?.prompt.prompt_text || FALLBACK_DOCUMENT_ANALYSIS_PROMPT;
 
-    // Verify auth
+    // Verify auth — accept service role key for server-to-server calls (e.g. from brand-prompt-agent)
     const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const isServiceRole = token === supabaseServiceKey;
+    if (!isServiceRole) {
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const body: AnalyzeDocumentsRequest = await req.json();
