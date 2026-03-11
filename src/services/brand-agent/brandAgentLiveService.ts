@@ -46,6 +46,7 @@ export interface LiveSessionControl {
   sendText: (text: string) => Promise<void>;
   sendFile: (attachment: { name: string; mimeType: string; data: string }) => Promise<void>;
   getResumeHandle: () => string | null;
+  setMuted: (muted: boolean) => void;
 }
 
 // Audio Contexts
@@ -263,38 +264,16 @@ function buildVoiceSystemInstruction(
   }
 
   if (brandCtx?.profile) {
-    if (brandCtx.profile.visual_dna) {
-      sections.push(`\n--- VISUAL DNA (${brandCtx.sourcesAnalyzed} sources analyzed, confidence: ${((brandCtx.profile.confidence_score || 0) * 100).toFixed(0)}%) ---`);
-      sections.push(JSON.stringify(brandCtx.profile.visual_dna, null, 1));
-    }
-    if (brandCtx.profile.photography_style) {
-      sections.push('\n--- PHOTOGRAPHY STYLE ---');
-      sections.push(JSON.stringify(brandCtx.profile.photography_style, null, 1));
-    }
-    if (brandCtx.profile.color_profile) {
-      sections.push('\n--- COLOR PROFILE ---');
-      sections.push(JSON.stringify(brandCtx.profile.color_profile, null, 1));
-    }
-    if (brandCtx.profile.composition_rules) {
-      sections.push('\n--- COMPOSITION RULES ---');
-      sections.push(JSON.stringify(brandCtx.profile.composition_rules, null, 1));
-    }
-    if (brandCtx.profile.product_catalog) {
-      sections.push('\n--- PRODUCT CATALOG ---');
-      sections.push(JSON.stringify(brandCtx.profile.product_catalog, null, 1));
-    }
-    if (brandCtx.profile.brand_identity) {
-      sections.push('\n--- BRAND IDENTITY ---');
-      sections.push(JSON.stringify(brandCtx.profile.brand_identity, null, 1));
-    }
-    if (brandCtx.profile.tone_of_voice) {
-      sections.push('\n--- TONE OF VOICE ---');
-      sections.push(JSON.stringify(brandCtx.profile.tone_of_voice, null, 1));
-    }
-    if (brandCtx.profile.typography) {
-      sections.push('\n--- TYPOGRAPHY ---');
-      sections.push(JSON.stringify(brandCtx.profile.typography, null, 1));
-    }
+    const confidence = ((brandCtx.profile.confidence_score || 0) * 100).toFixed(0);
+    sections.push(`\nBrand DNA synthesized from ${brandCtx.sourcesAnalyzed} sources (${confidence}% confidence). Full brand playbook is in vectorized memory.`);
+    sections.push(`
+MEMORY PROTOCOL: You do not have the full brand playbook in your active context.
+Before generating images or campaigns, call 'recall_brand_guidelines' with a specific query.
+Examples:
+- Before a LinkedIn post: recall_brand_guidelines("LinkedIn post photography and visual rules")
+- Before a campaign package: recall_brand_guidelines("visual style and compliance restrictions")
+- When the user asks about brand rules: recall_brand_guidelines("brand photography dos and don'ts")
+This ensures brand-accurate output and demonstrates your memory retrieval capability.`);
   }
 
   if (brandCtx?.directives && brandCtx.directives.length > 0) {
@@ -325,7 +304,7 @@ CRITICAL STARTUP PROTOCOL:
 4. Do NOT wait for the user to say "Hello" or anything else first.
 
 TOOLS:
-You have access to tools including generate_image, generate_video, check_generation_quota, generate_creative_package, and analyze_competitor_content.
+You have access to tools including recall_brand_guidelines, generate_image, generate_video, check_generation_quota, generate_creative_package, and analyze_competitor_content.
 When the user asks you to generate an image, call the generate_image tool with a detailed prompt.
 When the user asks for a video, motion concept, or moving asset, call generate_video. Duration must be exactly 4, 6, or 8 seconds — never 5 or 7. Default: 16:9, 8 seconds, fast model. Build the prompt from the brand's visual DNA: colors, photography style, motion direction, mood, lighting. Tell the user it's rendering and will appear in the History panel in 1-3 minutes.
 - Audio is automatic on both models — always included, no parameter needed.
@@ -992,6 +971,11 @@ export const connectVinceLiveSession = async (
         }
       },
       getResumeHandle: () => latestResumeHandle,
+      setMuted: (muted: boolean) => {
+        if (globalStream) {
+          globalStream.getAudioTracks().forEach(t => { t.enabled = !muted; });
+        }
+      },
     };
 
   } catch (error) {

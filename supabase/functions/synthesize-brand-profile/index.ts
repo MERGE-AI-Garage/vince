@@ -5,6 +5,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 import { getPromptWithModel } from '../_shared/prompt-utils.ts'
+import { vectorizeBrandProfile } from '../_shared/embedding-utils.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -442,6 +443,16 @@ serve(async (req) => {
       await supabase
         .from('creative_studio_brand_profiles')
         .insert(profileData);
+    }
+
+    // Vectorize brand memory after profile save — merge with existing profile so we always
+    // vectorize the full current state, even if this synthesis run produced no new fields
+    const profileForMemory = { ...(existingProfile ?? {}), ...profileData };
+    try {
+      await vectorizeBrandProfile(geminiApiKey, supabase, brand_id, profileForMemory);
+      console.log('[memory] Vectorization complete');
+    } catch (err) {
+      console.error('[memory] Vectorization failed:', err);
     }
 
     // Sync synthesized data back to the brands table for UI display

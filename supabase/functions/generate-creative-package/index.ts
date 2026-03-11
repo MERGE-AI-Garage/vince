@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { GoogleGenAI } from 'https://esm.sh/@google/genai@1.0.0';
 import { registerMediaImage } from '../_shared/media-registration.ts';
+import { getEmbedding } from '../_shared/embedding-utils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -129,9 +130,35 @@ serve(async (req) => {
 
     // Build brand context for system instruction
     const brandContext = buildBrandContext(brand, profile);
-    const fullSystemInstruction = system_context
+
+    // Invisible RAG: fetch relevant brand memory rules for the requested deliverable types
+    let memoryRules = '';
+    try {
+      const deliverableTypes = (deliverables && deliverables.length > 0)
+        ? deliverables.map(d => d.deliverable_type || d.name || '').filter(Boolean).join(', ')
+        : 'display banner, linkedin post, product shot';
+      const autoQuery = `Visual style, photography rules, and compliance for ${deliverableTypes}`;
+      const queryVector = await getEmbedding(apiKey, autoQuery, 'RETRIEVAL_QUERY');
+      const { data: ragContext } = await supabase.rpc('match_brand_memory', {
+        query_embedding: queryVector,
+        match_threshold: 0.5,
+        match_count: 3,
+        p_brand_id: brand_id,
+        p_category: null,
+      });
+      if (ragContext?.length) {
+        memoryRules = '\n\nSTRICT BRAND RULES FROM MEMORY (enforce these exactly):\n' +
+          ragContext.map((c: { content: string }) => c.content).join('\n');
+      }
+    } catch (ragErr) {
+      // Non-fatal: proceed without memory rules if retrieval fails
+      console.warn('[package] Brand memory retrieval failed:', ragErr);
+    }
+
+    const baseInstruction = system_context
       ? `${system_context}\n\n${brandContext}`
       : `You are Vince, an expert AI creative director for Brand Lens. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.`;
+    const fullSystemInstruction = `${baseInstruction}${memoryRules}`;
 
     // Default to 3 standard deliverables when none are specified
     const effectiveDeliverables = (deliverables && deliverables.length > 0) ? deliverables : [

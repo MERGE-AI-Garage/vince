@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { GoogleGenerativeAI } from 'https://esm.sh/@google/generative-ai@0.21.0';
 import { trackUsage } from '../_shared/ai-usage-tracker.ts';
+import { getEmbedding } from '../_shared/embedding-utils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -394,6 +395,25 @@ const VINCE_TOOLS = [
       },
     },
   },
+  {
+    name: 'recall_brand_guidelines',
+    description: "Search the brand's memory for specific photography rules, visual DNA, or compliance restrictions. Call this before generating assets if you need to know exact styling rules for a deliverable type or channel.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: "Semantic search query, e.g., 'LinkedIn post photography rules' or 'color restrictions and forbidden elements'",
+        },
+        category: {
+          type: 'string',
+          enum: ['photography_style', 'compliance', 'tone_of_voice', 'visual_dna', 'color_profile', 'composition_rules', 'brand_identity', 'typography'],
+          description: 'Optional category filter to narrow results',
+        },
+      },
+      required: ['query'],
+    },
+  },
 ];
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -420,6 +440,7 @@ async function executeTool(
   parameters: Record<string, unknown>,
   context: { brand_id: string; user_id: string },
   supabase: ReturnType<typeof createClient>,
+  geminiApiKey?: string,
 ): Promise<unknown> {
   switch (toolName) {
     case 'save_prompt_template':
@@ -462,9 +483,42 @@ async function executeTool(
       return await analyzeSelfDemo(parameters, context, supabase);
     case 'generate_video':
       return await generateVideo(parameters, context, supabase);
+    case 'recall_brand_guidelines':
+      return await recallBrandGuidelines(parameters, context, supabase, geminiApiKey);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
+}
+
+async function recallBrandGuidelines(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+  geminiApiKey?: string,
+): Promise<unknown> {
+  if (!geminiApiKey) {
+    return { message: 'Brand memory search is not available in this context.' };
+  }
+  const { query, category } = params as { query: string; category?: string };
+
+  const queryVector = await getEmbedding(geminiApiKey, query, 'RETRIEVAL_QUERY');
+
+  const { data, error } = await supabase.rpc('match_brand_memory', {
+    query_embedding: queryVector,
+    match_threshold: 0.5,
+    match_count: 4,
+    p_brand_id: context.brand_id,
+    p_category: category ?? null,
+  });
+
+  if (error || !data?.length) {
+    return { message: 'No specific guidelines found in memory. Proceed with general best practices.' };
+  }
+
+  return {
+    guidelines: data.map((d: { content: string }) => d.content),
+    instruction: 'Apply these rules strictly to your next generation step.',
+  };
 }
 
 async function savePromptTemplate(
@@ -1645,7 +1699,8 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      if (!body.brand_id && body.tool_name !== 'create_brand') {
+      const brandlessTools = ['create_brand', 'analyze_competitor_content', 'analyze_self_demo'];
+      if (!body.brand_id && !brandlessTools.includes(body.tool_name)) {
         return new Response(JSON.stringify({ success: false, error: 'brand_id is required for tool calls' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -1656,6 +1711,7 @@ serve(async (req) => {
           body.parameters || {},
           { brand_id: body.brand_id, user_id: user.id },
           supabase,
+          geminiApiKey,
         );
 
         // Website analysis after create_brand is triggered client-side (brandAgentLiveService)
@@ -1802,6 +1858,7 @@ serve(async (req) => {
           parameters,
           { brand_id, user_id: user.id },
           supabase,
+          geminiApiKey,
         );
         toolCalls.push({ toolName, parameters, result: toolResult, success: true });
         toolCallsCount++;
@@ -1820,6 +1877,7 @@ serve(async (req) => {
                 { url: newBrandUrl },
                 { brand_id, user_id: user.id },
                 supabase,
+                geminiApiKey,
               );
               toolCalls.push({ toolName: 'analyze_brand_website', parameters: { url: newBrandUrl }, result: analysisResult, success: true });
               toolCallsCount++;
