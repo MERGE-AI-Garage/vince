@@ -1738,7 +1738,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`[Vince] Message from ${user.email}: "${user_message.slice(0, 80)}"`);
+    console.log(`[Vince] Message from ${user.email}: "${(user_message ?? '[multimodal]').slice(0, 80)}"`);
 
     // Load brand context and available models
     let brand: Record<string, unknown> | null = null;
@@ -1793,7 +1793,7 @@ serve(async (req) => {
     // Add current user message to history
     messages.push({
       role: 'user',
-      content: user_message,
+      content: user_message ?? '[multimodal message]',
       timestamp: new Date().toISOString(),
     });
 
