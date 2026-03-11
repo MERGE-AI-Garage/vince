@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, Paperclip, X, Link, Target } from 'lucide-react';
+import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, MicOff, PhoneOff, Paperclip, X, Link, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, InputArea, type Message, type Attachment } from '@/components/shared-chat';
@@ -206,6 +206,7 @@ export function BrandAgentApp({
 
   // Voice state
   const voiceVolumeRef = useRef(0);
+  const [isMuted, setIsMuted] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState<TranscriptItem[]>([]);
   const liveControlRef = useRef<LiveSessionControl | null>(null);
   const addedTranscriptIdsRef = useRef<Set<string>>(new Set());
@@ -713,6 +714,7 @@ export function BrandAgentApp({
               }));
               invalidateGenerations();
             } else if (toolName === 'analyze_competitor_content' && result.competitor_summary) {
+              setAnalyzingVideoAt(null);
               const compMsgId = uuidv4();
               setMessages(prev => [...prev, {
                 id: compMsgId,
@@ -830,6 +832,7 @@ export function BrandAgentApp({
     }
     setIsVoiceMode(false);
     setActiveToolName(null);
+    setIsMuted(false);
 
     // Persist full message thread before clearing — fire-and-forget, non-blocking
     persistVoiceSession();
@@ -896,10 +899,36 @@ export function BrandAgentApp({
             </Button>
           )}
           {isVoiceMode && (
-            <Badge variant="outline" className="text-[9px] gap-1.5 border-red-500/40 text-red-400 animate-pulse">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              LIVE
-            </Badge>
+            <>
+              <Badge variant="outline" className="text-[9px] gap-1.5 border-red-500/40 text-red-400 animate-pulse">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                LIVE
+              </Badge>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-7 w-7 ${isMuted ? 'text-red-400 hover:text-red-300' : 'text-muted-foreground hover:text-foreground'}`}
+                onClick={() => {
+                  const next = !isMuted;
+                  setIsMuted(next);
+                  liveControlRef.current?.setMuted(next);
+                }}
+                aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-red-400"
+                onClick={handleCloseVoice}
+                aria-label="End voice session"
+                title="Back to chat"
+              >
+                <PhoneOff className="w-4 h-4" />
+              </Button>
+            </>
           )}
         </div>
         <input
