@@ -6,7 +6,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'board_admin' | 'user';
 
 interface AuthContextType {
   user: User | null;

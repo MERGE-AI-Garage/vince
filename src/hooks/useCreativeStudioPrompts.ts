@@ -4,7 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { BrandPromptTemplate, CameraPreset, TemplateReferenceImage } from '@/types/creative-studio';
+import type { BrandPromptTemplate, CameraPreset, TemplateReferenceImage, TemplateContentType } from '@/types/creative-studio';
 
 const QUERY_KEY = 'creative-studio-brand-prompts';
 
@@ -14,6 +14,7 @@ interface PromptRow {
   name: string;
   description: string | null;
   category: string | null;
+  content_type: string | null;
   prompt_template: string;
   locked_parameters: Record<string, unknown>;
   variable_fields: unknown;
@@ -31,6 +32,7 @@ interface PromptRow {
 function mapRow(row: PromptRow): BrandPromptTemplate {
   return {
     ...row,
+    content_type: (row.content_type as TemplateContentType) ?? 'image',
     description: row.description ?? undefined,
     category: row.category ?? undefined,
     variable_fields: Array.isArray(row.variable_fields) ? row.variable_fields : [],

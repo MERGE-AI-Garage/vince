@@ -200,7 +200,7 @@ export default function CreativeStudioAdmin() {
     model_type: 'image' as ModelType,
     provider: 'google',
     description: '',
-    capabilities: [] as string[],
+    capabilities: [] as ModelCapability[],
     parameters: {} as Record<string, unknown>,
     cost_per_generation: 0.01,
     is_active: true,

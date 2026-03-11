@@ -23,14 +23,23 @@ export interface Codrops3DOrbSettings {
   glowColor: string; speakingGlowColor: string; distortion: number;
 }
 
-export const GEMINI_VOICES: GeminiVoice[] = ['Puck', 'Charon', 'Kore', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Zephyr'];
-export const GEMINI_LIVE_MODELS = [
-  { id: 'gemini-2.5-flash-native-audio-preview-12-2025', name: 'Gemini 2.5 Flash (Native Audio)' },
-  { id: 'gemini-2.0-flash-live-001', name: 'Gemini 2.0 Flash Live' },
+export const GEMINI_VOICES: { value: GeminiVoice; label: string; description: string }[] = [
+  { value: 'Puck', label: 'Puck', description: 'Upbeat, energetic' },
+  { value: 'Charon', label: 'Charon', description: 'Deep, authoritative' },
+  { value: 'Kore', label: 'Kore', description: 'Warm, conversational' },
+  { value: 'Fenrir', label: 'Fenrir', description: 'Bold, assertive' },
+  { value: 'Aoede', label: 'Aoede', description: 'Smooth, articulate' },
+  { value: 'Leda', label: 'Leda', description: 'Clear, professional' },
+  { value: 'Orus', label: 'Orus', description: 'Calm, measured' },
+  { value: 'Zephyr', label: 'Zephyr', description: 'Bright, expressive' },
 ];
-export const GEMINI_TEXT_MODELS = [
-  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash' },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+export const GEMINI_LIVE_MODELS: { value: string; label: string; description: string }[] = [
+  { value: 'gemini-2.5-flash-native-audio-preview-12-2025', label: 'Gemini 2.5 Flash (Native Audio)', description: 'Latest model with native audio support' },
+  { value: 'gemini-2.0-flash-live-001', label: 'Gemini 2.0 Flash Live', description: 'Stable live model' },
+];
+export const GEMINI_TEXT_MODELS: { value: string; label: string; description: string }[] = [
+  { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash', description: 'Latest text model' },
+  { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', description: 'Stable text model' },
 ];
 
 export interface BrandAgentSettings {

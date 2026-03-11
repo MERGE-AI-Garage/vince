@@ -20,6 +20,7 @@ import {
   GEMINI_VOICES,
   GEMINI_LIVE_MODELS,
   DEFAULT_VOICE_PROMPT,
+  DEFAULT_VRM_AVATAR_SETTINGS,
   type GeminiVoice,
 } from '@/services/brand-agent/brandAgentSettings';
 import { toast } from 'sonner';
@@ -60,6 +61,7 @@ export const VoiceTab: React.FC = () => {
     classicWaveSettings: settings.classicWaveSettings,
     hyperspeedSettings: settings.hyperspeedSettings,
     codrops3DOrbSettings: settings.codrops3DOrbSettings,
+    vrmAvatarSettings: DEFAULT_VRM_AVATAR_SETTINGS,
   };
 
   return (
