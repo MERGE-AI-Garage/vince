@@ -214,14 +214,19 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
     const isServiceRole = token === supabaseServiceKey;
-    if (!isServiceRole) {
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      if (authError || !user) {
+    // deno-lint-ignore no-explicit-any
+    let user: any;
+    if (isServiceRole) {
+      user = { id: 'service-role', email: 'system' };
+    } else {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !authUser) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
           status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      user = authUser;
     }
 
     const body: AnalyzeDocumentsRequest = await req.json();
