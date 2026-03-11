@@ -256,6 +256,7 @@ serve(async (req) => {
               sizeBytes: buffer.length,
               folderPath: '/AI Generated/Brand Cards',
               title: `${brand.name} Creative Package`,
+              createdBy: userId,
               autoTags: ['creative-studio', 'ai-generated', 'creative-package'],
               customMetadata: {
                 generation_type: 'creative_package',

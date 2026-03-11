@@ -108,15 +108,14 @@ export function MediaLibraryTab() {
 
       let mediaQuery = supabase
         .from('media')
-        .select('*, creator_profile:profiles!created_by(full_name, avatar_url)')
+        .select('*')
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (currentFolderId) {
         mediaQuery = mediaQuery.eq('folder_id', currentFolderId);
-      } else {
-        mediaQuery = mediaQuery.is('folder_id', null);
       }
+      // At root: show all files (not restricted to folder_id = null)
 
       if (fileTypeFilter !== 'all') {
         mediaQuery = mediaQuery.eq('file_type', fileTypeFilter);
