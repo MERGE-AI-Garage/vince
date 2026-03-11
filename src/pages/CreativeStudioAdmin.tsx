@@ -72,6 +72,7 @@ import {
   MessageSquare,
   Chrome,
   HelpCircle,
+  FileImage,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { GoogleLogo, MergeLogo } from '@/components/ai-pulse/vendorLogos';
@@ -117,6 +118,7 @@ import { PromptHistoryTab } from '@/components/creative-studio/PromptHistoryTab'
 import { BrandIntelligenceTab } from '@/components/creative-studio/BrandIntelligenceTab';
 import { BrandEditorDialog } from '@/components/creative-studio/BrandEditorDialog';
 import { BrandDNABuilder } from '@/components/creative-studio/BrandDNABuilder';
+import { MediaLibraryTab } from '@/components/creative-studio/MediaLibraryTab';
 import { CameraPresetAdmin } from '@/components/creative-studio/CameraPresetAdmin';
 import { BrandDNAPrompts } from '@/components/creative-studio/BrandDNAPrompts';
 import { BrandCard } from '@/components/creative-studio/BrandCard';
@@ -539,6 +541,10 @@ export default function CreativeStudioAdmin() {
                 <Image className="h-3.5 w-3.5" />
                 Generations
               </TabsTrigger>
+              <TabsTrigger value="media">
+                <FileImage className="h-3.5 w-3.5" />
+                Media
+              </TabsTrigger>
               <TabsTrigger value="analytics" data-tour="admin-analytics-tab">
                 <TrendingUp className="h-3.5 w-3.5" />
                 Analytics
@@ -917,6 +923,11 @@ export default function CreativeStudioAdmin() {
           {/* Generations Tab */}
           <TabsContent value="generations">
             <GenerationsTab />
+          </TabsContent>
+
+          {/* Media Library Tab */}
+          <TabsContent value="media">
+            <MediaLibraryTab />
           </TabsContent>
 
           {/* Quotas Tab */}
