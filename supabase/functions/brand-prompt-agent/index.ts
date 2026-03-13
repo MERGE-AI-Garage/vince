@@ -273,13 +273,13 @@ const VINCE_TOOLS = [
   },
   {
     name: 'analyze_self_demo',
-    description: 'Watch a screen recording of a Brand Lens / Vince demo and analyze it as a product designer and UX critic. Use when the user shares a YouTube link to a Brand Lens demo recording and wants feedback on the product experience, demo flow, or workflow improvements. Returns a demo score and structured feedback.',
+    description: 'Watch a screen recording of a Vince / Vince demo and analyze it as a product designer and UX critic. Use when the user shares a YouTube link to a Vince demo recording and wants feedback on the product experience, demo flow, or workflow improvements. Returns a demo score and structured feedback.',
     parameters: {
       type: 'object',
       properties: {
         video_url: {
           type: 'string',
-          description: 'YouTube URL of the Brand Lens demo screen recording to analyze',
+          description: 'YouTube URL of the Vince demo screen recording to analyze',
         },
       },
       required: ['video_url'],
@@ -484,6 +484,47 @@ const VINCE_TOOLS = [
       },
     },
   },
+  {
+    name: 'check_job_status',
+    description: 'Check the status of a video or image analysis job. Call this after generate_video or analyze_brand_image to check if the job completed. Poll until status is \'completed\' or \'failed\'. Returns status, output_urls, error_message, and created_at.',
+    parameters: {
+      type: 'object',
+      properties: {
+        job_id: { type: 'string', description: 'The generation job ID to check (returned by generate_video).' },
+      },
+      required: ['job_id'],
+    },
+  },
+  {
+    name: 'list_guardrails',
+    description: 'List brand governance directives (guardrails) for the current brand. Returns id, focus_area, name, is_active, and created_at for each. Use when the user asks what guardrails exist, which are active, or wants to manage brand governance.',
+    parameters: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'activate_guardrail',
+    description: 'Activate a brand governance directive by its ID, making it enforceable for this brand. Use when the user wants to turn on a guardrail.',
+    parameters: {
+      type: 'object',
+      properties: {
+        directive_id: { type: 'string', description: 'The UUID of the directive to activate.' },
+      },
+      required: ['directive_id'],
+    },
+  },
+  {
+    name: 'deactivate_guardrail',
+    description: 'Deactivate a brand governance directive by its ID, suspending enforcement without deleting it. Use when the user wants to turn off a guardrail.',
+    parameters: {
+      type: 'object',
+      properties: {
+        directive_id: { type: 'string', description: 'The UUID of the directive to deactivate.' },
+      },
+      required: ['directive_id'],
+    },
+  },
 ];
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -561,6 +602,14 @@ async function executeTool(
       return await editImage(parameters, context, supabase);
     case 'list_generations':
       return await listGenerations(parameters, context, supabase);
+    case 'check_job_status':
+      return await checkJobStatus(parameters, supabase);
+    case 'list_guardrails':
+      return await listGuardrails(context, supabase);
+    case 'activate_guardrail':
+      return await setGuardrailActive(parameters, true, supabase);
+    case 'deactivate_guardrail':
+      return await setGuardrailActive(parameters, false, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
@@ -998,6 +1047,76 @@ async function listGenerations(
       estimated_cost_usd: g.estimated_cost_usd,
     })),
     count: (data || []).length,
+  };
+}
+
+async function checkJobStatus(
+  params: Record<string, unknown>,
+  supabase: ReturnType<typeof createClient>,
+) {
+  const { data, error } = await supabase
+    .from('creative_studio_generations')
+    .select('id, status, output_urls, error_message, created_at, completed_at, generation_type, model_used')
+    .eq('id', params.job_id as string)
+    .single();
+
+  if (error) throw new Error(`Job lookup failed: ${error.message}`);
+  if (!data) return { found: false, message: `No job found with id ${params.job_id}` };
+
+  return {
+    found: true,
+    id: data.id,
+    status: data.status,
+    output_urls: (data.output_urls || []) as string[],
+    error_message: data.error_message || null,
+    created_at: data.created_at,
+    completed_at: data.completed_at || null,
+    generation_type: data.generation_type,
+    model_used: data.model_used,
+  };
+}
+
+async function listGuardrails(
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const { data, error } = await supabase
+    .from('creative_studio_agent_directives')
+    .select('id, focus_area, name, is_active, created_at')
+    .eq('brand_id', context.brand_id)
+    .order('focus_area');
+
+  if (error) throw new Error(`Failed to fetch guardrails: ${error.message}`);
+
+  return {
+    guardrails: data || [],
+    count: (data || []).length,
+    active_count: (data || []).filter(d => d.is_active).length,
+  };
+}
+
+async function setGuardrailActive(
+  params: Record<string, unknown>,
+  is_active: boolean,
+  supabase: ReturnType<typeof createClient>,
+) {
+  const { data, error } = await supabase
+    .from('creative_studio_agent_directives')
+    .update({ is_active })
+    .eq('id', params.directive_id as string)
+    .select('id, name, focus_area, is_active')
+    .single();
+
+  if (error) throw new Error(`Failed to update guardrail: ${error.message}`);
+  if (!data) throw new Error(`No directive found with id ${params.directive_id}`);
+
+  return {
+    success: true,
+    id: data.id,
+    name: data.name,
+    focus_area: data.focus_area,
+    is_active: data.is_active,
+    message: `"${data.name}" is now ${is_active ? 'active' : 'inactive'}.`,
   };
 }
 
@@ -1716,7 +1835,11 @@ You have tools to take real actions:
 - list_brand_references: List available reference image collections for the brand (products, characters, styles, environments).
 - generate_brand_header: Generate the brand's hero/header image using its visual DNA and colors. Saves directly to the brand record.
 - generate_brand_cards: Generate the 5 brand card icons (DNA, Guidelines, Prompts, Templates, Agent) using the brand's color palette.
-- list_camera_options: Browse available camera bodies, lenses, film stocks, lighting setups, and other equipment in the Creative Studio inventory. Returns options with their prompt_fragment — use these verbatim when building generation prompts. Use when picking equipment for a generation, when the user asks what's available, or when evaluating whether specific equipment fits the brand.
+- list_camera_options: Browse available camera bodies, lenses, film stocks, lighting setups, and other equipment in the Creative Studio inventory. Returns options with their prompt_fragment — use these verbatim when building generation prompts. MANDATORY before every generate_image or generate_video call — never invent equipment.
+- check_job_status: Check if a video or image analysis job has completed. Poll after generate_video to tell the user when their video is ready.
+- list_guardrails: List all brand governance directives with their active/inactive status.
+- activate_guardrail: Turn on a specific brand governance directive by directive ID.
+- deactivate_guardrail: Turn off a specific brand governance directive by directive ID without deleting it.
 
 BRAND ONBOARDING FLOW:
 When a user asks to set up a new brand, you need TWO things: the brand name and the website URL.
@@ -1755,7 +1878,8 @@ BEHAVIORAL RULES:
 3. When the user asks to save something, use the save_prompt_template tool — don't just say you'll save it.
 4. Respond conversationally. Don't wrap everything in JSON. Include prompts naturally in your response.
 5. When you use a tool, briefly explain what you did and the result.
-6. NEVER include brand names, product model names, or any text you want rendered onto the image in generation prompts. Describe products by their visual characteristics instead: "brushed chrome commercial flushometer" rather than "SLOAN ROYAL flushometer". Image generation models will hallucinate text onto images if you mention brand/product names.`);
+6. NEVER include brand names, product model names, or any text you want rendered onto the image in generation prompts. Describe products by their visual characteristics instead: "brushed chrome commercial flushometer" rather than "SLOAN ROYAL flushometer". Image generation models will hallucinate text onto images if you mention brand/product names.
+7. ALWAYS call list_camera_options before every image generation. Never invent camera equipment — only use equipment names and prompt_fragments that exist in the inventory.`);
 
   // Inject available models so Vince can pick the right one without tool calls
   if (models.length > 0) {
@@ -1787,6 +1911,7 @@ GENERATION FLOW:
 1. When the user describes a shot, compose the prompt and present it with your camera recommendations.
 2. STOP. Wait for explicit confirmation before generating. Do NOT call generate_image or generate_video in the same turn you present the prompt.
 3. Valid confirmations: "go ahead", "make it", "shoot it", "generate", "yes", "do it", "let's go". Describing a shot is NOT a confirmation.
+   IMPORTANT: Keep your conversational text brief when calling synthesize_generation_prompt — one or two sentences max (e.g. "Golden hour with the ARRI Alexa — generating now."). The UI displays the full prompt and camera specs in structured cards below your message; do NOT repeat those details in your text response.
 4. On confirmation: check quota with check_generation_quota, then generate immediately with generate_image.
 5. Pick aspect ratio from context (Instagram → 1:1, stories → 9:16, hero banner → 16:9). State it, don't ask.
 6. Default to 1 image. Generate 2 when exploring looks or when you want to give options.
@@ -1924,7 +2049,7 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const brandlessTools = ['create_brand', 'analyze_competitor_content', 'analyze_self_demo'];
+      const brandlessTools = ['create_brand', 'analyze_competitor_content', 'analyze_self_demo', 'check_job_status'];
       if (!body.brand_id && !brandlessTools.includes(body.tool_name)) {
         return new Response(JSON.stringify({ success: false, error: 'brand_id is required for tool calls' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
