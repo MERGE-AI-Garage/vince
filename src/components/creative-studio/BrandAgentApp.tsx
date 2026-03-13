@@ -1053,15 +1053,16 @@ export function BrandAgentApp({
                     'text/plain': 'text',
                   };
                   const contentType = contentTypeMap[file.type] || (file.name.endsWith('.docx') ? 'docx' : file.name.endsWith('.pptx') ? 'pptx' : 'pdf');
-                  const { error: importError } = await supabase.functions.invoke('analyze-brand-documents', {
+                  const { error: importError } = await supabase.functions.invoke('brand-prompt-agent', {
                     body: {
+                      mode: 'tool_call',
+                      tool_name: 'import_brand_document',
                       brand_id: brandId,
-                      documents: [{
-                        content: publicUrl,
-                        content_type: contentType,
-                        mime_type: file.type,
+                      parameters: {
+                        document_url: publicUrl,
                         filename: file.name,
-                      }],
+                        content_type: contentType,
+                      },
                     },
                   });
                   const notify = importError
