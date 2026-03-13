@@ -1,4 +1,4 @@
-// ABOUTME: Tailwind configuration for Brand Lens.
+// ABOUTME: Tailwind configuration for Vince.
 // ABOUTME: Copied from AI Garage to maintain visual consistency with extracted components.
 
 import type { Config } from "tailwindcss";

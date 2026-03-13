@@ -315,7 +315,7 @@ function SystemWelcome({
               <div className="flex items-end justify-between">
                 <div>
                   <h2 className="font-fraunces text-2xl font-semibold text-white tracking-tight">
-                    Brand Lens
+                    Vince
                   </h2>
                   <p className="font-epilogue text-xs text-white/50 mt-1">
                     Image, video, and editing across eight Google models

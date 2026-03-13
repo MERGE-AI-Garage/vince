@@ -87,7 +87,7 @@ Replace the "god prompt" with a vectorized brand memory store (pgvector + Gemini
 
 > "Vince no longer has the full brand book loaded in memory. Instead, he actively searches
 > his brand memory — backed by Gemini Embedding 2 (which launched today) and pgvector — to
-> retrieve exactly the rules he needs for each generation. This is how Brand Lens scales to
+> retrieve exactly the rules he needs for each generation. This is how Vince scales to
 > enterprise brand books."
 
 **In-demo voice interaction to highlight the pattern:**

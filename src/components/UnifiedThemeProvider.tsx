@@ -24,7 +24,7 @@ const UnifiedThemeContext = createContext<UnifiedThemeProviderState>(initialStat
 export function UnifiedThemeProvider({
   children,
   defaultTheme = "dark",
-  storageKey = "brand-lens-theme",
+  storageKey = "vince-theme",
 }: {
   children: React.ReactNode
   defaultTheme?: UnifiedTheme

@@ -1,4 +1,4 @@
-// ABOUTME: Simple login page for Brand Lens demo.
+// ABOUTME: Simple login page for Vince demo.
 // ABOUTME: Supports email/password auth with pre-filled demo credentials.
 
 import { useState } from 'react';
@@ -24,7 +24,7 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <div className="w-full max-w-sm p-8 space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Brand Lens</h1>
+          <h1 className="text-3xl font-bold">Vince</h1>
           <p className="text-muted-foreground text-sm">Voice-Driven Creative Director</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">

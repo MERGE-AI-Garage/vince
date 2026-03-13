@@ -56,7 +56,7 @@ import { cn } from '@/lib/utils';
 import { checkPromptCompliance } from '@/utils/brandComplianceCheck';
 import { useBrandReferenceSuggestions } from '@/hooks/useBrandReferenceSuggestions';
 import { ShowcaseModal } from '@/components/onboarding/ShowcaseModal';
-import { useBrandLensTour } from '@/components/onboarding/BrandLensTour';
+import { useVinceTour } from '@/components/onboarding/VinceTour';
 import { useDemoExperience } from '@/hooks/useDemoExperience';
 
 // Delimiter for camera preset text injected into the prompt textarea
@@ -195,7 +195,7 @@ export default function CreativeStudio() {
     hasSeenShowcase, hasSeenTour, markTourSeen,
   } = useDemoExperience();
 
-  const { startTour } = useBrandLensTour({ onComplete: markTourSeen });
+  const { startTour } = useVinceTour({ onComplete: markTourSeen });
 
   // Auto-start showcase on first visit
   useEffect(() => {

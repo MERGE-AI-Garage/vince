@@ -2,7 +2,7 @@
 
 ## What This Is
 
-The Tool Registry powers the AI Guidelines feature in Brand Lens — it lets brands define which AI tools are approved, restricted, or off-limits for their work. This doc covers the schema decisions, migrations applied, and the 13 seeded demo tools.
+The Tool Registry powers the AI Guidelines feature in Vince — it lets brands define which AI tools are approved, restricted, or off-limits for their work. This doc covers the schema decisions, migrations applied, and the 13 seeded demo tools.
 
 ## Schema
 

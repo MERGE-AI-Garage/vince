@@ -1,4 +1,4 @@
-# Brand Lens — Build Status
+# Vince — Build Status
 
 **Updated:** Mar 8, 2026
 **Submission deadline:** Mar 16, 2026 (8 days remaining)
@@ -9,7 +9,7 @@
 
 ---
 
-## What Brand Lens Is
+## What Vince Is
 
 A voice-driven AI creative director agent ("Vince") that generates brand-aware creative packages using Gemini's interleaved output — text and images in a single API call. Users speak or type what they need; Vince builds technically precise prompts with brand context, camera presets, and compliance guardrails, then returns complete creative packages as alternating copy blocks and images.
 
@@ -44,7 +44,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 - Vince Control Panel — prompt, voice, chat settings
 - `BrandAgentApp` — text chat with brand context, tool action cards, quick prompts
 - `CreativePackageDisplay` — renders interleaved TEXT + IMAGE blocks
-- Simplified, focused navigation (Brand Lens, Creative Studio, Vince)
+- Simplified, focused navigation (Vince, Creative Studio, Vince)
 
 ### Edge Functions (19 deployed)
 
@@ -158,7 +158,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 | Audio context on fresh browser | Medium | AudioContext requires user gesture — demo must start with manual mic click, not auto-start |
 | 4-step playbook chain reliability | Medium | 9 concurrent/sequential edge calls — test multiple times before demo day |
 | WebSocket timeout during long generation | Low-Medium | Cloud Run has 60s idle WebSocket timeout — 40+ second generation could drop connection |
-| UI copy consistency | Low | Verify DB seed data and stored prompt templates all reflect Brand Lens identity |
+| UI copy consistency | Low | Verify DB seed data and stored prompt templates all reflect Vince identity |
 
 ---
 
@@ -231,7 +231,7 @@ Chrome Extension
 - 5+ full dry run rehearsals with timing
 - Record best run — upload immediately (don't wait until Mar 16)
 - Finalize DevPost submission
-- Fix naming consistency: pick "Brand Lens" or "Vince" and use it everywhere
+- Fix naming consistency: pick "Vince" or "Vince" and use it everywhere
 
 **Mar 16: Submit**
 - Final review of DevPost text

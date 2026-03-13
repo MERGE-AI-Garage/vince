@@ -2,7 +2,7 @@
 
 ## Overview
 
-Brand Lens uses neutral, product-agnostic copy throughout. These are the conventions enforced across all source files and edge functions.
+Vince uses neutral, product-agnostic copy throughout. These are the conventions enforced across all source files and edge functions.
 
 ## Conventions
 

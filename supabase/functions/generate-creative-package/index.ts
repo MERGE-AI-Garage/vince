@@ -157,7 +157,7 @@ serve(async (req) => {
 
     const baseInstruction = system_context
       ? `${system_context}\n\n${brandContext}`
-      : `You are Vince, an expert AI creative director for Brand Lens. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.`;
+      : `You are Vince, an expert AI creative director for Vince. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.`;
     const fullSystemInstruction = `${baseInstruction}${memoryRules}`;
 
     // Default to 3 standard deliverables when none are specified

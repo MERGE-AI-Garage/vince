@@ -1,4 +1,4 @@
-// ABOUTME: Cinematic showcase modal for Brand Lens — hackathon pitch for Gemini Live Agent Challenge
+// ABOUTME: Cinematic showcase modal for Vince — hackathon pitch for Gemini Live Agent Challenge
 // ABOUTME: 6-slide Vince narrative: Voice → Video Drop + Tool Calls → Competitive Intel → DNA → Director → Output
 
 import { useState, useEffect, useCallback, useRef } from 'react';

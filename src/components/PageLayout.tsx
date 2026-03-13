@@ -1,4 +1,4 @@
-// ABOUTME: Page layout wrapper for Brand Lens.
+// ABOUTME: Page layout wrapper for Vince.
 // ABOUTME: Provides consistent page structure with nav bar and content area.
 
 import { ReactNode } from 'react';

@@ -1,4 +1,4 @@
-// ABOUTME: Tailwind configuration for the Brand Lens mobile app
+// ABOUTME: Tailwind configuration for the Vince mobile app
 // ABOUTME: Points content paths to the parent app's src directory for class scanning
 
 import type { Config } from "tailwindcss";

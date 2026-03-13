@@ -341,7 +341,7 @@ export function AIGuidelinesDialog({ brand, open, onOpenChange }: AIGuidelinesDi
                   <p className="text-xs text-muted-foreground pt-1">
                     <strong>Questions?</strong> Contact the{' '}
                     <a href="/admin" className="text-primary hover:underline inline-flex items-center gap-0.5">
-                      Brand Lens team <ExternalLink className="w-3 h-3" />
+                      Vince team <ExternalLink className="w-3 h-3" />
                     </a>{' '}
                     or check the{' '}
                     <a href="/admin" className="text-primary hover:underline inline-flex items-center gap-0.5">

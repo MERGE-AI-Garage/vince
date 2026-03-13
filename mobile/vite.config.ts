@@ -1,4 +1,4 @@
-// ABOUTME: Vite build config for the Brand Lens mobile app (Capacitor — iOS)
+// ABOUTME: Vite build config for the Vince mobile app (Capacitor — iOS)
 // ABOUTME: Aliases @/ to the main app src and swaps the Supabase client for the mobile-compatible version
 
 import { defineConfig } from 'vite';

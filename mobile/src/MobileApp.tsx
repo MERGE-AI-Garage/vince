@@ -1,4 +1,4 @@
-// ABOUTME: Root component for the Brand Lens mobile app (iOS)
+// ABOUTME: Root component for the Vince mobile app (iOS)
 // ABOUTME: Full-screen Vince chat/voice interface with brand picker, mobile-optimized layout
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -34,7 +34,7 @@ class MobileErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error('[Brand Lens Mobile] Unhandled error:', error, info.componentStack);
+    console.error('[Vince Mobile] Unhandled error:', error, info.componentStack);
   }
 
   render() {
@@ -78,7 +78,7 @@ function BrandLensHome() {
         .order('name');
 
       if (error) {
-        console.error('[Brand Lens Mobile] Failed to fetch brands:', error);
+        console.error('[Vince Mobile] Failed to fetch brands:', error);
       } else {
         setBrands(data || []);
         // Auto-select first brand if available
@@ -194,7 +194,7 @@ function BrandLensHome() {
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <BrandAgentApp
           brandId={selectedBrandId}
-          brandName={selectedBrand?.name || 'Brand Lens'}
+          brandName={selectedBrand?.name || 'Vince'}
           onBrandCreated={handleBrandCreated}
         />
       </div>

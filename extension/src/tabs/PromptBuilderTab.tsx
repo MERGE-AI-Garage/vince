@@ -474,7 +474,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
           }} />
         </div>
         <div style={{ fontSize: '9px', color: '#8fa89e', opacity: 0.4 }}>
-          Brand Lens
+          Vince
         </div>
       </div>
     </div>

@@ -120,7 +120,7 @@ const getDefaultTitle = (pageKey: string): string => {
     case 'learning': return 'Learning Hub';
     case 'innovation_lab': return 'Strategic Initiatives';
     case 'use_cases': return 'Use Cases';
-    default: return 'Brand Lens';
+    default: return 'Vince';
   }
 };
 

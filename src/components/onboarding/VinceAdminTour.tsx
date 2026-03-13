@@ -1,14 +1,14 @@
-// ABOUTME: Driver.js admin tour for Brand Lens /admin page
+// ABOUTME: Driver.js admin tour for Vince /admin page
 // ABOUTME: 5 steps covering brand portfolio, model routing, analytics, DNA, and infrastructure
 
 import { useCallback } from 'react';
 import { driver } from 'driver.js';
 
-interface UseBrandLensAdminTourOptions {
+interface UseVinceAdminTourOptions {
   onComplete?: () => void;
 }
 
-export function useBrandLensAdminTour({ onComplete }: UseBrandLensAdminTourOptions = {}) {
+export function useVinceAdminTour({ onComplete }: UseVinceAdminTourOptions = {}) {
   const startAdminTour = useCallback(() => {
     const driverObj = driver({
       showProgress: true,

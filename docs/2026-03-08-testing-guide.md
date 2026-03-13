@@ -1,4 +1,4 @@
-# Brand Lens — Testing Guide
+# Vince — Testing Guide
 
 **Updated:** Mar 8, 2026
 **Purpose:** End-to-end testing checklist for all features before demo recording and submission
@@ -69,10 +69,10 @@ Expected: All functions listed with status `active` or equivalent.
 **Fail:** Error message or blank screen → check Supabase anon key in `.env`.
 
 ### 2.2 Navigation
-1. Confirm nav bar shows: Brand Lens (home), Creative Studio Admin, Vince Control Panel
-2. Confirm all nav labels, headings, and greetings are consistent with Brand Lens
+1. Confirm nav bar shows: Vince (home), Creative Studio Admin, Vince Control Panel
+2. Confirm all nav labels, headings, and greetings are consistent with Vince
 
-**Pass:** Navigation clean, all copy consistent with Brand Lens identity.
+**Pass:** Navigation clean, all copy consistent with Vince identity.
 **Fail:** Any unexpected product names or labels visible → check nav components and seed data.
 
 ---
@@ -390,7 +390,7 @@ Voice mode requires `GEMINI_API_KEY` in the browser environment (`VITE_GEMINI_AP
 3. Navigate to `google.com`
 4. Open the extension side panel
 
-**Pass:** Extension opens without errors. Brand Lens UI visible in side panel. Dark theme matching Creative Studio.
+**Pass:** Extension opens without errors. Vince UI visible in side panel. Dark theme matching Creative Studio.
 **Fail (auth error):** Extension is pointed at wrong Supabase project → check extension's config/supabase client for `foolpmhiedplyftbiocb`.
 **Fail (blank panel):** Manifest or side panel path issue → check `extension/manifest.json` for correct `side_panel.default_path`.
 

@@ -1,9 +1,9 @@
 {
-  "name": "brand-lens-mobile",
+  "name": "vince-mobile",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Brand Lens mobile app — Capacitor wrapper for the Vince creative director agent",
+  "description": "Vince mobile app — Capacitor wrapper for the Vince creative director agent",
   "dependencies": {
     "@capacitor/app": "^8.0.0",
     "@capacitor/browser": "^8.0.0",

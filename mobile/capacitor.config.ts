@@ -1,11 +1,11 @@
-// ABOUTME: Capacitor configuration for the Brand Lens mobile app (iOS)
+// ABOUTME: Capacitor configuration for the Vince mobile app (iOS)
 // ABOUTME: Points to the Vite build output and configures platform-specific settings
 
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.merge.brandlens',
-  appName: 'Brand Lens',
+  appName: 'Vince',
   webDir: 'dist',
   server: {
     // Allow connections to Supabase and Gemini APIs
@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
   },
   backgroundColor: '#0f0a1e',
   ios: {
-    scheme: 'BrandLens',
+    scheme: 'Vince',
     contentInset: 'automatic',
     backgroundColor: '#0f0a1e',
   },

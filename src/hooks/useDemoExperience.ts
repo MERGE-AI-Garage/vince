@@ -1,4 +1,4 @@
-// ABOUTME: First-visit demo experience state management for Brand Lens
+// ABOUTME: First-visit demo experience state management for Vince
 // ABOUTME: Tracks localStorage keys for showcase and tour seen state, exposes trigger callbacks
 
 import { useState, useCallback } from 'react';

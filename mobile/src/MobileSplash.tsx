@@ -1,4 +1,4 @@
-// ABOUTME: Animated launch screen for the Brand Lens iOS app
+// ABOUTME: Animated launch screen for the Vince iOS app
 // ABOUTME: Plays a 2-second branded intro (camera lens pulse, text reveal) then fades out
 
 import { useState, useEffect } from 'react';

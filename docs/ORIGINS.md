@@ -1,4 +1,4 @@
-# How Brand Lens Came to Be
+# How Vince Came to Be
 
 ## The Idea
 
@@ -33,4 +33,4 @@ The hackathon-specific features — interleaved creative packages, competitor vi
 
 The gap between generic AI image tools and what creative teams actually need is enormous. Brand consistency, photography-grade controls, compliance guardrails, creative direction that understands the difference between a brand's visual DNA and a stock photo prompt — these aren't solved by a better prompt. They're solved by a system that knows the brand.
 
-Brand Lens was built to close that gap.
+Vince was built to close that gap.

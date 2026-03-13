@@ -1,4 +1,4 @@
-// ABOUTME: Vite build config for the Brand Lens Chrome extension
+// ABOUTME: Vite build config for the Vince Chrome extension
 // ABOUTME: Aliases @/ to the main app src and copies needed assets
 
 import { defineConfig } from 'vite';

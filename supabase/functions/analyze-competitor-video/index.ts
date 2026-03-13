@@ -97,7 +97,7 @@ serve(async (req) => {
 
     const brandContext = buildBrandContext(brand, profile);
 
-    const systemPrompt = `You are Vince, an expert AI creative director for Brand Lens. You are analyzing a competitor's video to help the client craft a superior brand-aligned counter-campaign.
+    const systemPrompt = `You are Vince, an expert AI creative director for Vince. You are analyzing a competitor's video to help the client craft a superior brand-aligned counter-campaign.
 
 ${brandContext}
 
@@ -232,12 +232,12 @@ async function handleSelfCritique(
   startTime: number,
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
-  const systemPrompt = `You are watching a screen recording demo of an AI creative director product called Vince (Brand Lens).
+  const systemPrompt = `You are watching a screen recording demo of an AI creative director product called Vince (Vince).
 Analyze it as a product designer, UX critic, creative director, and AI engineer combined.
 Be direct, specific, and actionable. Cite timestamps where possible.
 Always respond with valid JSON matching the schema exactly.`;
 
-  const userPrompt = `Watch this Brand Lens demo recording and provide structured product feedback.
+  const userPrompt = `Watch this Vince demo recording and provide structured product feedback.
 
 Return a JSON object with this exact structure:
 {

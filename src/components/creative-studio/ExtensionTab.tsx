@@ -205,7 +205,7 @@ export function ExtensionTab() {
           </div>
 
           <p className="font-epilogue text-[11px] text-white/40 mt-6">
-            Version {EXTENSION_VERSION} · Chrome · Requires Brand Lens account
+            Version {EXTENSION_VERSION} · Chrome · Requires Vince account
           </p>
         </motion.div>
       </section>
@@ -352,7 +352,7 @@ export function ExtensionTab() {
           <div className="border-t border-border/40 bg-muted/30 px-5 py-4">
             <p className="font-epilogue text-xs text-muted-foreground leading-relaxed">
               Once installed, click the extension icon to open the sidebar on any AI tool.
-              Sign in with your Brand Lens credentials to load your brands.
+              Sign in with your Vince credentials to load your brands.
             </p>
           </div>
         </motion.div>
@@ -401,7 +401,7 @@ export function ExtensionTab() {
           >
             <Chrome className="w-12 h-12 text-[#1ED75F] mb-4" />
             <h3 className="font-epilogue text-base font-semibold text-white mb-1">
-              Brand Lens
+              Vince
             </h3>
             <p className="font-epilogue text-[11px] text-white/40 mt-4">
               AI-powered brand intelligence

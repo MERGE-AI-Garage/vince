@@ -112,7 +112,7 @@ export function AuthGate({ children }: AuthGateProps) {
   if (!session) {
     return (
       <div style={styles.container}>
-        <h2 style={styles.heading}>Brand Lens</h2>
+        <h2 style={styles.heading}>Vince</h2>
         <p style={styles.subtext}>Sign in with your account</p>
         {error && <p style={styles.error}>{error}</p>}
         <button

@@ -6,7 +6,7 @@
 
 ## Overview
 
-Brand Lens's flagship feature: a user speaks to Vince (the brand agent) via Gemini Live voice, says "Create Google, google.com," and within ~40 seconds the full brand DNA profile is extracted — colors, typography, tone of voice, visual identity, brand values — with zero manual steps.
+Vince's flagship feature: a user speaks to Vince (the brand agent) via Gemini Live voice, says "Create Google, google.com," and within ~40 seconds the full brand DNA profile is extracted — colors, typography, tone of voice, visual identity, brand values — with zero manual steps.
 
 This document captures the full architecture, every bug encountered, every fix applied, and the design decisions that made it work.
 
@@ -192,7 +192,7 @@ if (bodyUserId) {
 
 **Symptom:** All Vince conversations showing 0 messages in the admin conversation browser.
 
-**Root cause:** `chatbot_conversations` table is NOT in Brand Lens's generated Supabase types. Client-side insert fails silently, falls back to random UUID. Server-side update matches 0 rows.
+**Root cause:** `chatbot_conversations` table is NOT in Vince's generated Supabase types. Client-side insert fails silently, falls back to random UUID. Server-side update matches 0 rows.
 
 **Fix:** Server-side upsert (creates row if missing):
 
@@ -269,7 +269,7 @@ await supabase.from('chatbot_conversations').upsert({
 
 ## Supabase Auth Pattern for Edge Function Chaining
 
-This is a reusable pattern for any Brand Lens edge function that needs to be callable from both the browser (user JWT) and from other edge functions (service-role JWT):
+This is a reusable pattern for any Vince edge function that needs to be callable from both the browser (user JWT) and from other edge functions (service-role JWT):
 
 ```typescript
 // Identify caller — works with both user JWTs and service-role JWTs
@@ -315,7 +315,7 @@ if (authHeader) {
 
 ## Demo Script
 
-1. Open Brand Lens Creative Studio
+1. Open Vince Creative Studio
 2. Click voice mode (microphone icon)
 3. Say: "Hey Vince, create a brand called [Name], their website is [url]"
 4. Vince confirms brand created

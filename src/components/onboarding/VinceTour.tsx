@@ -1,14 +1,14 @@
-// ABOUTME: Driver.js voice-focused feature spotlight tour for Brand Lens
+// ABOUTME: Driver.js voice-focused feature spotlight tour for Vince
 // ABOUTME: 5 steps pointing to Brand DNA, Vince voice mode, and Director Mode — not a generic UI tutorial
 
 import { useCallback } from 'react';
 import { driver } from 'driver.js';
 
-interface UseBrandLensTourOptions {
+interface UseVinceTourOptions {
   onComplete?: () => void;
 }
 
-export function useBrandLensTour({ onComplete }: UseBrandLensTourOptions = {}) {
+export function useVinceTour({ onComplete }: UseVinceTourOptions = {}) {
   const startTour = useCallback(() => {
     const driverObj = driver({
       showProgress: true,

@@ -101,7 +101,7 @@ Direct edge calls would bypass Vince's confirmation step and the conversational 
 ## Feature 4: Vince Watching Himself (`analyze_self_demo`)
 
 ### What it does
-New Vince tool. When you share a YouTube link to a Brand Lens / Vince demo recording, Vince watches it as a product designer, UX critic, and AI engineer combined — analyzing demo effectiveness, not competitor marketing strategy.
+New Vince tool. When you share a YouTube link to a Vince demo recording, Vince watches it as a product designer, UX critic, and AI engineer combined — analyzing demo effectiveness, not competitor marketing strategy.
 
 The same `analyze-competitor-video` edge function handles this via `mode: 'self_critique'`. No new edge function needed. `brand_id` is not required in self-critique mode.
 
@@ -109,10 +109,10 @@ The same `analyze-competitor-video` edge function handles this via `mode: 'self_
 ```typescript
 {
   name: 'analyze_self_demo',
-  description: 'Watch a screen recording of a Brand Lens / Vince demo and analyze it as a product designer and UX critic. Use when the user shares a YouTube link to a Brand Lens demo recording and wants feedback on the product experience, demo flow, or workflow improvements.',
+  description: 'Watch a screen recording of a Vince / Vince demo and analyze it as a product designer and UX critic. Use when the user shares a YouTube link to a Vince demo recording and wants feedback on the product experience, demo flow, or workflow improvements.',
   parameters: {
     properties: {
-      video_url: { type: 'string', description: 'YouTube URL of the Brand Lens demo recording' }
+      video_url: { type: 'string', description: 'YouTube URL of the Vince demo recording' }
     },
     required: ['video_url']
   }
@@ -124,7 +124,7 @@ When `mode === 'self_critique'`, the edge function:
 - Skips brand context injection entirely
 - Uses a product-design–focused system prompt:
   ```
-  You are watching a screen recording demo of an AI creative director product called Vince (Brand Lens).
+  You are watching a screen recording demo of an AI creative director product called Vince (Vince).
   Analyze it as a product designer, UX critic, creative director, and AI engineer combined.
   Be direct, specific, and actionable. Cite timestamps where possible.
   ```
@@ -216,7 +216,7 @@ Frontend (`BrandAgentApp.tsx`):
 6. **Test deliverable button:** Click a "Build These" button → message sends `"Build a [name] for the counter-campaign: [description]"` → Vince confirms and generates
 
 ### Test 2: Vince watching himself — full violet card
-1. Upload any screen recording of the Brand Lens workflow to YouTube (unlisted is fine; even 2-3 minutes works)
+1. Upload any screen recording of the Vince workflow to YouTube (unlisted is fine; even 2-3 minutes works)
 2. In Vince chat: `Watch this demo recording and tell me what you think: [YouTube URL]`
 3. Wait ~15–30s
 4. **Expect the violet card to show all five sections:**
@@ -240,7 +240,7 @@ Same as Test 1 but in voice mode. Paste the URL into the voice bar URL field ins
 ### Edge cases
 - If Gemini doesn't return `scenes` or `campaign_directions` (API drift, flakiness), those sections don't render — guarded with `?.length > 0`
 - If a YouTube video is private or unavailable, the edge function returns an error and Vince reports it
-- `analyze_self_demo` vs `analyze_competitor_content` disambiguation: if you paste a generic YouTube URL without saying "demo" or "Brand Lens", Vince may default to competitor mode. Be explicit: "Watch this Brand Lens demo recording"
+- `analyze_self_demo` vs `analyze_competitor_content` disambiguation: if you paste a generic YouTube URL without saying "demo" or "Vince", Vince may default to competitor mode. Be explicit: "Watch this Vince demo recording"
 - `demo_score` is 0 if Gemini returns it as null — worth watching to see if Gemini skips it on some runs
 
 ---

@@ -80,7 +80,7 @@ export function BrandShopTopBar({
       {/* Left: Brand name + status */}
       <div className="flex items-center gap-2 shrink-0">
         <span className="text-sm font-semibold tracking-tight select-none" style={{ color: 'hsl(var(--cs-text-primary))' }}>
-          Brand Lens
+          Vince
         </span>
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-muted/50 rounded-full select-none">
           <div className={`w-1.5 h-1.5 ${statusColor} rounded-full ${statusPulse ? 'animate-pulse' : ''}`} />

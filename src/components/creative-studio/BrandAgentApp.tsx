@@ -1197,11 +1197,11 @@ export function BrandAgentApp({
                 {agentResponses[message.id].competitor_analysis && (() => {
                   const analysis = agentResponses[message.id].competitor_analysis!;
                   return (
-                    <div className="p-3 bg-orange-500/5 border border-orange-500/20 rounded-lg space-y-3">
+                    <div className="p-3 bg-purple-950/40 border border-purple-500/20 rounded-lg space-y-3">
                       {/* Header */}
                       <div className="flex items-center gap-1.5">
-                        <Target className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-orange-400">Beat This Ad</span>
+                        <Target className="w-3.5 h-3.5 text-purple-200 shrink-0" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-purple-200">Beat This Ad</span>
                       </div>
 
                       {/* Summary */}
@@ -1209,14 +1209,14 @@ export function BrandAgentApp({
 
                       {/* Scene Timeline */}
                       {analysis.scenes?.length > 0 && (
-                        <div className="pt-2 border-t border-orange-500/15">
-                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Scene Breakdown</p>
+                        <div className="pt-2 border-t border-purple-500/15">
+                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider mb-1.5">Scene Breakdown</p>
                           <div className="space-y-1">
                             {analysis.scenes.map((scene, i) => (
                               <div key={i} className="flex items-start gap-2 text-xs">
-                                <span className="text-orange-400/60 shrink-0 font-mono text-[10px] pt-0.5">{scene.timestamp}</span>
+                                <span className="text-purple-300/60 shrink-0 font-mono text-[10px] pt-0.5">{scene.timestamp}</span>
                                 <span className="text-foreground/60 flex-1">{scene.scene_type}</span>
-                                <span className="text-orange-400/50 shrink-0 text-[10px] italic">{scene.emotional_signal}</span>
+                                <span className="text-purple-300/50 shrink-0 text-[10px] italic">{scene.emotional_signal}</span>
                               </div>
                             ))}
                           </div>
@@ -1225,12 +1225,12 @@ export function BrandAgentApp({
 
                       {/* Strategic Openings */}
                       {analysis.weaknesses?.length > 0 && (
-                        <div className="pt-2 border-t border-orange-500/15">
-                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider mb-1.5">Strategic Openings</p>
+                        <div className="pt-2 border-t border-purple-500/15">
+                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider mb-1.5">Strategic Openings</p>
                           <ul className="space-y-1">
                             {analysis.weaknesses.map((w, i) => (
                               <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
-                                <span className="text-orange-400 mt-0.5 shrink-0">›</span>
+                                <span className="text-purple-200 mt-0.5 shrink-0">›</span>
                                 {w}
                               </li>
                             ))}
@@ -1240,17 +1240,17 @@ export function BrandAgentApp({
 
                       {/* 3 Campaign Directions */}
                       {analysis.campaign_directions?.length > 0 && (
-                        <div className="pt-2 border-t border-orange-500/15 space-y-2">
-                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">3 Ways to Beat It</p>
+                        <div className="pt-2 border-t border-purple-500/15 space-y-2">
+                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider">3 Ways to Beat It</p>
                           {analysis.campaign_directions.map((dir, i) => (
                             <button
                               key={i}
                               onClick={() => handleDirectionSelect(dir, analysis)}
-                              className="w-full text-left p-2 bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/40 rounded cursor-pointer transition-colors space-y-0.5"
+                              className="w-full text-left p-2 bg-purple-950/40 hover:bg-purple-800/30 border border-purple-500/20 hover:border-purple-500/40 rounded cursor-pointer transition-colors space-y-0.5"
                             >
                               <p className="text-xs font-semibold text-foreground/90">{dir.title}</p>
                               <p className="text-[11px] text-foreground/60 leading-snug">{dir.concept}</p>
-                              <p className="text-[10px] text-orange-400/70 italic">"{dir.tagline}"</p>
+                              <p className="text-[10px] text-purple-300/70 italic">"{dir.tagline}"</p>
                             </button>
                           ))}
                         </div>
@@ -1258,16 +1258,16 @@ export function BrandAgentApp({
 
                       {/* Counter Deliverables */}
                       {analysis.counter_deliverables && analysis.counter_deliverables.length > 0 && (
-                        <div className="pt-2 border-t border-orange-500/15 space-y-1.5">
-                          <p className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider">Build These</p>
+                        <div className="pt-2 border-t border-purple-500/15 space-y-1.5">
+                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider">Build These</p>
                           {analysis.counter_deliverables.map((d, i) => (
                             <button
                               key={i}
                               onClick={() => handleSendMessage(`Generate a creative package for a ${d.name} (${d.aspect_ratio}, deliverable_type: ${d.deliverable_type}) as part of the counter-campaign. Brief: ${d.description}`, [])}
-                              className="w-full text-left flex items-center gap-2 px-2 py-1.5 bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/40 rounded transition-colors"
+                              className="w-full text-left flex items-center gap-2 px-2 py-1.5 bg-purple-950/40 hover:bg-purple-800/30 border border-purple-500/20 hover:border-purple-500/40 rounded transition-colors"
                             >
                               <span className="text-xs font-medium text-foreground/80 flex-1">{d.name}</span>
-                              <span className="text-[10px] text-orange-400/50 shrink-0">{d.aspect_ratio}</span>
+                              <span className="text-[10px] text-purple-300/50 shrink-0">{d.aspect_ratio}</span>
                             </button>
                           ))}
                         </div>
@@ -1275,8 +1275,8 @@ export function BrandAgentApp({
 
                       {/* Counter Brief (collapsible) */}
                       {analysis.counter_brief && (
-                        <details className="pt-2 border-t border-orange-500/15">
-                          <summary className="text-[10px] font-semibold text-orange-400/70 uppercase tracking-wider cursor-pointer select-none">
+                        <details className="pt-2 border-t border-purple-500/15">
+                          <summary className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider cursor-pointer select-none">
                             Full Counter Brief
                           </summary>
                           <p className="text-xs text-foreground/70 leading-relaxed mt-1.5">{analysis.counter_brief}</p>
@@ -1545,10 +1545,10 @@ export function BrandAgentApp({
 
         {analyzingVideoAt && (
           <div className="flex items-center gap-2 text-xs py-2">
-            <div className="flex items-center gap-2 bg-orange-500/10 border border-orange-500/30 rounded-lg px-3 py-2 w-full">
-              <div className="h-2 w-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+            <div className="flex items-center gap-2 bg-purple-950/40 border border-purple-500/30 rounded-lg px-3 py-2 w-full">
+              <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse flex-shrink-0" />
               <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-orange-300 font-medium">Analyzing video</span>
+                <span className="text-purple-200 font-medium">Analyzing video</span>
                 <span className="text-muted-foreground">
                   {elapsedAnalysisSeconds < 60
                     ? `${elapsedAnalysisSeconds}s · Gemini is watching the video...`

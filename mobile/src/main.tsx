@@ -1,4 +1,4 @@
-// ABOUTME: Entry point for the Brand Lens mobile app (Capacitor — iOS)
+// ABOUTME: Entry point for the Vince mobile app (Capacitor — iOS)
 // ABOUTME: Mounts MobileApp and handles cleanup when the app is backgrounded
 
 import { StrictMode } from 'react';

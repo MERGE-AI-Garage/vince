@@ -217,7 +217,7 @@ async function fetchPage(url: string, timeoutMs = 15000): Promise<string | null>
 async function fetchCSS(url: string): Promise<string> {
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BrandLens-Analyzer/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Vince-Analyzer/1.0)' },
       signal: AbortSignal.timeout(10000),
     });
     if (!response.ok) return '';
@@ -807,7 +807,7 @@ async function discoverBrandPages(doc: any, baseUrl: string): Promise<string[]> 
     try {
       const response = await fetch(testUrl, {
         method: 'HEAD',
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BrandLens-Analyzer/1.0)' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Vince-Analyzer/1.0)' },
         signal: AbortSignal.timeout(5000),
       });
       if (response.ok && response.status === 200) {

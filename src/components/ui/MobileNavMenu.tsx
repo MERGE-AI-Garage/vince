@@ -35,7 +35,7 @@ export function MobileNavMenu({ open, onOpenChange, navItems, siteTitle, labsIte
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-[280px]">
         <SheetHeader className="pb-4">
-          <SheetTitle className="text-left font-fraunces">{siteTitle || 'Brand Lens'}</SheetTitle>
+          <SheetTitle className="text-left font-fraunces">{siteTitle || 'Vince'}</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col space-y-1">
           {navItems.map((item) => (

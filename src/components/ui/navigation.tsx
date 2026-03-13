@@ -1,4 +1,4 @@
-// ABOUTME: Top navigation bar for Brand Lens.
+// ABOUTME: Top navigation bar for Vince.
 // ABOUTME: Minimal nav with brand name, studio links, and sign out.
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const Navigation = () => {
       <div className="max-w-screen-2xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="text-lg font-bold tracking-tight">
-            Brand Lens
+            Vince
           </Link>
           <div className="hidden md:flex items-center gap-1">
             <Button variant="ghost" size="sm" asChild>

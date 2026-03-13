@@ -1,4 +1,4 @@
-// ABOUTME: Vite configuration for Brand Lens.
+// ABOUTME: Vite configuration for Vince.
 // ABOUTME: Matches AI Garage toolchain — SWC compiler, @/ alias, chunk splitting.
 
 import { defineConfig } from "vite";

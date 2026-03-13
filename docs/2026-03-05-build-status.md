@@ -1,4 +1,4 @@
-# Brand Lens — Build Status
+# Vince — Build Status
 
 **Project:** Gemini Live Agent Challenge (Google hackathon)
 **Submission window:** Feb 16 — Mar 16, 2026
@@ -7,7 +7,7 @@
 
 ---
 
-## What Brand Lens Is
+## What Vince Is
 
 A voice-driven AI creative director agent ("Vince") that generates brand-aware creative packages using Gemini's interleaved output — text and images in a single API response. Users describe what they need in natural language (text or voice), Vince builds technically precise prompts with brand context, camera presets, and compliance guardrails, then generates complete creative packages with copy + images together.
 
@@ -41,7 +41,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 - [x] BrandAgentApp — text chat with brand context, tool actions, image display
 - [x] CreativePackageDisplay — renders interleaved text + images from Gemini
 - [x] Voice mode UI — live indicator, transcript, controls
-- [x] Simplified navigation (Brand Lens branding throughout)
+- [x] Simplified navigation (Vince branding throughout)
 - [x] Pre-filled demo credentials on login page
 
 ### Edge Functions

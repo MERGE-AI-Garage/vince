@@ -1,4 +1,4 @@
-// ABOUTME: Auth context for Brand Lens.
+// ABOUTME: Auth context for Vince.
 // ABOUTME: Provides user session, profile, and authentication state.
 
 import React, { createContext, useContext, useEffect, useState } from 'react';

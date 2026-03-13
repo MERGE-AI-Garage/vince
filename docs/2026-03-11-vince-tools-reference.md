@@ -78,7 +78,7 @@
 | Tool | What it does |
 |------|-------------|
 | `analyze_competitor_content` | Analyze a competitor video — returns summary, weaknesses, 3 counter-campaign directions |
-| `analyze_self_demo` | Watch a Brand Lens demo recording and return a UX score + structured critique |
+| `analyze_self_demo` | Watch a Vince demo recording and return a UX score + structured critique |
 
 ---
 
