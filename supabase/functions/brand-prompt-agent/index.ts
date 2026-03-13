@@ -414,6 +414,76 @@ const VINCE_TOOLS = [
       required: ['query'],
     },
   },
+  {
+    name: 'list_camera_options',
+    description: "List available camera equipment, film stocks, lighting setups, lenses, and other photography options from the Creative Studio inventory. Use when: (1) picking camera equipment for a generation — always check inventory before deciding, (2) the user asks what cameras/lenses/film stocks are available, (3) the user requests specific equipment and you need its prompt fragment, (4) you want to suggest equipment options. Returns options grouped by category with prompt_fragment for each — use these fragments verbatim in generation prompts.",
+    parameters: {
+      type: 'object',
+      properties: {
+        category: {
+          type: 'string',
+          enum: ['camera_body', 'film_stock', 'focal_length', 'aperture', 'lighting', 'composition', 'depth_of_field', 'color_grade', 'film_effect', 'shot_type', 'print_process', 'color_temperature', 'frame_rate'],
+          description: 'Filter to a specific equipment category. Omit to return all categories.',
+        },
+        media_type: {
+          type: 'string',
+          enum: ['still', 'video', 'both'],
+          description: 'Filter by media type. Omit to return all.',
+        },
+      },
+    },
+  },
+  {
+    name: 'edit_image',
+    description: 'Edit an existing image conversationally using AI. Use when the user says "make it darker", "change the background", "adjust the lighting", "warm it up", "iterate on this", or any instruction to modify an existing image. Pass thought_signature from a previous edit_image response to maintain visual editing context across multiple refinements.',
+    parameters: {
+      type: 'object',
+      properties: {
+        input_image_url: {
+          type: 'string',
+          description: 'URL of the image to edit. Use the output_url from a previous generate_image, edit_image, or list_generations result.',
+        },
+        instruction: {
+          type: 'string',
+          description: 'What to change about the image. Be specific: "make the background darker and more dramatic", "shift the color grade to golden hour warm tones", "remove the text overlay".',
+        },
+        thought_signature: {
+          type: 'string',
+          description: 'Thought signature returned by a previous edit_image call on this image. Pass this to maintain editing context across multiple refinements. Omit on the first edit.',
+        },
+        aspect_ratio: {
+          type: 'string',
+          enum: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+          description: 'Output aspect ratio. Default matches input.',
+        },
+      },
+      required: ['input_image_url', 'instruction'],
+    },
+  },
+  {
+    name: 'list_generations',
+    description: 'List past image and video generations for this brand. Use when the user asks to see what was made, wants to find a previous shot to iterate on, or says "show me what we generated" or "find that image from yesterday".',
+    parameters: {
+      type: 'object',
+      properties: {
+        limit: {
+          type: 'integer',
+          description: 'Max results to return (default 10, max 20).',
+          minimum: 1,
+          maximum: 20,
+        },
+        generation_type: {
+          type: 'string',
+          enum: ['text_to_image', 'multi_turn_edit', 'video', 'all'],
+          description: 'Filter by generation type. Omit or use "all" for everything.',
+        },
+        since: {
+          type: 'string',
+          description: 'ISO date string to filter results after this date (e.g. "2026-03-10"). Use to find "yesterday\'s" or "last week\'s" generations.',
+        },
+      },
+    },
+  },
 ];
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -485,9 +555,49 @@ async function executeTool(
       return await generateVideo(parameters, context, supabase);
     case 'recall_brand_guidelines':
       return await recallBrandGuidelines(parameters, context, supabase, geminiApiKey);
+    case 'list_camera_options':
+      return await listCameraOptions(parameters, supabase);
+    case 'edit_image':
+      return await editImage(parameters, context, supabase);
+    case 'list_generations':
+      return await listGenerations(parameters, context, supabase);
     default:
       throw new Error(`Unknown tool: ${toolName}`);
   }
+}
+
+async function listCameraOptions(
+  params: Record<string, unknown>,
+  supabase: ReturnType<typeof createClient>,
+) {
+  const query = supabase
+    .from('creative_studio_camera_options')
+    .select('category, slug, display_name, description, prompt_fragment, media_type')
+    .eq('is_active', true)
+    .order('category')
+    .order('sort_order');
+
+  if (params.category) query.eq('category', params.category as string);
+  if (params.media_type && params.media_type !== 'both') {
+    query.in('media_type', [params.media_type as string, 'both']);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  const grouped: Record<string, unknown[]> = {};
+  for (const option of (data || [])) {
+    if (!grouped[option.category]) grouped[option.category] = [];
+    grouped[option.category].push({
+      name: option.display_name,
+      slug: option.slug,
+      description: option.description,
+      prompt_fragment: option.prompt_fragment,
+      media_type: option.media_type,
+    });
+  }
+
+  return { categories: grouped, total: data?.length || 0 };
 }
 
 async function recallBrandGuidelines(
@@ -788,6 +898,106 @@ async function generateImage(
     image_count: (result.output_urls || []).length,
     generation_time_ms: result.generation_time_ms,
     quota_remaining: result.quota?.remaining,
+  };
+}
+
+async function editImage(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  // If a thought_signature is provided, pass it as a model turn so Gemini can
+  // resume its internal reasoning state across edit turns.
+  const conversation_history = params.thought_signature
+    ? [{ role: 'model', text: '', thought_signature: params.thought_signature as string }]
+    : undefined;
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/generate-creative-image`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+    },
+    body: JSON.stringify({
+      generation_type: 'multi_turn_edit',
+      prompt: params.instruction as string,
+      model_id: 'gemini-3.1-flash-image-preview',
+      brand_id: context.brand_id,
+      user_id: context.user_id,
+      aspect_ratio: (params.aspect_ratio as string) || '1:1',
+      input_image: params.input_image_url as string,
+      ...(conversation_history ? { conversation_history } : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    let errorMessage = `Edit failed (${response.status})`;
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMessage = errorJson.details || errorJson.error || errorMessage;
+    } catch {
+      errorMessage = errorText.slice(0, 200);
+    }
+    throw new Error(errorMessage);
+  }
+
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.details || result.error || 'Edit failed');
+  }
+
+  return {
+    output_url: (result.output_urls || [])[0] || null,
+    thought_signature: result.thought_signature || null,
+    text_response: result.text_response || null,
+    generation_id: result.generation_id || null,
+  };
+}
+
+async function listGenerations(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const limit = Math.min((params.limit as number) || 10, 20);
+  const generationType = params.generation_type as string | undefined;
+  const since = params.since as string | undefined;
+
+  let query = supabase
+    .from('creative_studio_generations')
+    .select('id, output_urls, prompt_text, model_used, generation_type, created_at, estimated_cost_usd')
+    .eq('brand_id', context.brand_id)
+    .eq('user_id', context.user_id)
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (generationType && generationType !== 'all') {
+    query = query.eq('generation_type', generationType);
+  }
+
+  if (since) {
+    query = query.gte('created_at', new Date(since).toISOString());
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(`Failed to fetch generations: ${error.message}`);
+
+  return {
+    generations: (data || []).map(g => ({
+      id: g.id,
+      output_urls: (g.output_urls || []) as string[],
+      prompt_text: g.prompt_text ? (g.prompt_text as string).slice(0, 150) : null,
+      model_used: g.model_used,
+      generation_type: g.generation_type,
+      created_at: g.created_at,
+      estimated_cost_usd: g.estimated_cost_usd,
+    })),
+    count: (data || []).length,
   };
 }
 
@@ -1506,6 +1716,7 @@ You have tools to take real actions:
 - list_brand_references: List available reference image collections for the brand (products, characters, styles, environments).
 - generate_brand_header: Generate the brand's hero/header image using its visual DNA and colors. Saves directly to the brand record.
 - generate_brand_cards: Generate the 5 brand card icons (DNA, Guidelines, Prompts, Templates, Agent) using the brand's color palette.
+- list_camera_options: Browse available camera bodies, lenses, film stocks, lighting setups, and other equipment in the Creative Studio inventory. Returns options with their prompt_fragment — use these verbatim when building generation prompts. Use when picking equipment for a generation, when the user asks what's available, or when evaluating whether specific equipment fits the brand.
 
 BRAND ONBOARDING FLOW:
 When a user asks to set up a new brand, you need TWO things: the brand name and the website URL.
@@ -1526,8 +1737,20 @@ BRAND VISUAL BUILDOUT:
 - If the user asks to regenerate specific cards, pass the card_keys parameter (e.g., ["brand_dna", "templates"]).
 - These are brand-building tools, NOT creative studio image generation. Use them for brand setup and maintenance.
 
+CAMERA & EQUIPMENT:
+Camera choice is a creative decision — it changes the visual DNA of the image, not just metadata. A GoPro, a Fujifilm X100, and an ARRI Alexa produce fundamentally different looks. Treat every prompt like a photography brief: camera, lens, lighting, film stock, and color grade are always specified together.
+
+You are the creative director. Pick the camera. Don't wait to be asked.
+
+1. Before any generation, call list_camera_options to check the inventory. Pick equipment that serves the brief AND fits the brand's photography standards.
+2. State your choice naturally: "Going with the ARRI Alexa here — the tonal range suits this brand's clean contemporary look."
+3. Only ask when there's a genuine creative fork: "I could go Contax T2 for an editorial 35mm feel, or keep it digital. The brand leans contemporary but both could work. What's your instinct?"
+4. When the user requests specific equipment: look it up with list_camera_options, get its prompt_fragment, apply it if it fits the brand.
+5. When equipment conflicts with brand guidelines, push back with a concrete creative reason — not just "it violates policy." E.g., "The Bronica is gorgeous for medium format work, but this brand is built around crisp digital aesthetics — the grain and tonal softness would fight the look. Want to try the Contax T2? Similar indie feel, less at odds with the DNA."
+6. Use the prompt_fragment from inventory verbatim in generation prompts — don't paraphrase it.
+
 BEHAVIORAL RULES:
-1. When generating a prompt, always include recommended camera settings.
+1. When generating a prompt, always include camera equipment selected from inventory.
 2. Before creating a new template, search the library to avoid duplicates.
 3. When the user asks to save something, use the save_prompt_template tool — don't just say you'll save it.
 4. Respond conversationally. Don't wrap everything in JSON. Include prompts naturally in your response.
@@ -1562,11 +1785,13 @@ Every model has a cost per generation. Multiply by num_outputs for total cost.
 
 GENERATION FLOW:
 1. When the user describes a shot, compose the prompt and present it with your camera recommendations.
-2. When they confirm ("OK generate", "go ahead", "make it", "shoot it"), check quota with check_generation_quota, then generate immediately with generate_image.
-3. Pick aspect ratio from context (Instagram → 1:1, stories → 9:16, hero banner → 16:9). State it, don't ask.
-4. Default to 1 image. Generate 2 when exploring looks or when you want to give options.
-5. After generation, present the results and offer to save the prompt to the library if it's a keeper.
-6. If quota is exhausted, inform the user of the reset date and offer to save the prompt for later.
+2. STOP. Wait for explicit confirmation before generating. Do NOT call generate_image or generate_video in the same turn you present the prompt.
+3. Valid confirmations: "go ahead", "make it", "shoot it", "generate", "yes", "do it", "let's go". Describing a shot is NOT a confirmation.
+4. On confirmation: check quota with check_generation_quota, then generate immediately with generate_image.
+5. Pick aspect ratio from context (Instagram → 1:1, stories → 9:16, hero banner → 16:9). State it, don't ask.
+6. Default to 1 image. Generate 2 when exploring looks or when you want to give options.
+7. After generation, present the results and offer to save the prompt to the library if it's a keeper.
+8. If quota is exhausted, inform the user of the reset date and offer to save the prompt for later.
 
 REFERENCE IMAGE COLLECTIONS:
 - When the user mentions a specific product, person, or character by name, use list_brand_references to check if reference collections exist.

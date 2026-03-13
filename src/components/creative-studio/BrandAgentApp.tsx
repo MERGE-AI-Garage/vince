@@ -160,6 +160,23 @@ interface CreativePackageResult {
   brand_alignment?: BrandAlignment;
 }
 
+interface EditedImage {
+  url: string;
+  generation_id?: string;
+  text_response?: string;
+  thought_signature?: string;
+}
+
+interface GenerationRecord {
+  id: string;
+  output_urls: string[];
+  prompt_text: string | null;
+  model_used: string;
+  generation_type: string;
+  created_at: string;
+  estimated_cost_usd: number | null;
+}
+
 interface AgentResponse {
   prompt?: string;
   camera_preset?: CameraPreset;
@@ -170,6 +187,8 @@ interface AgentResponse {
   creative_package?: CreativePackageResult;
   competitor_analysis?: CompetitorAnalysis;
   self_demo_analysis?: SelfDemoAnalysis;
+  edited_image?: EditedImage;
+  generation_history?: GenerationRecord[];
 }
 
 export function BrandAgentApp({
@@ -503,8 +522,37 @@ export function BrandAgentApp({
         }
       }
 
+      // Extract edit_image result
+      let editedImage: EditedImage | undefined;
+      const editAction = response.tool_actions?.find(
+        (a: ToolAction) => a.toolName === 'edit_image' && a.success
+      );
+      if (editAction?.result) {
+        const r = editAction.result as Record<string, unknown>;
+        if (r.output_url) {
+          editedImage = {
+            url: r.output_url as string,
+            generation_id: (r.generation_id as string) || undefined,
+            text_response: (r.text_response as string) || undefined,
+            thought_signature: (r.thought_signature as string) || undefined,
+          };
+        }
+      }
+
+      // Extract list_generations result
+      let generationHistory: GenerationRecord[] | undefined;
+      const listAction = response.tool_actions?.find(
+        (a: ToolAction) => a.toolName === 'list_generations' && a.success
+      );
+      if (listAction?.result) {
+        const r = listAction.result as Record<string, unknown>;
+        if (r.generations && Array.isArray(r.generations) && (r.generations as unknown[]).length > 0) {
+          generationHistory = r.generations as GenerationRecord[];
+        }
+      }
+
       // Store structured response data alongside the message
-      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length || creativePackage || competitorAnalysis || selfDemoAnalysis) {
+      if (response.prompt || response.camera_preset || response.recommended_model || response.tool_actions?.length || response.generated_images?.length || creativePackage || competitorAnalysis || selfDemoAnalysis || editedImage || generationHistory) {
         setAgentResponses(prev => ({
           ...prev,
           [agentMsgId]: {
@@ -516,9 +564,11 @@ export function BrandAgentApp({
             creative_package: creativePackage,
             competitor_analysis: competitorAnalysis,
             self_demo_analysis: selfDemoAnalysis,
+            edited_image: editedImage,
+            generation_history: generationHistory,
           },
         }));
-        if (creativePackage) invalidateGenerations();
+        if (creativePackage || response.generated_images?.length) invalidateGenerations();
       }
 
       // If a brand was created, notify the parent so it can switch to the new brand
@@ -689,6 +739,7 @@ export function BrandAgentApp({
                 ...prev,
                 [imgMsgId]: { generated_images: images },
               }));
+              invalidateGenerations();
             } else if (toolName === 'generate_creative_package' && result.parts && Array.isArray(result.parts)) {
               const pkgMsgId = uuidv4();
               setMessages(prev => [...prev, {
@@ -756,6 +807,40 @@ export function BrandAgentApp({
                 ...prev,
                 [vidMsgId]: {
                   generated_videos: (result.output_urls as string[]),
+                },
+              }));
+            } else if (toolName === 'edit_image' && result.output_url) {
+              const editMsgId = uuidv4();
+              setMessages(prev => [...prev, {
+                id: editMsgId,
+                role: 'model' as const,
+                content: (result.text_response as string) || 'Image edited',
+                timestamp: new Date(),
+              }]);
+              setAgentResponses(prev => ({
+                ...prev,
+                [editMsgId]: {
+                  edited_image: {
+                    url: result.output_url as string,
+                    generation_id: (result.generation_id as string) || undefined,
+                    text_response: (result.text_response as string) || undefined,
+                    thought_signature: (result.thought_signature as string) || undefined,
+                  },
+                },
+              }));
+              invalidateGenerations();
+            } else if (toolName === 'list_generations' && result.generations && Array.isArray(result.generations) && (result.generations as unknown[]).length > 0) {
+              const histMsgId = uuidv4();
+              setMessages(prev => [...prev, {
+                id: histMsgId,
+                role: 'model' as const,
+                content: `Found ${(result.generations as unknown[]).length} generation(s)`,
+                timestamp: new Date(),
+              }]);
+              setAgentResponses(prev => ({
+                ...prev,
+                [histMsgId]: {
+                  generation_history: result.generations as GenerationRecord[],
                 },
               }));
             }
@@ -1337,15 +1422,100 @@ export function BrandAgentApp({
                             className="w-full h-auto object-cover"
                             loading="lazy"
                           />
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between">
+                            {onSetImage && (
+                              <button
+                                onClick={() => onSetImage(img.url)}
+                                className="text-[9px] text-purple-300 hover:text-white"
+                              >
+                                Load to Canvas
+                              </button>
+                            )}
                             <a
                               href={img.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[9px] text-white/80 hover:text-white"
+                              className="text-[9px] text-white/80 hover:text-white ml-auto"
                             >
                               Open full size
                             </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Edited Image */}
+                {agentResponses[message.id].edited_image && (
+                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                    <p className="text-[10px] font-medium text-purple-400 mb-2">Edited Image</p>
+                    <div className="relative group rounded-lg overflow-hidden border border-border/50">
+                      <img
+                        src={agentResponses[message.id].edited_image!.url}
+                        alt="Edited image"
+                        className="w-full h-auto object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between">
+                        {onSetImage && (
+                          <button
+                            onClick={() => onSetImage(agentResponses[message.id].edited_image!.url)}
+                            className="text-[9px] text-purple-300 hover:text-white"
+                          >
+                            Load to Canvas
+                          </button>
+                        )}
+                        <a
+                          href={agentResponses[message.id].edited_image!.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[9px] text-white/80 hover:text-white ml-auto"
+                        >
+                          Open full size
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Generation History */}
+                {agentResponses[message.id].generation_history && agentResponses[message.id].generation_history!.length > 0 && (
+                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                    <p className="text-[10px] font-medium text-purple-400 mb-2">
+                      Past Generations ({agentResponses[message.id].generation_history!.length})
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {agentResponses[message.id].generation_history!.map((gen) => (
+                        <div key={gen.id} className="relative group rounded-lg overflow-hidden border border-border/50">
+                          {gen.output_urls[0] && (
+                            <img
+                              src={gen.output_urls[0]}
+                              alt={gen.prompt_text || 'Generated image'}
+                              className="w-full h-24 object-cover"
+                              loading="lazy"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 gap-1">
+                            {gen.prompt_text && (
+                              <p className="text-[8px] text-white/70 line-clamp-2 leading-tight">{gen.prompt_text}</p>
+                            )}
+                            <div className="flex items-center gap-1.5">
+                              {onSetImage && (
+                                <button
+                                  onClick={() => onSetImage(gen.output_urls[0])}
+                                  className="text-[8px] text-purple-300 hover:text-white"
+                                >
+                                  Canvas
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleSendMessage(`Edit this image: ${gen.output_urls[0]}`, [])}
+                                className="text-[8px] text-blue-300 hover:text-white"
+                              >
+                                Iterate
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1365,6 +1535,8 @@ export function BrandAgentApp({
                 {activeToolName === 'generate_creative_package' ? 'Generating creative package...' :
                  activeToolName === 'analyze_competitor_content' ? 'Analyzing competitor content...' :
                  activeToolName === 'generate_video' ? 'Queueing video render...' :
+                 activeToolName === 'edit_image' ? 'Editing image...' :
+                 activeToolName === 'list_generations' ? 'Loading past generations...' :
                  'Vince is working...'}
               </span>
             </div>

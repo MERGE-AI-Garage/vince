@@ -10,10 +10,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Image as ImageIcon, Search, Folder, Home } from 'lucide-react';
+import { Image as ImageIcon, Search, Folder, Home, ExternalLink } from 'lucide-react';
+import { MediaLibraryTab } from './MediaLibraryTab';
 
 interface MediaItem {
   id: string;
@@ -49,6 +57,7 @@ export function MediaLibraryPanel({ open, onOpenChange, onSelectImage }: MediaLi
   ]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const [showFullLibrary, setShowFullLibrary] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!open) return;
@@ -125,17 +134,30 @@ export function MediaLibraryPanel({ open, onOpenChange, onSelectImage }: MediaLi
     : media;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-[400px] sm:max-w-[400px] p-0 flex flex-col shadow-2xl">
         <SheetHeader className="px-5 pt-5 pb-4 border-b bg-muted/30">
-          <SheetTitle className="flex items-center gap-2.5 text-base">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <ImageIcon className="w-4 h-4 text-primary" />
+          <SheetTitle className="flex items-center justify-between text-base">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <ImageIcon className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <span className="block">Media Library</span>
+                <span className="text-[10px] text-muted-foreground font-normal">Click to load or drag to canvas</span>
+              </div>
             </div>
-            <div>
-              <span className="block">Media Library</span>
-              <span className="text-[10px] text-muted-foreground font-normal">Click to load or drag to canvas</span>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+              onClick={() => setShowFullLibrary(true)}
+              title="Open full media library"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Full Library
+            </Button>
           </SheetTitle>
         </SheetHeader>
 
@@ -234,5 +256,20 @@ export function MediaLibraryPanel({ open, onOpenChange, onSelectImage }: MediaLi
         </ScrollArea>
       </SheetContent>
     </Sheet>
+
+    <Dialog open={showFullLibrary} onOpenChange={setShowFullLibrary}>
+      <DialogContent className="max-w-[95vw] w-[1200px] max-h-[90vh] h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-primary" />
+            Media Library
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <MediaLibraryTab />
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

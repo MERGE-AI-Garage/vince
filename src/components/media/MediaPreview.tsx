@@ -111,6 +111,13 @@ export function MediaPreview({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose, onNavigate]);
 
+  // Must be declared before early returns to satisfy Rules of Hooks
+  const handleCopyUrl = useCallback(() => {
+    if (!currentFile) return;
+    navigator.clipboard.writeText(currentFile.url);
+    toast.success('URL copied to clipboard');
+  }, [currentFile]);
+
   if (!file) return null;
 
   const handleDownload = () => {
@@ -123,12 +130,6 @@ export function MediaPreview({
     document.body.removeChild(link);
     toast.success('Download started');
   };
-
-  const handleCopyUrl = useCallback(() => {
-    if (!currentFile) return;
-    navigator.clipboard.writeText(currentFile.url);
-    toast.success('URL copied to clipboard');
-  }, [currentFile]);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
