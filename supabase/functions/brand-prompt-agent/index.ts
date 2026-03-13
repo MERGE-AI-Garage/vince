@@ -194,17 +194,17 @@ const VINCE_TOOLS = [
               description: { type: 'string', description: 'Additional context for what this deliverable should show. Optional when deliverable_type is set.' },
               aspect_ratio: {
                 type: 'string',
-                enum: ['1:1', '16:9', '9:16', '4:3', '3:4'],
+                enum: ['1:1', '16:9', '9:16', '4:3', '3:4', '4:5', '8:1', '1:4'],
                 description: 'Image format. Optional when deliverable_type is set — each type has a sensible default.',
               },
               deliverable_type: {
                 type: 'string',
-                enum: ['linkedin_post', 'product_shot_with_text', 'social_story', 'display_banner', 'email_header'],
-                description: 'Named deliverable type with pre-built brand typography and layout instructions. Use this for real-world marketing formats that need branded text rendered into the image. linkedin_post (4:3, LinkedIn-ready with headline+logo), product_shot_with_text (1:1, product hero with text overlay), social_story (9:16, vertical story with bold headline+CTA), display_banner (16:9, ad banner with headline+CTA button), email_header (3:4, email masthead with logo+title).',
+                enum: ['linkedin_post', 'product_shot_with_text', 'social_story', 'display_banner', 'email_header', 'tiktok_reel', 'instagram_feed_portrait', 'print_full_page', 'print_ooh_billboard', 'print_ooh_transit', 'print_direct_mail', 'print_collateral', 'banner_leaderboard', 'banner_skyscraper'],
+                description: 'Named deliverable type with pre-built brand typography and layout instructions. linkedin_post (4:3), product_shot_with_text (1:1), social_story (9:16 generic vertical), display_banner (16:9 ad banner), email_header (3:4 masthead), tiktok_reel (9:16 TikTok/Reels-native with hook text), instagram_feed_portrait (4:5 highest-reach Instagram format), print_full_page (3:4 magazine/newspaper full page), print_ooh_billboard (16:9 outdoor billboard), print_ooh_transit (2:3 bus shelter/transit vertical), print_direct_mail (4:3 postcard/mailer), print_collateral (3:4 brochure/sell sheet cover), banner_leaderboard (8:1 IAB 728x90), banner_skyscraper (1:4 IAB 160x600).',
               },
             },
           },
-          description: 'Specific deliverables to generate. Use deliverable_type for named formats (linkedin_post, product_shot_with_text, etc.) which include branded text rendering. Mix typed and custom deliverables freely.',
+          description: 'Specific deliverables to generate. Use deliverable_type for named formats which include branded text rendering. Mix typed and custom deliverables freely.',
         },
       },
       required: ['brief'],
@@ -333,7 +333,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'create_brand',
-    description: 'Create a new brand in the system. Requires a name and website URL. For well-known brands, infer the URL (e.g., "Google" → "google.com"). Call this immediately after the user provides a brand name — do not ask for additional details beyond the website.',
+    description: 'Create a new brand in the system. Use this whenever the user says "create a new brand", "add a brand", "new client", "set up a brand", or gives you a brand name to onboard — even while working with another brand. Requires a name and website URL. For well-known brands, infer the URL (e.g., "Google" → "google.com"). Call this immediately — do NOT ask about colors, mood, tone, or creative direction.',
     parameters: {
       type: 'object',
       properties: {
@@ -1842,9 +1842,9 @@ You have tools to take real actions:
 - deactivate_guardrail: Turn off a specific brand governance directive by directive ID without deleting it.
 
 BRAND ONBOARDING FLOW:
-When a user asks to set up a new brand, you need TWO things: the brand name and the website URL.
-1. If the user gives you a brand name WITHOUT a website URL, infer it for well-known brands (e.g., "Google" → "google.com", "Nike" → "nike.com"). If you can't infer it, ask for the website URL — it's required.
-2. Call create_brand with both the name and website_url. Do NOT call it without a website URL.
+When a user says "create a new brand", "add a brand", "I need a new brand", "new client", or gives you a brand name to onboard — even if you are currently working with another brand — this is a SYSTEM ACTION, not a creative request. Do NOT ask about colors, mood, tone, visual style, or personality. Do NOT say the brand already exists unless create_brand returns an error — never assume or guess. Instead:
+1. If the user gives you a brand name WITHOUT a website URL, infer it for well-known brands (e.g., "Google" → "google.com", "Nike" → "nike.com"). If you can't infer it, ask only for the website URL.
+2. Call create_brand immediately with the name and website_url. Do NOT call it without a website URL.
 3. Website analysis is triggered AUTOMATICALLY after brand creation — you do NOT need to call analyze_brand_website yourself. The system chains it for you. Tell the user: "I've created the brand and kicked off the website analysis — it takes about 30 seconds to extract colors, fonts, and visual identity."
 4. If they provide documents (PDFs, brand guidelines, style guides), call import_brand_document for each one.
    After ALL documents are imported, ALWAYS call synthesize_brand_profile to merge the intelligence,
@@ -2019,7 +2019,16 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const genAI = new GoogleGenerativeAI(geminiApiKey);
 
-    // Authenticate
+    const body = await req.json();
+
+    // Tool declarations are not sensitive — always serve them regardless of auth state
+    if (body.mode === 'get_tools') {
+      return new Response(JSON.stringify({ success: true, tools: VINCE_TOOLS }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Authenticate all other requests
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
@@ -2031,15 +2040,6 @@ serve(async (req) => {
     if (authError || !user) {
       return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const body = await req.json();
-
-    // ── Mode routing for live session tool calling ───────────────────────
-    if (body.mode === 'get_tools') {
-      return new Response(JSON.stringify({ success: true, tools: VINCE_TOOLS }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 

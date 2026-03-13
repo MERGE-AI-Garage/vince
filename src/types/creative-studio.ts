@@ -1161,7 +1161,16 @@ export type DeliverableType =
   | 'product_shot_with_text'
   | 'social_story'
   | 'display_banner'
-  | 'email_header';
+  | 'email_header'
+  | 'tiktok_reel'
+  | 'instagram_feed_portrait'
+  | 'print_full_page'
+  | 'print_ooh_billboard'
+  | 'print_ooh_transit'
+  | 'print_direct_mail'
+  | 'print_collateral'
+  | 'banner_leaderboard'
+  | 'banner_skyscraper';
 
 export const DELIVERABLE_TYPE_LABELS: Record<DeliverableType, string> = {
   linkedin_post: 'LinkedIn Post',
@@ -1169,4 +1178,13 @@ export const DELIVERABLE_TYPE_LABELS: Record<DeliverableType, string> = {
   social_story: 'Social Story',
   display_banner: 'Display Banner',
   email_header: 'Email Header',
+  tiktok_reel: 'TikTok / Reels',
+  instagram_feed_portrait: 'Instagram Feed (Portrait)',
+  print_full_page: 'Print Ad — Full Page',
+  print_ooh_billboard: 'OOH — Billboard',
+  print_ooh_transit: 'OOH — Transit Shelter',
+  print_direct_mail: 'Direct Mail',
+  print_collateral: 'Collateral — Sell Sheet',
+  banner_leaderboard: 'Banner — Leaderboard',
+  banner_skyscraper: 'Banner — Skyscraper',
 };

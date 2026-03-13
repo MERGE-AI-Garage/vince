@@ -211,27 +211,31 @@ async function executeRemoteTool(
 ): Promise<Record<string, unknown>> {
   console.log(`[Vince Live] Calling edge function for tool: ${toolName}`);
 
-  try {
-    const { data, error } = await supabase.functions.invoke('brand-prompt-agent', {
-      body: {
-        mode: 'tool_call',
-        tool_name: toolName,
-        parameters,
-        brand_id: brandId,
-        user_id: userId,
-      }
-    });
-
-    if (error) {
-      console.error(`[Vince Live] Edge function error for ${toolName}:`, error);
-      return { error: error.message };
+  const { data, error } = await supabase.functions.invoke('brand-prompt-agent', {
+    body: {
+      mode: 'tool_call',
+      tool_name: toolName,
+      parameters,
+      brand_id: brandId,
+      user_id: userId,
     }
+  });
 
-    return data?.result ?? { error: 'No result returned' };
-  } catch (err) {
-    console.error(`[Vince Live] Tool execution failed (${toolName}):`, err);
-    return { error: err instanceof Error ? err.message : 'Tool execution failed' };
+  if (error) {
+    console.error(`[Vince Live] Edge function error for ${toolName}:`, error);
+    // Surface auth failures clearly so the user knows to log in again
+    if ('status' in error && (error as { status: number }).status === 401) {
+      throw new Error('AUTH_EXPIRED');
+    }
+    throw error;
   }
+
+  if (!data?.success) {
+    if (data?.error === 'Unauthorized') throw new Error('AUTH_EXPIRED');
+    throw new Error(data?.error || 'Tool execution failed');
+  }
+
+  return data.result ?? {};
 }
 
 // ─── System Instruction ─────────────────────────────────────────────
@@ -303,8 +307,15 @@ CRITICAL STARTUP PROTOCOL:
 3. YOUR OPENING LINE: "${greeting}"
 4. Do NOT wait for the user to say "Hello" or anything else first.
 
+BRAND ONBOARDING FLOW:
+When a user says "create a new brand", "add a brand", "I need a new brand", "new client", "set up a brand", or gives you a brand name to onboard — even while working with another brand — this is a SYSTEM ACTION, not a creative request. Do NOT ask about colors, mood, tone, visual style, or personality. Do NOT say the brand already exists unless create_brand returns an error — never assume.
+1. If the user gives you a brand name WITHOUT a website URL, infer it for well-known brands (e.g., "Google" → "google.com", "Nike" → "nike.com"). If you can't infer it, ask only for the website URL.
+2. Call create_brand immediately with the name and website_url.
+3. Tell the user: "I've created the brand and kicked off the website analysis — takes about 30 seconds."
+
 TOOLS:
-You have access to tools including recall_brand_guidelines, generate_image, generate_video, check_generation_quota, generate_creative_package, and analyze_competitor_content.
+You have access to tools including create_brand, recall_brand_guidelines, generate_image, generate_video, check_generation_quota, generate_creative_package, and analyze_competitor_content.
+When the user asks to create or add a new brand, call the create_brand tool immediately.
 When the user asks you to generate an image, call the generate_image tool with a detailed prompt.
 When the user asks for a video, motion concept, or moving asset, call generate_video. Duration must be exactly 4, 6, or 8 seconds — never 5 or 7. Default: 16:9, 8 seconds, fast model. Build the prompt from the brand's visual DNA: colors, photography style, motion direction, mood, lighting. Tell the user it's rendering and will appear in the History panel in 1-3 minutes.
 - Audio is automatic on both models — always included, no parameter needed.
@@ -312,8 +323,13 @@ When the user asks for a video, motion concept, or moving asset, call generate_v
 - Use reference_image_url to pass a brand logo or product reference when the user says "use the logo" or "show our product" — quality model only.
 - aspect_ratio supports only "16:9" or "9:16" (video does not support 1:1).
 Check quota with check_generation_quota before generating.
-When the user asks for a campaign, multiple deliverables, or a creative package, call generate_creative_package. ALWAYS specify 3 deliverables: a display_banner (16:9 hero), a linkedin_post (4:3), and a product_shot_with_text (1:1 Instagram-ready). Add more if the user requests specific formats.
-When the user shares a competitor video URL (YouTube or other), call analyze_competitor_content with that URL ONCE. Do NOT call analyze_competitor_content again for the same URL — use the results you already received. Present the findings conversationally, then ASK the user if they want to proceed with a counter-campaign. Do NOT automatically call generate_creative_package — wait for confirmation. When they confirm, call generate_creative_package with the counter_brief and the 3 standard deliverables.
+When the user asks for a campaign, deliverables, or a creative package, call generate_creative_package with deliverables matched to their intent:
+- DIGITAL/SOCIAL (default): display_banner (16:9), linkedin_post (4:3), product_shot_with_text (1:1)
+- PRINT: print_full_page (3:4 magazine ad), print_collateral (3:4 brochure/sell sheet), print_ooh_billboard (16:9 outdoor) — omit digital types entirely when user says "print"
+- MIXED: combine digital and print types as requested
+- SPECIFIC FORMATS: tiktok_reel, instagram_feed_portrait, email_header, print_ooh_transit, print_direct_mail, banner_leaderboard, banner_skyscraper
+Never default to digital deliverables when the user explicitly says "print."
+When the user shares a competitor video URL (YouTube or other), call analyze_competitor_content with that URL ONCE. Do NOT call analyze_competitor_content again for the same URL — use the results you already received. Present the findings conversationally, then ASK the user if they want to proceed with a counter-campaign. Do NOT automatically call generate_creative_package — wait for confirmation. When they confirm, call generate_creative_package with the counter_brief and appropriate deliverables.
 The system handles execution — you will receive the result and can describe it to the user.
 NEVER narrate or claim you are generating without actually calling the tool.
 NEVER mention tool names to the user. Never say "there is a technical issue with a tool." If a tool fails, simply say you ran into a problem and offer to try a different approach.
@@ -723,7 +739,8 @@ export const connectVinceLiveSession = async (
                   .then(result => {
                     if (sessionCancelled) return;
                     callbacks.onToolResult?.('generate_creative_package', result);
-                    const count = (result as Record<string, unknown>).deliverable_count as number || 0;
+                    const names = (result as Record<string, unknown>).deliverable_names as string[] | undefined;
+                    const count = names?.length ?? ((result as Record<string, unknown>).image_urls as string[] | undefined)?.length ?? 0;
                     const completion = `Campaign package is ready — ${count > 0 ? `${count} deliverables` : 'full package'} in the History panel. Want to run another direction or refine anything?`;
                     sessionPromise?.then(s => s.sendText(completion)).catch(err => console.error('[Vince Live] Failed to send package completion:', err));
                   })
@@ -837,10 +854,15 @@ export const connectVinceLiveSession = async (
                 callbacks.onToolResult?.(fc.name || '', result);
               } catch (toolErr) {
                 console.error(`[Vince Live] Tool call failed (${fc.name}):`, toolErr);
+                const isAuthErr = toolErr instanceof Error && toolErr.message === 'AUTH_EXPIRED';
                 functionResponses.push({
                   id: fc.id || '',
                   name: fc.name || '',
-                  response: { error: toolErr instanceof Error ? toolErr.message : 'Tool execution failed' },
+                  response: {
+                    error: isAuthErr
+                      ? 'Your session has expired. Please refresh the page and log in again to continue.'
+                      : (toolErr instanceof Error ? toolErr.message : 'Tool execution failed'),
+                  },
                 });
               }
             }

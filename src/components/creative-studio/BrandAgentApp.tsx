@@ -705,16 +705,38 @@ export function BrandAgentApp({
               const filtered = prev.filter(t => t.id !== item.id);
               return [...filtered, item];
             });
-            // Push final transcripts into the chat thread in real time
+            const INTERIM_ID = 'voice-interim-model';
+            // Stream Vince's response into chat progressively as he speaks
+            if (!item.isFinal && item.role === 'model' && item.text) {
+              setMessages(prev => {
+                const existingIdx = prev.findIndex(m => m.id === INTERIM_ID);
+                if (existingIdx >= 0) {
+                  const updated = [...prev];
+                  updated[existingIdx] = { ...updated[existingIdx], content: item.text };
+                  return updated;
+                }
+                return [...prev, {
+                  id: INTERIM_ID,
+                  role: 'model' as const,
+                  content: item.text,
+                  timestamp: new Date(),
+                  isVoice: true,
+                }];
+              });
+            }
+            // Replace interim with final, or add final user message directly
             if (item.isFinal && item.text && !addedTranscriptIdsRef.current.has(item.id)) {
               addedTranscriptIdsRef.current.add(item.id);
-              setMessages(prev => [...prev, {
-                id: uuidv4(),
-                role: item.role === 'user' ? 'user' as const : 'model' as const,
-                content: item.text,
-                timestamp: new Date(),
-                isVoice: true,
-              }]);
+              setMessages(prev => {
+                const filtered = item.role === 'model' ? prev.filter(m => m.id !== INTERIM_ID) : prev;
+                return [...filtered, {
+                  id: uuidv4(),
+                  role: item.role === 'user' ? 'user' as const : 'model' as const,
+                  content: item.text,
+                  timestamp: new Date(),
+                  isVoice: true,
+                }];
+              });
             }
           },
           onToolStart: (toolName) => {
