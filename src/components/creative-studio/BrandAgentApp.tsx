@@ -1033,24 +1033,44 @@ export function BrandAgentApp({
                 if (!ev.target?.result) return;
                 const base64 = (ev.target.result as string).split(',')[1];
 
-                // Documents (PDF, DOCX, etc.): upload to Storage first so Vince has a URL
-                // for import_brand_document. Never send raw base64 — PDFs can be megabytes.
+                // Documents (PDF, DOCX, etc.): upload to Storage, then import directly
+                // without waiting for Vince to decide. Notify Vince after so he responds naturally.
                 if (isDocument && brandId) {
                   const path = `brand-documents/${brandId}/${Date.now()}-${file.name}`;
-                  const { error } = await supabase.storage
+                  const { error: uploadError } = await supabase.storage
                     .from('media')
                     .upload(path, file, { contentType: file.type });
-                  if (!error) {
-                    const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path);
-                    const msg = `[Brand document uploaded: ${file.name}]\nURL: ${publicUrl}\n\nPlease import this document using import_brand_document with the URL above, then synthesize the brand profile and run the brand playbook.`;
-                    if (isVoiceMode && liveControlRef.current?.sendText) {
-                      liveControlRef.current.sendText(msg).catch(err => console.error('[Vince] Voice text inject failed:', err));
-                    } else {
-                      handleSendMessage(msg, []);
-                    }
-                  } else {
-                    console.error('[Vince] Document storage upload failed:', error);
+                  if (uploadError) {
+                    console.error('[Vince] Document storage upload failed:', uploadError);
                     handleSendMessage(`[Uploaded: ${file.name}] (storage failed — cannot import by URL)`, []);
+                    return;
+                  }
+                  const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path);
+                  const contentTypeMap: Record<string, string> = {
+                    'application/pdf': 'pdf',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+                    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+                    'text/plain': 'text',
+                  };
+                  const contentType = contentTypeMap[file.type] || (file.name.endsWith('.docx') ? 'docx' : file.name.endsWith('.pptx') ? 'pptx' : 'pdf');
+                  const { error: importError } = await supabase.functions.invoke('analyze-brand-documents', {
+                    body: {
+                      brand_id: brandId,
+                      documents: [{
+                        content: publicUrl,
+                        content_type: contentType,
+                        mime_type: file.type,
+                        filename: file.name,
+                      }],
+                    },
+                  });
+                  const notify = importError
+                    ? `I uploaded ${file.name} but the analysis failed. You can try importing it manually.`
+                    : `I just imported and analyzed ${file.name} for the brand. The document has been processed and added to the brand profile. Would you like to synthesize the updated brand profile now?`;
+                  if (isVoiceMode && liveControlRef.current?.sendText) {
+                    liveControlRef.current.sendText(notify).catch(err => console.error('[Vince] Voice text inject failed:', err));
+                  } else {
+                    handleSendMessage(notify, []);
                   }
                   return;
                 }
