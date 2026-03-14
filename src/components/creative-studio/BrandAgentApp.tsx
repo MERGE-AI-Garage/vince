@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, MicOff, PhoneOff, Paperclip, X, Link, Target } from 'lucide-react';
+import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, MicOff, PhoneOff, Paperclip, X, Link, Target, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, InputArea, type Message, type Attachment } from '@/components/shared-chat';
@@ -34,6 +34,11 @@ import {
 import type { CameraPreset } from '@/types/creative-studio';
 import { CreativePackageDisplay, type PackagePart } from './CreativePackageDisplay';
 import { useInvalidateGenerations } from '@/hooks/useCreativeStudioGenerations';
+import {
+  fetchRecentConversations,
+  loadConversationMessages,
+  type ConversationSummary,
+} from '@/services/vinceConversationHistory';
 
 function formatToolAction(action: ToolAction): string {
   const result = action.result as Record<string, unknown> | undefined;
@@ -207,6 +212,9 @@ export function BrandAgentApp({
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [showHistoryPicker, setShowHistoryPicker] = useState(false);
+  const [historySummaries, setHistorySummaries] = useState<ConversationSummary[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userContext, setUserContext] = useState<UserContext | undefined>(undefined);
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | undefined>(undefined);
@@ -955,6 +963,25 @@ export function BrandAgentApp({
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const handleOpenHistory = async () => {
+    setShowHistoryPicker(true);
+    setHistoryLoading(true);
+    try {
+      const summaries = await fetchRecentConversations(25);
+      setHistorySummaries(summaries);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleRestoreConversation = async (summary: ConversationSummary) => {
+    const restored = await loadConversationMessages(summary.id);
+    setConversationId(summary.id);
+    setMessages(restored);
+    setAgentResponses({});
+    setShowHistoryPicker(false);
+  };
+
   const handleDirectionSelect = (direction: CampaignDirection, analysis: CompetitorAnalysis) => {
     const text = `Let's go with the "${direction.title}" direction. ${direction.concept} Tagline: "${direction.tagline}"`;
     handleSendMessage(text, []);
@@ -983,6 +1010,16 @@ export function BrandAgentApp({
           )}
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-7 w-7 ${showHistoryPicker ? 'text-purple-500 bg-purple-50' : 'text-muted-foreground hover:text-purple-500 hover:bg-purple-50'}`}
+            onClick={showHistoryPicker ? () => setShowHistoryPicker(false) : handleOpenHistory}
+            aria-label="Chat history"
+            title="Chat history"
+          >
+            <History className="w-4 h-4" />
+          </Button>
           {enableImageUpload && (
             <Button
               variant="ghost"
@@ -1121,8 +1158,84 @@ export function BrandAgentApp({
         />
       </div>
 
+      {/* Conversation history picker */}
+      {showHistoryPicker && (
+        <div className="flex-1 min-h-0 overflow-y-auto border-t bg-background">
+          <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/20 sticky top-0">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Past Conversations</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-6 text-[10px] gap-1 text-purple-500 border-purple-500/30 hover:bg-purple-50"
+              onClick={() => {
+                setConversationId(null);
+                setMessages([]);
+                setAgentResponses({});
+                setShowHistoryPicker(false);
+                supabase.auth.getUser().then(({ data: { user } }) => {
+                  if (!user) return;
+                  createBrandAgentConversation(user.id).then(setConversationId).catch(() => {});
+                });
+              }}
+            >
+              + New chat
+            </Button>
+          </div>
+          {historyLoading && (
+            <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">Loading…</div>
+          )}
+          {!historyLoading && historySummaries.length === 0 && (
+            <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">No past conversations yet.</div>
+          )}
+          {historySummaries.map(conv => (
+            <button
+              key={conv.id}
+              onClick={() => handleRestoreConversation(conv)}
+              className="w-full text-left px-3 py-2.5 border-b border-border/30 hover:bg-muted/30 transition-colors flex flex-col gap-1.5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-xs text-foreground leading-snug line-clamp-2 flex-1">
+                  {conv.firstUserMessage}
+                </span>
+                <span className="text-[10px] text-muted-foreground shrink-0 pt-0.5">
+                  {(() => {
+                    const diff = Date.now() - new Date(conv.updatedAt).getTime();
+                    const mins = Math.floor(diff / 60000);
+                    if (mins < 60) return mins <= 1 ? 'Just now' : `${mins}m ago`;
+                    const hours = Math.floor(mins / 60);
+                    if (hours < 24) return `${hours}h ago`;
+                    const days = Math.floor(hours / 24);
+                    if (days === 1) return 'Yesterday';
+                    if (days < 7) return `${days}d ago`;
+                    return new Date(conv.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  })()}
+                </span>
+              </div>
+              {(conv.thumbnails.length > 0 || conv.hasCreativePackage) && (
+                <div className="flex items-center gap-1.5">
+                  {conv.thumbnails.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt=""
+                      className="w-9 h-9 rounded object-cover border border-border/50"
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ))}
+                  {conv.hasCreativePackage && (
+                    <span className="text-[9px] font-semibold text-purple-500 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">
+                      Package
+                    </span>
+                  )}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Messages — always visible */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-1 scroll-smooth">
+      {!showHistoryPicker && <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-1 scroll-smooth">
         {messages.map((message, idx) => (
           <React.Fragment key={message.id}>
             {message.content === 'Voice session ended.' ? (
@@ -1634,10 +1747,10 @@ export function BrandAgentApp({
           </div>
         )}
         <div ref={messagesEndRef} />
-      </div>
+      </div>}
 
-      {/* Quick prompts — pinned above input, hidden during voice mode */}
-      {!isVoiceMode && !isLoading && quickPrompts.length > 0 && (
+      {/* Quick prompts — pinned above input, hidden during voice mode or history picker */}
+      {!showHistoryPicker && !isVoiceMode && !isLoading && quickPrompts.length > 0 && (
         <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-t bg-muted/20 flex-shrink-0">
           {quickPrompts
             .slice(promptOffset, promptOffset + 3)
@@ -1672,8 +1785,8 @@ export function BrandAgentApp({
         </div>
       )}
 
-      {/* Inline voice bar — replaces input area during voice mode */}
-      {isVoiceMode && (
+      {/* Inline voice bar — replaces input area during voice mode, hidden when history picker open */}
+      {!showHistoryPicker && isVoiceMode && (
         <div className="flex-shrink-0 border-t bg-muted/40 px-3 py-2.5 space-y-2">
           {/* Live transcript — wraps up to 3 lines so Vince's response is readable */}
           {liveTranscriptText && (
@@ -1749,8 +1862,8 @@ export function BrandAgentApp({
         </div>
       )}
 
-      {/* Text input — hidden during voice mode */}
-      {!isVoiceMode && (
+      {/* Text input — hidden during voice mode or history picker */}
+      {!showHistoryPicker && !isVoiceMode && (
         <InputArea
           onSendMessage={handleSendMessage}
           onStartVoice={handleStartVoice}

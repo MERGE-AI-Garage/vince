@@ -2,9 +2,12 @@
 // ABOUTME: Merges text and voice interactions into a single message stream; renders rich payloads inline.
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Mic, MicOff, Link } from 'lucide-react';
+import { Send, Mic, MicOff, Link, History, Paperclip, X as XIcon } from 'lucide-react';
 import { ChatMessage, type Message } from './ChatMessage';
 import { sendChatMessage } from '../services/chatService';
+import { ConversationHistoryPanel } from './ConversationHistoryPanel';
+import { createBrandAgentConversation } from '@/services/brand-agent/brandAgentGeminiService';
+import { supabase } from '@/integrations/supabase/client';
 import type { ToolResult, VoiceState } from '../hooks/useVinceVoice';
 import type { TranscriptItem } from '@/services/brand-agent/brandAgentLiveService';
 
@@ -75,12 +78,25 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [attachedUrl, setAttachedUrl] = useState('');
+  const [attachedFileName, setAttachedFileName] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Track what we've already synced from the voice session
   const syncedTranscriptIds = useRef(new Set<string>());
   const shownVoiceResultsCount = useRef(0);
+
+  // Create a conversation row on mount so messages are persisted
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      createBrandAgentConversation(user.id).then(setConversationId).catch(() => {/* non-fatal */});
+    });
+  }, []);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -145,6 +161,28 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
     });
   }, [voiceToolResults]);
 
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `chat-references/${user?.id ?? 'anon'}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('media').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path);
+      setAttachedUrl(publicUrl);
+      setAttachedFileName(file.name);
+    } catch {
+      // non-fatal — user can paste a URL manually
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, []);
+
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isSending) return;
@@ -159,11 +197,11 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
     setMessages(prev => [...prev, userMsg, loadingMsg]);
     setInput('');
     setAttachedUrl('');
-    setShowUrlInput(false);
+    setAttachedFileName('');
     setIsSending(true);
 
     try {
-      const response = await sendChatMessage(fullText, brandId);
+      const response = await sendChatMessage(fullText, brandId, conversationId ?? undefined);
       setMessages(prev => prev.map(m => m.id === loadingMsg.id
         ? { ...m, text: response.message, isLoading: false, toolResults: response.toolResults }
         : m
@@ -177,7 +215,25 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
     } finally {
       setIsSending(false);
     }
-  }, [brandId, isSending, attachedUrl]);
+  }, [brandId, isSending, attachedUrl, conversationId]);
+
+  const startNewConversation = useCallback(() => {
+    setMessages([]);
+    setInput('');
+    setAttachedUrl('');
+    setAttachedFileName('');
+    setShowHistory(false);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      createBrandAgentConversation(user.id).then(setConversationId).catch(() => {});
+    });
+  }, []);
+
+  const handleRestoreConversation = useCallback((id: string, restoredMessages: Message[]) => {
+    setConversationId(id);
+    setMessages(restoredMessages);
+    setShowHistory(false);
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -197,7 +253,46 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '0', fontFamily: 'Epilogue, system-ui, sans-serif' }}>
 
-      {/* Message list */}
+      {/* History toggle bar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        padding: '4px 8px 0',
+        flexShrink: 0,
+      }}>
+        <button
+          onClick={() => setShowHistory(h => !h)}
+          title={showHistory ? 'Back to chat' : 'Chat history'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: showHistory ? `rgba(${PURPLE_RGB}, 0.12)` : 'none',
+            border: showHistory ? `1px solid rgba(${PURPLE_RGB}, 0.3)` : '1px solid transparent',
+            borderRadius: '5px',
+            padding: '3px 7px',
+            cursor: 'pointer',
+            color: showHistory ? PURPLE : 'rgba(224,222,217,0.3)',
+            fontSize: '10px',
+            fontFamily: 'Epilogue, system-ui, sans-serif',
+            transition: 'all 0.15s',
+          }}
+        >
+          <History size={11} />
+          History
+        </button>
+      </div>
+
+      {/* History panel or message list */}
+      {showHistory ? (
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <ConversationHistoryPanel
+            onRestoreConversation={handleRestoreConversation}
+            onNewChat={startNewConversation}
+          />
+        </div>
+      ) : (
       <div
         ref={scrollRef}
         style={{
@@ -226,9 +321,10 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
           />
         ))}
       </div>
+      )}
 
-      {/* Voice status bar — only shown when voice is active */}
-      {isVoiceActive && (
+      {/* Voice + input controls — hidden when browsing history */}
+      {!showHistory && isVoiceActive && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -281,7 +377,8 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
         </div>
       )}
 
-      {/* URL attachment — always visible, paste a reference image or video URL */}
+      {/* Attachment row — hidden when browsing history */}
+      {!showHistory && <>
       <div style={{
         padding: '5px 10px',
         borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -290,21 +387,56 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
         gap: '6px',
         alignItems: 'center',
       }}>
-        <Link size={10} style={{ color: attachedUrl ? PURPLE : 'rgba(224,222,217,0.25)', flexShrink: 0 }} />
+        {/* Hidden file input */}
         <input
-          type="url"
-          value={attachedUrl}
-          onChange={e => setAttachedUrl(e.target.value)}
-          placeholder="Paste reference image or video URL…"
-          style={{
-            flex: 1, background: 'none', border: 'none', outline: 'none',
-            fontSize: '10px', color: attachedUrl ? '#e0ded9' : 'rgba(224,222,217,0.35)',
-            fontFamily: 'Epilogue, system-ui, sans-serif',
-          }}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); inputRef.current?.focus(); } }}
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          style={{ display: 'none' }}
+          onChange={handleFileSelect}
         />
-        {attachedUrl && (
-          <button onClick={() => setAttachedUrl('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(224,222,217,0.3)', fontSize: '13px', lineHeight: 1, padding: '0 2px' }}>×</button>
+        {/* Paperclip — upload file */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          title="Attach image or video"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}
+        >
+          <Paperclip size={11} style={{ color: isUploading ? PURPLE : (attachedFileName ? PURPLE : 'rgba(224,222,217,0.3)') }} />
+        </button>
+        {/* Link icon — URL paste */}
+        <Link size={10} style={{ color: attachedUrl && !attachedFileName ? PURPLE : 'rgba(224,222,217,0.2)', flexShrink: 0 }} />
+        {attachedFileName ? (
+          /* Show uploaded filename pill */
+          <span style={{ flex: 1, fontSize: '10px', color: PURPLE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {isUploading ? 'Uploading…' : attachedFileName}
+          </span>
+        ) : (
+          <input
+            type="url"
+            value={attachedUrl}
+            onChange={e => { setAttachedUrl(e.target.value); setAttachedFileName(''); }}
+            placeholder="Paste reference image or video URL…"
+            style={{
+              flex: 1, background: 'none', border: 'none', outline: 'none',
+              fontSize: '10px', color: attachedUrl ? '#e0ded9' : 'rgba(224,222,217,0.35)',
+              fontFamily: 'Epilogue, system-ui, sans-serif',
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (input.trim()) { sendMessage(input); } else { inputRef.current?.focus(); }
+              }
+            }}
+          />
+        )}
+        {(attachedUrl || attachedFileName) && (
+          <button
+            onClick={() => { setAttachedUrl(''); setAttachedFileName(''); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', display: 'flex' }}
+          >
+            <XIcon size={11} style={{ color: 'rgba(224,222,217,0.3)' }} />
+          </button>
         )}
       </div>
 
@@ -397,6 +529,7 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
           <Send size={13} style={{ color: input.trim() && !isSending ? '#fff' : 'rgba(224,222,217,0.25)' }} />
         </button>
       </div>
+      </>}
 
       <style>{`
         @keyframes vinceChatMicPulse {

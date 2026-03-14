@@ -396,6 +396,7 @@ serve(async (req) => {
                 brand_id,
                 brand_name: brand.name,
               },
+              modelUsed: 'gemini-3.1-flash-image-preview',
             }).catch(err => console.error('[generate-creative-package] Media registration failed:', err));
           }
         } catch (uploadErr) {
@@ -407,13 +408,28 @@ serve(async (req) => {
     } // end else (full interleaved generation path)
 
     const latencyMs = Date.now() - startTime;
+    const ASPECT_RATIO_NAMES: Record<string, string> = {
+      '16:9': 'Widescreen',
+      '9:16': 'Vertical',
+      '1:1': 'Square',
+      '4:3': 'Standard',
+      '3:4': 'Portrait',
+      '4:5': 'Instagram Portrait',
+      '8:1': 'Leaderboard Banner',
+      '1:4': 'Skyscraper Banner',
+    };
     const deliverableNames = resolvedDeliverables.length > 0
       ? resolvedDeliverables.map((d, i) => {
           if (d.name) return d.name;
           // Infer a short name from the first few words of the description
           if (d.description) {
-            const words = d.description.replace(/\n.*/s, '').trim().split(/\s+/).slice(0, 3).join(' ');
+            const firstLine = d.description.replace(/\n.*/s, '').trim();
+            const words = firstLine.split(/\s+/).slice(0, 3).join(' ');
             if (words.length > 2) return words;
+          }
+          // Fall back to a human-readable name derived from the aspect ratio
+          if (d.aspect_ratio && ASPECT_RATIO_NAMES[d.aspect_ratio]) {
+            return ASPECT_RATIO_NAMES[d.aspect_ratio];
           }
           return `Deliverable ${i + 1}`;
         })
