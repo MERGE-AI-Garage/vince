@@ -15,9 +15,9 @@ export function StorytellingSection() {
     <section
       id="storytelling"
       style={{
-        background: 'linear-gradient(135deg, #133B34 0%, #00524F 100%)',
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.03) 100%)',
         padding: '20px 16px',
-        color: '#EAE8E3',
+        color: '#111111',
       }}
     >
       <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', fontWeight: 600, textAlign: 'center', marginBottom: '6px' }}>
@@ -34,7 +34,7 @@ export function StorytellingSection() {
             style={{
               padding: '10px',
               borderRadius: '8px',
-              background: 'rgba(255,255,255,0.08)',
+              background: 'rgba(0,0,0,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
             }}
           >

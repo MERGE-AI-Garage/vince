@@ -9,7 +9,7 @@ export function TemplatesGlossarySection() {
   const { googleSlides, linkedInHeaders, glossary } = mergeBrandGuidelines;
 
   return (
-    <section id="templates-glossary" style={{ padding: '20px 16px', background: '#142e28', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
+    <section id="templates-glossary" style={{ padding: '20px 16px', background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
       {/* Google Slides */}
       <SectionHeading>{googleSlides.title}</SectionHeading>
 
@@ -18,12 +18,12 @@ export function TemplatesGlossarySection() {
           marginTop: '10px',
           padding: '10px',
           borderRadius: '8px',
-          border: '1px solid rgba(19,59,52,0.1)',
+          border: '1px solid rgba(0,0,0,0.07)',
           background: '#fff',
         }}
       >
         <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>{googleSlides.access.title}</div>
-        <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
           {googleSlides.access.steps}
         </p>
       </div>
@@ -33,20 +33,20 @@ export function TemplatesGlossarySection() {
           marginTop: '8px',
           padding: '10px',
           borderRadius: '8px',
-          border: '1px solid rgba(19,59,52,0.1)',
+          border: '1px solid rgba(0,0,0,0.07)',
           background: '#fff',
         }}
       >
         <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>{googleSlides.apply.title}</div>
-        <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
           {googleSlides.apply.steps}
         </p>
-        <p style={{ fontSize: '10px', color: '#8fa89e', fontStyle: 'italic', marginTop: '6px' }}>
+        <p style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic', marginTop: '6px' }}>
           {googleSlides.apply.note}
         </p>
       </div>
 
-      <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '8px', textAlign: 'center' }}>
+      <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '8px', textAlign: 'center' }}>
         {googleSlides.feedback}
       </p>
 
@@ -56,7 +56,7 @@ export function TemplatesGlossarySection() {
         <p style={{ fontSize: '11px', marginTop: '4px', marginBottom: '10px' }}>{linkedInHeaders.intro}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {linkedInHeaders.images.map((image, i) => (
-            <div key={i} style={{ borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(19,59,52,0.1)' }}>
+            <div key={i} style={{ borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.07)' }}>
               <img src={`.${image}`} alt={`LinkedIn Header Option ${i + 1}`} style={{ width: '100%', height: 'auto', display: 'block' }} />
             </div>
           ))}
@@ -66,7 +66,7 @@ export function TemplatesGlossarySection() {
       {/* Glossary */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading>{glossary.title}</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '12px' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', lineHeight: 1.5, marginBottom: '12px' }}>
           {glossary.intro}
         </p>
 
@@ -79,19 +79,19 @@ export function TemplatesGlossarySection() {
               style={{
                 padding: '8px 10px',
                 borderRadius: '6px',
-                border: '1px solid rgba(19,59,52,0.1)',
+                border: '1px solid rgba(0,0,0,0.07)',
                 background: '#fff',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '12px', color: '#8fa89e', textDecoration: 'line-through' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280', textDecoration: 'line-through' }}>
                   {item.old}
                 </span>
                 <ArrowRight size={12} color="#8b5cf6" />
                 <span style={{ fontSize: '12px', fontWeight: 600 }}>{item.new}</span>
               </div>
               {item.note && (
-                <p style={{ fontSize: '10px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+                <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px', lineHeight: 1.5, whiteSpace: 'pre-line' }}>
                   {item.note}
                 </p>
               )}
@@ -108,12 +108,12 @@ export function TemplatesGlossarySection() {
               style={{
                 padding: '8px 10px',
                 borderRadius: '6px',
-                border: '1px solid rgba(19,59,52,0.1)',
+                border: '1px solid rgba(0,0,0,0.07)',
                 background: '#fff',
               }}
             >
               <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '2px' }}>{item.term}</div>
-              <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>{item.definition}</p>
+              <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5 }}>{item.definition}</p>
             </div>
           ))}
         </div>

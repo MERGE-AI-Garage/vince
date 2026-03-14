@@ -10,6 +10,7 @@ export interface Brand {
   primary_color: string | null;
   secondary_color: string | null;
   logo_url: string | null;
+  logo_mark_url: string | null;
   is_default: boolean | null;
 }
 
@@ -27,7 +28,7 @@ export function useBrands() {
       // Fetch active brands
       const { data, error } = await supabase
         .from('creative_studio_brands')
-        .select('id, name, primary_color, secondary_color, logo_url, is_default')
+        .select('id, name, primary_color, secondary_color, logo_url, logo_mark_url, is_default')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 

@@ -1,5 +1,5 @@
-// ABOUTME: Apple-style product page for the AI Brand Guidelines Chrome Extension
-// ABOUTME: Hero, feature grid, how-it-works, installation guide, supported platforms + download CTA
+// ABOUTME: Apple-style product page for the Vince Chrome Extension and mobile apps.
+// ABOUTME: Hero, feature grid, mobile apps section, how-it-works, installation guide + download CTA.
 
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
@@ -15,6 +15,8 @@ import {
   Package,
   ArrowUpRight,
   CheckCircle2,
+  Smartphone,
+  Apple,
 } from 'lucide-react';
 
 const EXTENSION_DOWNLOAD_URL = '/vince-extension.zip';
@@ -115,7 +117,7 @@ function DownloadButton({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
     <a
       href={EXTENSION_DOWNLOAD_URL}
       download
-      className={`inline-flex items-center gap-2 rounded-xl bg-[#1ED75F] text-[#0D1B16] font-semibold transition-all hover:bg-[#1ED75F]/90 shadow-lg shadow-[#1ED75F]/20 hover:shadow-[#1ED75F]/30 ${
+      className={`inline-flex items-center gap-2 rounded-xl bg-violet-600 text-white font-semibold transition-all hover:bg-violet-500 shadow-lg shadow-violet-900/30 hover:shadow-violet-800/40 ${
         isLarge ? 'px-8 py-3.5 text-sm' : 'px-6 py-2.5 text-xs'
       }`}
     >
@@ -146,12 +148,14 @@ function formatStepText(text: string) {
 export function ExtensionTab() {
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
+  const mobileRef = useRef(null);
   const howRef = useRef(null);
   const installRef = useRef(null);
   const ctaRef = useRef(null);
 
   const heroInView = useInView(heroRef, { once: true, margin: '-50px' });
   const featuresInView = useInView(featuresRef, { once: true, margin: '-80px' });
+  const mobileInView = useInView(mobileRef, { once: true, margin: '-80px' });
   const howInView = useInView(howRef, { once: true, margin: '-80px' });
   const installInView = useInView(installRef, { once: true, margin: '-80px' });
   const ctaInView = useInView(ctaRef, { once: true, margin: '-80px' });
@@ -161,10 +165,10 @@ export function ExtensionTab() {
       {/* ── Section 1: Hero ── */}
       <section
         ref={heroRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-20 px-8"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1e1b4b] via-[#4c1d95] to-[#1e1b4b] py-20 px-8"
       >
         {/* Radial glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_50%,rgba(30,215,95,0.12),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_50%,rgba(139,92,246,0.20),transparent_60%)]" />
 
         {/* Chrome watermark */}
         <Chrome className="absolute -bottom-6 -right-6 w-40 h-40 text-white/[0.04] transform -rotate-12" />
@@ -177,8 +181,8 @@ export function ExtensionTab() {
         >
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 mb-8">
-            <Chrome className="w-4 h-4 text-[#1ED75F]" />
-            <span className="font-epilogue text-sm font-medium text-white/80">Chrome Extension</span>
+            <Chrome className="w-4 h-4 text-violet-300" />
+            <span className="font-epilogue text-sm font-medium text-white/80">Browser & Mobile</span>
           </div>
 
           <h1 className="font-fraunces text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">
@@ -255,7 +259,89 @@ export function ExtensionTab() {
         </div>
       </section>
 
-      {/* ── Section 3: How It Works ── */}
+      {/* ── Section 3: Mobile Apps ── */}
+      <section
+        ref={mobileRef}
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1e1b4b] via-[#2d1b69] to-[#1e1b4b] py-16 px-8"
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_40%,rgba(139,92,246,0.15),transparent_70%)]" />
+        <Smartphone className="absolute -top-4 -right-4 w-48 h-48 text-white/[0.03] transform rotate-12" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={mobileInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          className="relative z-10 text-center mb-12"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 mb-6">
+            <Smartphone className="w-4 h-4 text-violet-300" />
+            <span className="font-epilogue text-sm font-medium text-white/80">Mobile Apps</span>
+          </div>
+          <h2 className="font-fraunces text-3xl font-bold text-white mb-4">
+            Take Vince Everywhere
+          </h2>
+          <p className="font-epilogue text-base text-white/65 max-w-2xl mx-auto leading-relaxed">
+            The original vision for Vince was always mobile-first. Talk to Vince while you're on the go —
+            your creative direction, brand knowledge, and generated assets waiting when you get back to your desk.
+          </p>
+        </motion.div>
+
+        <div className="relative z-10 grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* iOS — Available Now */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={mobileInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="bg-white/8 border border-white/15 rounded-2xl p-8 flex flex-col"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
+                <Apple className="w-8 h-8 text-white" />
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-300 text-xs font-semibold">
+                <CheckCircle2 className="w-3 h-3" />
+                Available Now
+              </span>
+            </div>
+            <h3 className="font-fraunces text-xl font-bold text-white mb-3">iOS App</h3>
+            <p className="font-epilogue text-sm text-white/65 leading-relaxed flex-1">
+              Generate brand-aligned imagery on the go. Talk to Vince while you're jogging or commuting —
+              your creative direction and generated assets are waiting when you get back to your desk.
+              Full access to Creative Studio from your iPhone.
+            </p>
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <p className="font-epilogue text-xs text-white/40">iPhone · iOS 16+ · Available on App Store</p>
+            </div>
+          </motion.div>
+
+          {/* Android — Coming Soon */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={mobileInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-white/4 border border-white/8 rounded-2xl p-8 flex flex-col opacity-80"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-white/8 flex items-center justify-center">
+                <Smartphone className="w-7 h-7 text-white/50" />
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/8 border border-white/15 text-white/50 text-xs font-semibold">
+                In Development
+              </span>
+            </div>
+            <h3 className="font-fraunces text-xl font-bold text-white/70 mb-3">Android App</h3>
+            <p className="font-epilogue text-sm text-white/45 leading-relaxed flex-1">
+              Android version is in active development. The same full Vince experience — brand intelligence,
+              on-the-go generation, and Creative Studio access — coming to Android and Google Play.
+            </p>
+            <div className="mt-6 pt-6 border-t border-white/8">
+              <p className="font-epilogue text-xs text-white/30">Android · Google Play · Coming Soon</p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Section 4: How It Works ── */}
       <section ref={howRef} className="py-16 px-2 bg-muted/30 rounded-xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -285,8 +371,8 @@ export function ExtensionTab() {
                   <div className="hidden md:block absolute top-7 left-[60%] w-[80%] h-px bg-border" />
                 )}
 
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Icon className="w-6 h-6 text-primary" />
+                <div className="w-14 h-14 rounded-full bg-violet-500/10 flex items-center justify-center mx-auto mb-4">
+                  <Icon className="w-6 h-6 text-violet-500" />
                 </div>
                 <div className="font-epilogue text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
                   Step {i + 1}
@@ -301,7 +387,7 @@ export function ExtensionTab() {
         </div>
       </section>
 
-      {/* ── Section 4: Installation Guide ── */}
+      {/* ── Section 5: Installation Guide ── */}
       <section ref={installRef} className="py-16 px-2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -324,8 +410,8 @@ export function ExtensionTab() {
           <div className="divide-y divide-border/40">
             {installSteps.map((step, i) => (
               <div key={i} className="flex gap-4 p-5">
-                <div className="w-8 h-8 rounded-full bg-[#00856C]/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="font-epilogue text-sm font-bold text-[#00856C]">{i + 1}</span>
+                <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="font-epilogue text-sm font-bold text-violet-400">{i + 1}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-epilogue text-sm leading-relaxed">
@@ -358,12 +444,12 @@ export function ExtensionTab() {
         </motion.div>
       </section>
 
-      {/* ── Section 5: Supported Platforms + Final CTA ── */}
+      {/* ── Section 6: Supported Platforms + Final CTA ── */}
       <section
         ref={ctaRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-16 px-8"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1e1b4b] via-[#4c1d95] to-[#1e1b4b] py-16 px-8"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(30,215,95,0.1),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(139,92,246,0.15),transparent_60%)]" />
 
         <div className="relative z-10 grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
           {/* Left — Supported platforms */}
@@ -381,7 +467,7 @@ export function ExtensionTab() {
                   key={platform}
                   className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-3 py-1.5 font-epilogue text-xs text-white/80"
                 >
-                  <CheckCircle2 className="w-3 h-3 text-[#1ED75F]" />
+                  <CheckCircle2 className="w-3 h-3 text-violet-400" />
                   {platform}
                 </span>
               ))}
@@ -399,7 +485,7 @@ export function ExtensionTab() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center flex flex-col items-center justify-center"
           >
-            <Chrome className="w-12 h-12 text-[#1ED75F] mb-4" />
+            <Chrome className="w-12 h-12 text-violet-400 mb-4" />
             <h3 className="font-epilogue text-base font-semibold text-white mb-1">
               Vince
             </h3>

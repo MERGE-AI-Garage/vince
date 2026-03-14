@@ -68,7 +68,7 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
   }
 
   const displayItems = useMemo<DisplayItem[]>(() => {
-    const genItems: DisplayItem[] = (generations || []).flatMap(gen => {
+    const genItems: DisplayItem[] = (generations || []).flatMap<DisplayItem>(gen => {
       if (gen.generation_type === 'creative_package' && gen.output_urls && gen.output_urls.length > 1) {
         const names = gen.metadata?.deliverable_names as string[] | undefined;
         return gen.output_urls.map((url, idx) => ({

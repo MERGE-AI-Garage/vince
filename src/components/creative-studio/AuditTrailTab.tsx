@@ -112,7 +112,7 @@ export function AuditTrailTab() {
         badgeIcon={<History className="w-4 h-4 text-gray-700 dark:text-white/80" />}
         badgeLabel="Activity Log"
         title="Audit Trail"
-        subtitle="Generation activity · compliance checks · cost tracking"
+        subtitle="A complete compliance log of all platform activity — model configuration changes, brand modifications, user permission updates, and administrative actions. Use this for security reviews, incident investigations, and governance reporting."
       />
 
       {/* Clickable Summary Cards */}
@@ -159,8 +159,8 @@ export function AuditTrailTab() {
                   <p className="text-2xl font-bold">{stats.unique_users_this_week}</p>
                   <p className="text-xs text-muted-foreground">Active Users (7d)</p>
                 </div>
-                <div className="p-2 rounded-lg bg-emerald-500/10">
-                  <Users className="h-4 w-4 text-emerald-500" />
+                <div className="p-2 rounded-lg bg-violet-500/10">
+                  <Users className="h-4 w-4 text-violet-500" />
                 </div>
               </div>
             </CardContent>
@@ -177,8 +177,8 @@ export function AuditTrailTab() {
                     <p className="text-2xl font-bold">${stats.total_cost_this_month.toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground">Cost (30d)</p>
                   </div>
-                  <div className="p-2 rounded-lg bg-green-500/10">
-                    <DollarSign className="h-4 w-4 text-green-500" />
+                  <div className="p-2 rounded-lg bg-violet-500/10">
+                    <DollarSign className="h-4 w-4 text-violet-500" />
                   </div>
                 </div>
               </CardContent>

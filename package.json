@@ -45,6 +45,7 @@
     "date-fns": "^3.6.0",
     "driver.js": "^1.4.0",
     "framer-motion": "^12.33.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.462.0",
     "postprocessing": "^6.38.3",
     "react": "^18.3.1",

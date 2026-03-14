@@ -9,7 +9,7 @@ export function CollageLayoutSection() {
   const { collagePersonas, taglines, layoutStructure, printProduction } = mergeBrandGuidelines;
 
   return (
-    <section id="collage-layout" style={{ padding: '20px 16px', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
+    <section id="collage-layout" style={{ padding: '20px 16px', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
       {/* Collage Personas */}
       <SectionHeading>Built Different</SectionHeading>
       <div
@@ -17,7 +17,7 @@ export function CollageLayoutSection() {
           marginTop: '10px',
           padding: '12px',
           borderRadius: '8px',
-          border: '1px solid rgba(19,59,52,0.1)',
+          border: '1px solid rgba(0,0,0,0.07)',
           background: '#fff',
         }}
       >
@@ -26,14 +26,14 @@ export function CollageLayoutSection() {
         </div>
         <p style={{ fontSize: '11px', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.description}</p>
         <p style={{ fontSize: '11px', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.purpose}</p>
-        <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.details}</p>
-        <p style={{ fontSize: '10px', color: '#8fa89e', fontStyle: 'italic' }}>{collagePersonas.note}</p>
+        <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.details}</p>
+        <p style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic' }}>{collagePersonas.note}</p>
       </div>
 
       {/* Taglines */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>Taglines</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '12px' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', lineHeight: 1.5, marginBottom: '12px' }}>
           "Built Different" can be used as a featured message or as a tagline. When featured, use Fraunces. As support, use Epilogue Small Caps.
         </p>
 
@@ -42,12 +42,12 @@ export function CollageLayoutSection() {
           style={{
             padding: '16px',
             borderRadius: '8px',
-            background: 'linear-gradient(135deg, #133B34, #00524F)',
+            background: 'linear-gradient(135deg, #f0f0f0, #e8e8e8)',
             textAlign: 'center',
             marginBottom: '8px',
           }}
         >
-          <div style={{ fontFamily: 'Fraunces, serif', fontSize: '24px', fontWeight: 500, color: '#EAE8E3', letterSpacing: '-0.02em' }}>
+          <div style={{ fontFamily: 'Fraunces, serif', fontSize: '24px', fontWeight: 500, color: '#111111', letterSpacing: '-0.02em' }}>
             Built Different
           </div>
           <p style={{ fontSize: '10px', color: 'rgba(234,232,227,0.6)', marginTop: '4px' }}>
@@ -60,7 +60,7 @@ export function CollageLayoutSection() {
           style={{
             padding: '16px',
             borderRadius: '8px',
-            border: '1px solid rgba(19,59,52,0.1)',
+            border: '1px solid rgba(0,0,0,0.07)',
             background: '#fff',
             textAlign: 'center',
             marginBottom: '10px',
@@ -69,7 +69,7 @@ export function CollageLayoutSection() {
           <div style={{ fontFamily: 'Epilogue, sans-serif', fontSize: '18px', fontWeight: 600, fontVariant: 'small-caps', letterSpacing: '0.2em' }}>
             BUILT DIFFERENT
           </div>
-          <p style={{ fontSize: '10px', color: '#8fa89e', marginTop: '4px' }}>
+          <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px' }}>
             Dyad | Epilogue SemiBold Small Caps
           </p>
         </div>
@@ -88,7 +88,7 @@ export function CollageLayoutSection() {
       {/* Layout Structure */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>{layoutStructure.title}</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '10px' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', lineHeight: 1.5, marginBottom: '10px' }}>
           {layoutStructure.intro}
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -97,11 +97,11 @@ export function CollageLayoutSection() {
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#8b5cf6' }}>
                 {el.number}. {el.title}
               </div>
-              <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5 }}>
                 {el.spec}
               </p>
               {el.note && (
-                <p style={{ fontSize: '10px', color: '#8fa89e', fontStyle: 'italic', marginTop: '2px' }}>
+                <p style={{ fontSize: '10px', color: '#6b7280', fontStyle: 'italic', marginTop: '2px' }}>
                   Note: {el.note}
                 </p>
               )}
@@ -113,14 +113,14 @@ export function CollageLayoutSection() {
       {/* Print Production */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>{printProduction.title}</SectionHeading>
-        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '4px', lineHeight: 1.5, marginBottom: '8px' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', lineHeight: 1.5, marginBottom: '8px' }}>
           {printProduction.intro}
         </p>
         <div
           style={{
             padding: '10px',
             borderRadius: '8px',
-            border: '1px solid rgba(19,59,52,0.1)',
+            border: '1px solid rgba(0,0,0,0.07)',
             background: '#fff',
           }}
         >
@@ -130,7 +130,7 @@ export function CollageLayoutSection() {
             </p>
           ))}
         </div>
-        <p style={{ fontSize: '10px', color: '#8fa89e', marginTop: '6px', textAlign: 'center' }}>
+        <p style={{ fontSize: '10px', color: '#6b7280', marginTop: '6px', textAlign: 'center' }}>
           {printProduction.contact}
         </p>
       </div>

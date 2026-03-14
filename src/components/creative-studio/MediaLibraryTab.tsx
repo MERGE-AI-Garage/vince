@@ -154,9 +154,9 @@ export function MediaLibraryTab() {
       if (foldersError) throw foldersError;
       if (allFoldersError) throw allFoldersError;
 
-      setMedia(mediaData || []);
-      setFolders(foldersData || []);
-      setAllFolders(allFoldersData || []);
+      setMedia((mediaData || []) as unknown as MediaFile[]);
+      setFolders((foldersData || []) as unknown as MediaFolder[]);
+      setAllFolders((allFoldersData || []) as unknown as MediaFolder[]);
 
       // Compute stats from fetched data — no extra query needed
       const files = mediaData || [];
@@ -225,7 +225,6 @@ export function MediaLibraryTab() {
 
       toast.success(`Uploaded ${files.length} file(s)`);
       await fetchData();
-      await fetchStats();
     } catch (error: any) {
       toast.error(`Upload failed: ${error.message}`);
     } finally {
@@ -243,7 +242,6 @@ export function MediaLibraryTab() {
       toast.success('File deleted');
       setDeleteTarget(null);
       await fetchData();
-      await fetchStats();
     } catch (error: any) {
       toast.error(`Delete failed: ${error.message}`);
     }
@@ -260,7 +258,6 @@ export function MediaLibraryTab() {
       setSelectedFiles(new Set());
       setShowBulkDeleteConfirm(false);
       await fetchData();
-      await fetchStats();
     } catch (error: any) {
       toast.error(`Delete failed: ${error.message}`);
     }
@@ -717,7 +714,7 @@ export function MediaLibraryTab() {
                                   decoding="async"
                                 />
                               ) : file.file_type === 'video' ? (
-                                <video src={file.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" preload="none" />
+                                <video src={file.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" preload="metadata" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">{getFileIcon(file.file_type)}</div>
                               )}
@@ -783,7 +780,7 @@ export function MediaLibraryTab() {
                                 {file.file_type === 'image' ? (
                                   <img src={file.thumbnail_url || file.url} alt={file.filename} className="w-full h-full object-cover rounded" loading="lazy" decoding="async" />
                                 ) : file.file_type === 'video' ? (
-                                  <video src={file.url} className="w-full h-full object-cover rounded" preload="none" />
+                                  <video src={file.url} className="w-full h-full object-cover rounded" preload="metadata" />
                                 ) : (
                                   getFileIcon(file.file_type)
                                 )}

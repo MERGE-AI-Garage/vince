@@ -222,7 +222,7 @@ export function AnalyticsTab() {
         badgeIcon={<TrendingUp className="w-4 h-4 text-gray-700 dark:text-white/80" />}
         badgeLabel="Intelligence"
         title="Analytics"
-        subtitle="Generation trends · cost analysis · user activity · model performance"
+        subtitle="Track generation volume, estimated costs, and model utilization across the platform. Use this dashboard to measure AI adoption, surface usage trends, and build the data story behind your team's creative AI investment."
         actions={
           <div className="flex items-center gap-1.5">
             {([7, 30, 90, 365] as TimeRange[]).map((d) => (
@@ -247,7 +247,7 @@ export function AnalyticsTab() {
             ? 'border-red-500/50 bg-red-500/5'
             : budgetStatus.percentUsed > 70
               ? 'border-amber-500/50 bg-amber-500/5'
-              : 'border-green-500/30 bg-green-500/5'
+              : 'border-violet-500/30 bg-violet-500/5'
         }`}>
           <CardContent className="py-4">
             <div className="flex items-center justify-between mb-2">
@@ -266,7 +266,7 @@ export function AnalyticsTab() {
                   ? 'text-red-500'
                   : budgetStatus.percentUsed > 70
                     ? 'text-amber-500'
-                    : 'text-green-500'
+                    : 'text-violet-500'
               }`}>
                 {budgetStatus.percentUsed.toFixed(0)}%
               </span>
@@ -278,7 +278,7 @@ export function AnalyticsTab() {
                   ? '[&>div]:bg-red-500'
                   : budgetStatus.percentUsed > 70
                     ? '[&>div]:bg-amber-500'
-                    : '[&>div]:bg-green-500'
+                    : '[&>div]:bg-violet-500'
               }`}
             />
           </CardContent>
@@ -997,7 +997,7 @@ export function AnalyticsTab() {
                       <p className="font-medium truncate">{user.full_name}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <Badge variant="outline" className="text-[9px] px-1 py-0">
-                          {user.favorite_type.replace(/_/g, ' ')}
+                          {(user.favorite_type ?? '').replace(/_/g, ' ')}
                         </Badge>
                         <span className="text-[10px] text-muted-foreground">
                           {user.types_used} type{user.types_used !== 1 ? 's' : ''}
@@ -1280,7 +1280,7 @@ function UserStatsTable({
             </TableCell>
             <TableCell>
               <Badge variant="outline" className="text-[10px]">
-                {user.favorite_type.replace(/_/g, ' ')}
+                {(user.favorite_type ?? '').replace(/_/g, ' ')}
               </Badge>
             </TableCell>
           </TableRow>
@@ -1394,7 +1394,7 @@ function UserActivityDialog({
                   </div>
                   <div className="text-center">
                     <Badge variant="outline" className="text-xs">
-                      {user.favorite_type.replace(/_/g, ' ')}
+                      {(user.favorite_type ?? '').replace(/_/g, ' ')}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">Top Type</p>
                   </div>

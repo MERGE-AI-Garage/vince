@@ -156,8 +156,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     minHeight: '100vh',
     padding: '24px',
-    background: '#133B34',
-    color: '#EAE8E3',
+    background: '#0d0d0d',
+    color: 'var(--ext-text)',
     fontFamily: 'Epilogue, system-ui, sans-serif',
   },
   heading: {

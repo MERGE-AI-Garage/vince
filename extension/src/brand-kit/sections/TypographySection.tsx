@@ -8,9 +8,9 @@ export function TypographySection() {
   const { typography } = mergeBrandGuidelines;
 
   return (
-    <section id="typography" style={{ padding: '20px 16px', background: '#142e28', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
+    <section id="typography" style={{ padding: '20px 16px', background: 'transparent', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
       <SectionHeading>Typography</SectionHeading>
-      <p style={{ fontSize: '12px', color: '#8fa89e', marginTop: '6px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: 1.5 }}>
         {typography.intro}
       </p>
 
@@ -20,7 +20,7 @@ export function TypographySection() {
           marginTop: '14px',
           padding: '12px',
           borderRadius: '8px',
-          border: '1px solid rgba(19,59,52,0.1)',
+          border: '1px solid rgba(0,0,0,0.07)',
           background: '#fff',
         }}
       >
@@ -31,7 +31,7 @@ export function TypographySection() {
           {typography.primary.name}
         </div>
         <div style={{ fontFamily: 'Fraunces, serif', fontSize: '36px', marginTop: '4px', marginBottom: '8px' }}>Aa</div>
-        <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, marginBottom: '8px' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5, marginBottom: '8px' }}>
           {typography.primary.description}
         </p>
         <div style={{ fontFamily: 'Fraunces, serif', fontSize: '13px', letterSpacing: '-0.02em', wordBreak: 'break-all' }}>
@@ -52,7 +52,7 @@ export function TypographySection() {
           marginTop: '10px',
           padding: '12px',
           borderRadius: '8px',
-          border: '1px solid rgba(19,59,52,0.1)',
+          border: '1px solid rgba(0,0,0,0.07)',
           background: '#fff',
         }}
       >
@@ -63,7 +63,7 @@ export function TypographySection() {
           {typography.secondary.name}
         </div>
         <div style={{ fontFamily: 'Epilogue, sans-serif', fontSize: '36px', marginTop: '4px', marginBottom: '8px' }}>Bb</div>
-        <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, marginBottom: '8px' }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5, marginBottom: '8px' }}>
           {typography.secondary.description}
         </p>
         <div style={{ fontFamily: 'Epilogue, sans-serif', fontSize: '12px', wordBreak: 'break-all' }}>
@@ -82,7 +82,7 @@ export function TypographySection() {
       <div style={{ marginTop: '16px' }}>
         <SectionHeading sub>{typography.usage.fraunces.title}</SectionHeading>
         {typography.usage.fraunces.guidelines.map((g, i) => (
-          <p key={i} style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, marginTop: '6px' }}>
+          <p key={i} style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5, marginTop: '6px' }}>
             {g}
           </p>
         ))}
@@ -112,14 +112,14 @@ export function TypographySection() {
       <div style={{ marginTop: '16px' }}>
         <SectionHeading sub>{typography.usage.epilogue.title}</SectionHeading>
         {typography.usage.epilogue.guidelines.map((g, i) => (
-          <p key={i} style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5, marginTop: '6px' }}>
+          <p key={i} style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5, marginTop: '6px' }}>
             {g}
           </p>
         ))}
         <div style={{ marginTop: '8px' }}>
           <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: '4px' }}>Small Caps Access:</div>
           {typography.usage.epilogue.smallCapsAccess.map((s, i) => (
-            <p key={i} style={{ fontSize: '10px', color: '#8fa89e', lineHeight: 1.5, marginBottom: '2px', paddingLeft: '8px' }}>
+            <p key={i} style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.5, marginBottom: '2px', paddingLeft: '8px' }}>
               {s}
             </p>
           ))}

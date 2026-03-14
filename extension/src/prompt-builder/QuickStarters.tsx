@@ -55,7 +55,7 @@ function lightenHex(hex: string, amount: number): string {
 /** Derive accent colors from a brand color, falling back to MERGE defaults */
 function deriveAccents(brandColor?: string | null) {
   const primary = brandColor || '#8b5cf6';
-  const dark = brandColor ? darkenHex(brandColor, 40) : '#133B34';
+  const dark = brandColor ? darkenHex(brandColor, 40) : '#111111';
   const darkAlt = brandColor ? darkenHex(brandColor, 20) : '#00524F';
   const highlight = brandColor ? lightenHex(brandColor, 80) : '#8b5cf6';
   return { primary, dark, darkAlt, highlight };
@@ -144,7 +144,7 @@ function VariableForm({
                 display: 'block',
                 fontSize: '9px',
                 fontWeight: 600,
-                color: '#8fa89e',
+                color: '#6b7280',
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em',
                 marginBottom: '3px',
@@ -160,7 +160,7 @@ function VariableForm({
                     padding: '7px 8px',
                     borderRadius: '6px',
                     border: `1px solid ${hexToRgba(accents.dark, 0.15)}`,
-                    background: '#1a3a32',
+                    background: '#efefef',
                     fontSize: '11px',
                     fontFamily: 'Epilogue, system-ui, sans-serif',
                     color: accents.dark,
@@ -183,7 +183,7 @@ function VariableForm({
                     padding: '7px 8px',
                     borderRadius: '6px',
                     border: `1px solid ${hexToRgba(accents.dark, 0.15)}`,
-                    background: '#1a3a32',
+                    background: '#efefef',
                     fontSize: '11px',
                     fontFamily: 'Epilogue, system-ui, sans-serif',
                     color: accents.dark,
@@ -213,7 +213,7 @@ function VariableForm({
             background: allFilled
               ? `linear-gradient(135deg, ${accents.dark} 0%, ${accents.darkAlt} 100%)`
               : hexToRgba(accents.dark, 0.1),
-            color: allFilled ? accents.highlight : '#636466',
+            color: allFilled ? accents.highlight : '#6b7280',
             cursor: allFilled ? 'pointer' : 'not-allowed',
             fontSize: '10px',
             fontWeight: 700,
@@ -230,8 +230,8 @@ function VariableForm({
             padding: '8px 12px',
             borderRadius: '6px',
             border: `1px solid ${hexToRgba(accents.dark, 0.1)}`,
-            background: '#1a3a32',
-            color: '#8fa89e',
+            background: '#efefef',
+            color: '#6b7280',
             cursor: 'pointer',
             fontSize: '10px',
             fontWeight: 600,
@@ -289,8 +289,8 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
   if (isLoading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 0' }}>
-        <Loader2 size={16} style={{ color: '#8fa89e', animation: 'spin 1s linear infinite' }} />
-        <span style={{ fontSize: '11px', color: '#8fa89e', marginLeft: '8px' }}>Loading presets...</span>
+        <Loader2 size={16} style={{ color: '#6b7280', animation: 'spin 1s linear infinite' }} />
+        <span style={{ fontSize: '11px', color: '#6b7280', marginLeft: '8px' }}>Loading presets...</span>
       </div>
     );
   }
@@ -353,7 +353,7 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
                 {cat.label}
               </div>
               <ChevronDown size={10} style={{
-                color: '#8fa89e',
+                color: '#6b7280',
                 transition: 'transform 0.15s ease',
                 transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
               }} />
@@ -449,7 +449,7 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '10px', color: '#8fa89e', lineHeight: 1.4, marginTop: '2px' }}>
+                    <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.4, marginTop: '2px' }}>
                       {preset.description.length > 120
                         ? preset.description.slice(0, 120) + '...'
                         : preset.description}

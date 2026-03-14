@@ -58,6 +58,8 @@ import { useBrandReferenceSuggestions } from '@/hooks/useBrandReferenceSuggestio
 import { ShowcaseModal } from '@/components/onboarding/ShowcaseModal';
 import { useVinceTour } from '@/components/onboarding/VinceTour';
 import { useDemoExperience } from '@/hooks/useDemoExperience';
+import { CreativePackageDisplay, type PackagePart } from '@/components/creative-studio/CreativePackageDisplay';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Delimiter for camera preset text injected into the prompt textarea
 const CAMERA_MARKER = '\n\n[Camera] ';
@@ -132,6 +134,7 @@ export default function CreativeStudio() {
   const quotaType = generationType === 'video' ? 'text_to_video' as const : 'text_to_image' as const;
   const { data: quota } = useCreativeStudioQuota(quotaType);
   const [selectedGeneration, setSelectedGeneration] = useState<GenerationWithDetails | null>(null);
+  const [historyPackageGen, setHistoryPackageGen] = useState<GenerationWithDetails | null>(null);
   const lastGenerationIdRef = useRef<string | null>(null);
 
   const {
@@ -350,6 +353,10 @@ export default function CreativeStudio() {
   };
 
   const handleSelectGeneration = (gen: GenerationWithDetails) => {
+    if (gen.generation_type === 'creative_package' && gen.copy_blocks?.length) {
+      setHistoryPackageGen(gen);
+      return;
+    }
     setSelectedGeneration(gen);
     if (gen.output_urls?.[0]) {
       setCurrentImage(gen.output_urls[0]);
@@ -1427,6 +1434,25 @@ export default function CreativeStudio() {
         onClose={handleShowcaseClose}
         onStartTour={handleToggleVince}
       />
+
+      {/* Creative package history viewer */}
+      <Dialog open={!!historyPackageGen} onOpenChange={(open) => !open && setHistoryPackageGen(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Creative Package</DialogTitle>
+          </DialogHeader>
+          {historyPackageGen && (
+            <CreativePackageDisplay
+              parts={historyPackageGen.copy_blocks as PackagePart[]}
+              imageUrls={historyPackageGen.output_urls || []}
+              latencyMs={historyPackageGen.generation_time_ms || 0}
+              brief={historyPackageGen.prompt_text}
+              deliverableNames={historyPackageGen.metadata?.deliverable_names as string[] | undefined}
+              onLoadToCanvas={setCurrentImage}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

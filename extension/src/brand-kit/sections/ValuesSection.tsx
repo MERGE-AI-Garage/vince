@@ -8,7 +8,7 @@ export function ValuesSection() {
   const { values, personality } = mergeBrandGuidelines;
 
   return (
-    <section id="values" style={{ padding: '20px 16px', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
+    <section id="values" style={{ padding: '20px 16px', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
       <SectionHeading>Our Values</SectionHeading>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
@@ -18,7 +18,7 @@ export function ValuesSection() {
             style={{
               padding: '12px',
               borderRadius: '8px',
-              border: '1px solid rgba(19,59,52,0.1)',
+              border: '1px solid rgba(0,0,0,0.07)',
               background: '#fff',
             }}
           >
@@ -30,10 +30,10 @@ export function ValuesSection() {
                 {value.title}
               </span>
             </div>
-            <p style={{ fontSize: '12px', fontWeight: 600, color: '#e0ded9', marginBottom: '4px' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: '#111111', marginBottom: '4px' }}>
               {value.tagline}
             </p>
-            <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5 }}>
               {value.description}
             </p>
           </div>
@@ -43,7 +43,7 @@ export function ValuesSection() {
       {/* Personality */}
       <div style={{ marginTop: '20px' }}>
         <SectionHeading sub>Brand Personality</SectionHeading>
-        <p style={{ fontSize: '12px', color: '#8fa89e', marginTop: '6px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: 1.5 }}>
           {personality.description}
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
@@ -63,7 +63,7 @@ export function ValuesSection() {
             </span>
           ))}
         </div>
-        <p style={{ fontSize: '11px', color: '#8fa89e', marginTop: '8px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '8px', lineHeight: 1.5 }}>
           {personality.note}
         </p>
       </div>

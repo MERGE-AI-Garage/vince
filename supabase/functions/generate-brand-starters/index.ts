@@ -41,7 +41,7 @@ interface GeneratedStarter {
   };
 }
 
-const VALID_CATEGORIES = ['product', 'lifestyle', 'campaign', 'social', 'hero', 'editorial', 'cinematography'];
+const VALID_CATEGORIES = ['product', 'lifestyle', 'campaign', 'social', 'hero', 'editorial', 'cinematography', 'copy', 'brand-voice'];
 
 function buildFullBrandContext(
   brand: Record<string, unknown>,
@@ -186,24 +186,40 @@ BRAND CONTEXT:
 ${brandContext}
 
 RULES:
-1. Generate 10-15 Quick Starters (minimum 8)
-2. Each starter MUST reference specific brand products, materials, or settings from the brand context
+1. Generate 12-18 Quick Starters (minimum 10)
+2. Each starter MUST reference specific brand products, materials, settings, or voice attributes from the brand context
 3. Starters should cover a MIX of these categories: ${JSON.stringify(VALID_CATEGORIES)}
-4. Each prompt_template should be 2-4 sentences of vivid, specific creative direction
-5. Include actual product names, materials, finishes, and brand-specific details — NOT generic placeholders
-6. Camera presets should match the brand's photography style preferences
-7. Names should be concise (2-4 words) and evocative
-8. Descriptions should explain when/why to use the starter (1 sentence)
-9. Vary the shot types: hero shots, in-situ, macro details, lifestyle, editorial, campaign concepts
-10. If the brand has sustainability/CSR themes, include at least one campaign starter for those
-11. If the brand has multiple product lines, ensure starters cover different products
-12. VARIABLE FIELDS: If the brand has a product_catalog with 2+ distinct products, create at least 2 starters
+4. Include at least 1 starter from EACH of these category groups:
+   - Visual (product, hero, lifestyle, editorial)
+   - Video (cinematography)
+   - Social (social, campaign)
+   - Copy/Text (copy, brand-voice)
+5. Each prompt_template should be 2-4 sentences of vivid, specific creative direction
+6. Include actual product names, materials, finishes, and brand-specific details — NOT generic placeholders
+7. Camera presets should match the brand's photography style preferences
+8. Names should be concise (2-4 words) and evocative
+9. Descriptions should explain when/why to use the starter (1 sentence)
+10. Vary the shot types: hero shots, in-situ, macro details, lifestyle, editorial, campaign concepts
+11. If the brand has sustainability/CSR themes, include at least one campaign starter for those
+12. If the brand has multiple product lines, ensure starters cover different products
+13. VARIABLE FIELDS: If the brand has a product_catalog with 2+ distinct products, create at least 2 starters
     with a {{product}} variable. Use {{product}} literally in prompt_template where the product name goes.
     Set variable_fields to [{key:"product", label:"Product", type:"select", options:[list of product names], required:true}].
     Set the most common product as default_value.
-13. For campaign/lifestyle starters where tone or theme varies, you may add a {{campaign_theme}} select field
+14. For campaign/lifestyle starters where tone or theme varies, you may add a {{campaign_theme}} select field
     with options drawn from the brand's actual themes (e.g., sustainability, innovation, community).
-14. For starters WITHOUT variable dimensions, set variable_fields to [].
+15. For starters WITHOUT variable dimensions, set variable_fields to [].
+
+COPY AND BRAND-VOICE CATEGORY RULES:
+- "copy" starters are copywriting briefs for headlines, ads, social captions, or emails.
+  prompt_template should describe: voice direction (with brand-specific dos/don'ts drawn from tone_of_voice),
+  format (word count, structure), emotional arc, and what to avoid. No camera_preset needed.
+  Example variable_fields: platform (select), tone_variation (select from brand's tone options), content_type (select).
+- "brand-voice" starters are system prompts that prime an external AI tool (Gemini, Claude, ChatGPT)
+  with this brand's complete voice identity. prompt_template should read as a direct instruction:
+  "You are writing for [Brand]. [Voice description]. [Tone rules]. [Dos]. [Don'ts]. [Examples]."
+  These are the most powerful starters for copy teams — one click primes any AI with the brand voice.
+  Example variable_fields: tool (select: Gemini, Claude, ChatGPT), content_type (select), audience (select).
 
 Return a JSON array of objects with this schema:
 [

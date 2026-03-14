@@ -4,7 +4,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface BrandLogo {
+  id: string;
+  url: string;
+  variant: string | null;
+  lockup: string | null;
+  background: string | null;
+  is_default: boolean | null;
+  notes: string | null;
+  sort_order: number | null;
+}
+
 export interface BrandGuidelinesData {
+  brand_logos: BrandLogo[];
   brand: {
     id: string;
     name: string;
@@ -22,6 +34,15 @@ export interface BrandGuidelinesData {
     photography_style?: Record<string, unknown>;
     color_profile?: {
       mandatory_colors?: string[];
+      brand_colors?: Array<{
+        name?: string;
+        hex: string;
+        rgb?: string;
+        cmyk?: string;
+        pms?: string;
+        role?: string;
+        uses?: string[];
+      }>;
       forbidden_colors?: string[];
       palette_relationships?: string;
       overall_tone?: string;
@@ -55,8 +76,108 @@ export interface BrandGuidelinesData {
       body_font?: string;
       style_description?: string;
     };
-    brand_story?: Record<string, unknown>;
-    brand_standards?: Record<string, unknown>;
+    brand_story?: {
+      narrative_summary?: string;
+      mission_vision?: {
+        mission?: string;
+        vision?: string;
+        purpose?: string;
+      };
+      heritage?: {
+        founding_story?: string;
+        milestones?: string[];
+        legacy?: string;
+      };
+      innovation?: {
+        approach?: string;
+        differentiators?: string[];
+        technology?: string;
+      };
+      customer_focus?: {
+        promise?: string;
+        experience?: string;
+        testimonial_themes?: string[];
+      };
+      competitive_position?: {
+        market_position?: string;
+        key_differentiators?: string[];
+        awards?: string[];
+      };
+      culture?: {
+        dei?: string;
+        values_in_practice?: string;
+        employee_experience?: string;
+      };
+      community?: {
+        programs?: string;
+        partnerships?: string[];
+        impact_metrics?: string;
+      };
+      sustainability?: {
+        goals?: string[];
+        social?: string;
+        governance?: string;
+        environmental?: string;
+      };
+    };
+    brand_standards?: {
+      logo_system?: {
+        primary?: {
+          description?: string;
+          clear_space?: string;
+          minimum_size?: { print?: string; digital?: string };
+        };
+        monogram?: {
+          description?: string;
+          usage?: string;
+          variants?: string[];
+        };
+      };
+      color_system?: {
+        color_groups?: Array<{
+          name: string;
+          colors: Array<{ name?: string; hex: string; pms?: string; rgb?: string; cmyk?: string }>;
+        }>;
+        ada_compliance?: Array<{
+          background?: string;
+          foreground?: string;
+          ratio?: string;
+          level?: string;
+        }>;
+      };
+      writer_guidelines?: {
+        principles?: Array<{
+          name: string;
+          description: string;
+          example_try?: string;
+          example_instead_of?: string;
+        }>;
+        litmus_test?: string;
+      };
+      typography_system?: {
+        rules?: Array<{ text: string }>;
+        primary_font?: { name?: string; usage?: string; weights?: string[] };
+        secondary_font?: { name?: string; usage?: string; weights?: string[] };
+        layout_hierarchy?: Array<{ element: string; font: string; color?: string }>;
+      };
+      glossary?: Array<{ preferred: string; replaces: string }>;
+      social_media_voice?: {
+        persona?: string;
+        hashtags?: string[];
+        voice_traits?: Array<{ name: string; description: string }>;
+        content_types?: string[];
+      };
+      vertical_positioning?: {
+        verticals?: Array<{
+          name: string;
+          sub_verticals?: Array<{ name: string; headline?: string; description?: string }>;
+        }>;
+      };
+      competitive_landscape?: {
+        per_vertical?: Array<{ vertical: string; competitors: string[] }>;
+        market_position_summary?: string;
+      };
+    };
     source_metadata?: Record<string, unknown>;
     confidence_score: number;
     total_images_analyzed: number;
@@ -77,8 +198,8 @@ export function useBrandGuidelines(brandId: string | null | undefined) {
     setIsLoading(true);
 
     async function load() {
-      // Fetch brand + profile in parallel
-      const [brandRes, profileRes] = await Promise.all([
+      // Fetch brand, profile, and logo library in parallel
+      const [brandRes, profileRes, logosRes] = await Promise.all([
         supabase
           .from('creative_studio_brands')
           .select('id, name, logo_url, primary_color, secondary_color, description, brand_voice, website_url, brand_category, is_default')
@@ -89,6 +210,11 @@ export function useBrandGuidelines(brandId: string | null | undefined) {
           .select('*')
           .eq('brand_id', brandId!)
           .single(),
+        supabase
+          .from('creative_studio_brand_logos')
+          .select('id, url, variant, lockup, background, is_default, notes, sort_order')
+          .eq('brand_id', brandId!)
+          .order('sort_order', { ascending: true }),
       ]);
 
       if (cancelled) return;
@@ -101,6 +227,7 @@ export function useBrandGuidelines(brandId: string | null | undefined) {
       }
 
       setData({
+        brand_logos: logosRes.data || [],
         brand: brandRes.data,
         profile: profileRes.data || null,
       });

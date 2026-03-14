@@ -1,5 +1,5 @@
 // ABOUTME: Admin dashboard for Vince platform management.
-// ABOUTME: Tabs for models, brands, generations, analytics, and settings.
+// ABOUTME: Primary tabs: Brands, Brand DNA, Campaigns, Generations, Media, Downloads, Welcome Page, Settings. Settings houses AI Models, Camera Presets, Analytics, User Quotas, Audit Trail, and Prompt History in a sidebar nav.
 
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -134,6 +134,7 @@ const HERO_IMAGES = [
 export default function CreativeStudioAdmin() {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('brands');
+  const [settingsSection, setSettingsSection] = useState('general');
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const { startAdminTour } = useVinceAdminTour();
 
@@ -532,41 +533,17 @@ export default function CreativeStudioAdmin() {
                 <Brain className="h-3.5 w-3.5" />
                 Brand DNA
               </TabsTrigger>
-              <TabsTrigger value="camera">
-                <Camera className="h-3.5 w-3.5" />
-                Camera
-              </TabsTrigger>
-              <TabsTrigger value="models" data-tour="admin-models-tab">
-                <Sparkles className="h-3.5 w-3.5" />
-                Models
+              <TabsTrigger value="campaigns">
+                <Layers className="h-3.5 w-3.5" />
+                Campaigns
               </TabsTrigger>
               <TabsTrigger value="generations">
                 <Image className="h-3.5 w-3.5" />
                 Generations
               </TabsTrigger>
-              <TabsTrigger value="campaigns">
-                <Layers className="h-3.5 w-3.5" />
-                Campaigns
-              </TabsTrigger>
               <TabsTrigger value="media">
                 <FileImage className="h-3.5 w-3.5" />
                 Media
-              </TabsTrigger>
-              <TabsTrigger value="analytics" data-tour="admin-analytics-tab">
-                <TrendingUp className="h-3.5 w-3.5" />
-                Analytics
-              </TabsTrigger>
-              <TabsTrigger value="quotas">
-                <Users className="h-3.5 w-3.5" />
-                User Quotas
-              </TabsTrigger>
-              <TabsTrigger value="audit">
-                <History className="h-3.5 w-3.5" />
-                Audit Trail
-              </TabsTrigger>
-              <TabsTrigger value="prompt-history">
-                <MessageSquare className="h-3.5 w-3.5" />
-                Prompt History
               </TabsTrigger>
               <TabsTrigger value="downloads">
                 <Package className="h-3.5 w-3.5" />
@@ -583,284 +560,6 @@ export default function CreativeStudioAdmin() {
             </TabsList>
 
           </div>
-
-          {/* Models Tab */}
-          <TabsContent value="models">
-            <div className="space-y-6">
-              <TabHeroHeader
-                gradientLight="from-[#f1f3f4] via-[#e8eaed] to-[#dadce0]"
-                gradientDark="dark:from-[#1a1a2e] dark:via-[#16213e] dark:to-[#0f3460]"
-                watermark={<GoogleLogo className="w-full h-full" />}
-                watermarkSmall={<MergeLogo className="w-full h-full" />}
-                badgeIcon={<GoogleLogo className="w-5 h-5 text-gray-800 dark:text-white/80" />}
-                badgeLabel="Google Vertex AI"
-                title="AI Models"
-                subtitle="Curated Vertex AI models powering image and video generation across Creative Studio. Enable or disable models per use case, set defaults for each content type, and monitor cost-per-generation pricing to govern your team's AI spend."
-                actions={
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => refetchModels()} className="bg-white/60 dark:bg-white/10 border-gray-300/60 dark:border-white/20">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Refresh
-                    </Button>
-                    <Button onClick={() => handleOpenModelEditor()} className="gap-2 shadow-md">
-                      <Plus className="h-4 w-4" />
-                      Add Model
-                    </Button>
-                  </>
-                }
-              />
-
-              {modelsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-              ) : (
-                <>
-                  {/* Image Models Section */}
-                  {(() => {
-                    const imageModels = models?.filter(m => m.model_type === 'image') || [];
-                    const videoModels = models?.filter(m => m.model_type === 'video') || [];
-                    return (
-                      <>
-                        {/* Image Models Section */}
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                              <Image className="h-3.5 w-3.5 text-white" />
-                            </div>
-                            <h3 className="font-semibold">Image Models</h3>
-                            <Badge variant="outline" className="text-xs">{imageModels.length}</Badge>
-                          </div>
-                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {imageModels.map((model) => (
-                              <div
-                                key={model.id}
-                                className={cn(
-                                  'group relative flex overflow-hidden rounded-xl',
-                                  'border border-border/40 bg-card/80 backdrop-blur-sm',
-                                  'hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5',
-                                  'transition-all duration-300',
-                                  !model.is_active && 'opacity-50',
-                                  model.is_default && 'ring-1 ring-primary/30',
-                                )}
-                              >
-                                {/* Gradient accent strip */}
-                                <div className="w-1.5 bg-gradient-to-b from-blue-500 to-indigo-600 shrink-0" />
-
-                                <div className="flex-1 p-4 space-y-3 min-w-0">
-                                  <div className="flex items-start justify-between">
-                                    <div className="space-y-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        <h4 className="font-medium text-sm truncate">{model.name}</h4>
-                                        {model.is_default && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 shrink-0" />}
-                                      </div>
-                                      <p className="text-[10px] text-muted-foreground font-mono truncate">{model.model_id}</p>
-                                    </div>
-                                    <Badge
-                                      variant="outline"
-                                      className={cn(
-                                        'text-[10px] shrink-0',
-                                        model.is_active
-                                          ? 'bg-green-500/10 text-green-600 border-green-500/30 dark:text-green-400'
-                                          : 'bg-muted text-muted-foreground',
-                                      )}
-                                    >
-                                      {model.is_active ? 'Active' : 'Inactive'}
-                                    </Badge>
-                                  </div>
-
-                                  {model.description && (
-                                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{model.description}</p>
-                                  )}
-
-                                  <div className="flex flex-wrap gap-1">
-                                    {model.capabilities.slice(0, 4).map((cap) => (
-                                      <Badge key={cap} variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
-                                        {cap.replace(/_/g, ' ')}
-                                      </Badge>
-                                    ))}
-                                    {model.capabilities.length > 4 && (
-                                      <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
-                                        +{model.capabilities.length - 4}
-                                      </Badge>
-                                    )}
-                                  </div>
-
-                                  <div className="flex items-center gap-3 text-xs">
-                                    <span className="flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400">
-                                      <DollarSign className="h-3 w-3" />
-                                      {model.cost_per_generation.toFixed(3)}
-                                      <span className="text-muted-foreground font-normal">/img</span>
-                                    </span>
-                                    {(model.parameters as any)?.rate_limit_per_minute && (
-                                      <span className="text-muted-foreground">
-                                        {(model.parameters as any).rate_limit_per_minute} req/min
-                                      </span>
-                                    )}
-                                    {(model.parameters as any)?.max_sample_count > 1 && (
-                                      <span className="text-muted-foreground">
-                                        ×{(model.parameters as any).max_sample_count} max
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  <div className="flex items-center gap-1 pt-2 border-t border-border/30">
-                                    <Button variant="ghost" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleOpenModelEditor(model.id)}>
-                                      <Pencil className="h-3 w-3 mr-1" />
-                                      Edit
-                                    </Button>
-                                    {!model.is_default && (
-                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleSetDefaultModel(model.id, model.model_type)} title="Set as default">
-                                        <StarOff className="h-3 w-3" />
-                                      </Button>
-                                    )}
-                                    <Switch checked={model.is_active} onCheckedChange={() => handleToggleModel(model.id, model.is_active)} />
-                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteModelConfirm(model.id)}>
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Video Models Section */}
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                              <Video className="h-3.5 w-3.5 text-white" />
-                            </div>
-                            <h3 className="font-semibold">Video Models</h3>
-                            <Badge variant="outline" className="text-xs">{videoModels.length}</Badge>
-                          </div>
-                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {videoModels.map((model) => {
-                              const params = model.parameters as any;
-                              const pricingTiers = params?.pricing_tiers || [];
-                              return (
-                                <div
-                                  key={model.id}
-                                  className={cn(
-                                    'group relative flex overflow-hidden rounded-xl',
-                                    'border border-border/40 bg-card/80 backdrop-blur-sm',
-                                    'hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-0.5',
-                                    'transition-all duration-300',
-                                    !model.is_active && 'opacity-50',
-                                    model.is_default && 'ring-1 ring-primary/30',
-                                  )}
-                                >
-                                  {/* Gradient accent strip */}
-                                  <div className="w-1.5 bg-gradient-to-b from-purple-500 to-pink-600 shrink-0" />
-
-                                  <div className="flex-1 p-4 space-y-3 min-w-0">
-                                    <div className="flex items-start justify-between">
-                                      <div className="space-y-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                          <h4 className="font-medium text-sm truncate">{model.name}</h4>
-                                          {model.is_default && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 shrink-0" />}
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground font-mono truncate">{model.model_id}</p>
-                                      </div>
-                                      <Badge
-                                        variant="outline"
-                                        className={cn(
-                                          'text-[10px] shrink-0',
-                                          model.is_active
-                                            ? 'bg-green-500/10 text-green-600 border-green-500/30 dark:text-green-400'
-                                            : 'bg-muted text-muted-foreground',
-                                        )}
-                                      >
-                                        {model.is_active ? 'Active' : 'Inactive'}
-                                      </Badge>
-                                    </div>
-
-                                    {model.description && (
-                                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{model.description}</p>
-                                    )}
-
-                                    {/* Pricing tiers */}
-                                    {pricingTiers.length > 0 && (
-                                      <div className="bg-muted/30 rounded-md p-2 space-y-0.5">
-                                        {pricingTiers.map((tier: any) => (
-                                          <div key={tier.label} className="flex items-center justify-between text-[10px]">
-                                            <span className="text-muted-foreground">{tier.label}</span>
-                                            <span className="font-medium text-purple-600 dark:text-purple-400 tabular-nums">
-                                              ${tier.per_second.toFixed(2)}/sec
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    )}
-
-                                    <div className="flex flex-wrap gap-1">
-                                      {params?.supports_audio && (
-                                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
-                                          audio
-                                        </Badge>
-                                      )}
-                                      {params?.supports_4k && (
-                                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
-                                          4K
-                                        </Badge>
-                                      )}
-                                      {params?.durations && (
-                                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
-                                          {params.durations.join('/')}s
-                                        </Badge>
-                                      )}
-                                      {model.capabilities.slice(0, 3).map((cap) => (
-                                        <Badge key={cap} variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
-                                          {cap.replace(/_/g, ' ')}
-                                        </Badge>
-                                      ))}
-                                    </div>
-
-                                    <div className="flex items-center gap-3 text-xs">
-                                      <span className="flex items-center gap-1 font-medium text-purple-600 dark:text-purple-400">
-                                        <DollarSign className="h-3 w-3" />
-                                        {params?.cost_per_second
-                                          ? `${params.cost_per_second.toFixed(2)}`
-                                          : model.cost_per_generation.toFixed(2)}
-                                        <span className="text-muted-foreground font-normal">
-                                          {params?.cost_per_second ? '/sec' : '/gen'}
-                                        </span>
-                                      </span>
-                                      {params?.rate_limit_per_minute && (
-                                        <span className="text-muted-foreground">
-                                          {params.rate_limit_per_minute} req/min
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    <div className="flex items-center gap-1 pt-2 border-t border-border/30">
-                                      <Button variant="ghost" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleOpenModelEditor(model.id)}>
-                                        <Pencil className="h-3 w-3 mr-1" />
-                                        Edit
-                                      </Button>
-                                      {!model.is_default && (
-                                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleSetDefaultModel(model.id, model.model_type)} title="Set as default">
-                                          <StarOff className="h-3 w-3" />
-                                        </Button>
-                                      )}
-                                      <Switch checked={model.is_active} onCheckedChange={() => handleToggleModel(model.id, model.is_active)} />
-                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteModelConfirm(model.id)}>
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </>
-              )}
-            </div>
-          </TabsContent>
 
           {/* Brands Tab */}
           <TabsContent value="brands">
@@ -942,25 +641,6 @@ export default function CreativeStudioAdmin() {
             <MediaLibraryTab />
           </TabsContent>
 
-          {/* Quotas Tab */}
-          <TabsContent value="quotas">
-            <QuotasTab />
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <AnalyticsTab />
-          </TabsContent>
-
-          {/* Audit Trail Tab */}
-          <TabsContent value="audit">
-            <AuditTrailTab />
-          </TabsContent>
-
-          {/* Prompt History Tab */}
-          <TabsContent value="prompt-history">
-            <PromptHistoryTab />
-          </TabsContent>
 
           {/* Brand Intelligence Tab */}
           <TabsContent value="intelligence">
@@ -1003,10 +683,6 @@ export default function CreativeStudioAdmin() {
             <BrandIntelligenceTab brandId={effectiveBrandId} />
           </TabsContent>
 
-          {/* Camera Presets Tab */}
-          <TabsContent value="camera">
-            <CameraPresetAdmin />
-          </TabsContent>
 
           {/* Downloads Tab */}
           <TabsContent value="downloads">
@@ -1041,174 +717,492 @@ export default function CreativeStudioAdmin() {
                 badgeIcon={<Settings className="w-4 h-4 text-gray-700 dark:text-white/80" />}
                 badgeLabel="Configuration"
                 title="Settings"
-                subtitle="Control platform-wide behavior: generation cost limits, monthly budget alerts, per-user quotas, and the AI system prompts that power brand DNA analysis. Changes here affect every user and every brand in the system."
-                actions={
-                  settingsDirty ? (
-                    <>
-                      <Button variant="outline" size="sm" onClick={handleResetSettings} className="bg-white/60 dark:bg-white/10 border-gray-300/60 dark:border-white/20">
-                        Cancel
-                      </Button>
-                      <Button size="sm" onClick={handleSaveSettings} disabled={updateCostSetting.isPending} className="shadow-md">
-                        {updateCostSetting.isPending ? 'Saving...' : 'Save Settings'}
-                      </Button>
-                    </>
-                  ) : undefined
-                }
+                subtitle="Platform-wide configuration: cost limits, AI models, camera presets, user quotas, analytics, and monitoring. Changes here affect every user and every brand in the system."
               />
 
-              {settingsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin" />
+              <Tabs value={settingsSection} onValueChange={setSettingsSection}>
+                <div className="flex justify-center">
+                  <TabsList>
+                    <TabsTrigger value="general">
+                      <Settings className="h-3.5 w-3.5" />
+                      General
+                    </TabsTrigger>
+                    <TabsTrigger value="models">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      AI Models
+                    </TabsTrigger>
+                    <TabsTrigger value="camera">
+                      <Camera className="h-3.5 w-3.5" />
+                      Camera Presets
+                    </TabsTrigger>
+                    <TabsTrigger value="analytics">
+                      <TrendingUp className="h-3.5 w-3.5" />
+                      Analytics
+                    </TabsTrigger>
+                    <TabsTrigger value="quotas">
+                      <Users className="h-3.5 w-3.5" />
+                      User Quotas
+                    </TabsTrigger>
+                    <TabsTrigger value="audit">
+                      <History className="h-3.5 w-3.5" />
+                      Audit Trail
+                    </TabsTrigger>
+                    <TabsTrigger value="prompt-history">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      Prompt History
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
-              ) : costSettings && (
-                <>
-                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                    {/* Left column — Quotas + Costs */}
-                    <div className="lg:col-span-3 space-y-6">
-                      {/* Quota Defaults */}
-                      <div className="flex overflow-hidden rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm">
-                        <div className="w-1.5 bg-gradient-to-b from-blue-400 to-blue-600 shrink-0" />
-                        <div className="flex-1 p-5 space-y-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                              <Users className="h-4 w-4 text-blue-500" />
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-semibold">Quota Defaults</h3>
-                              <p className="text-xs text-muted-foreground">Weekly generation limits for new users</p>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Weekly Image Limit</Label>
-                              <Input
-                                type="number"
-                                value={settingsForm.default_image_weekly_limit}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  default_image_weekly_limit: parseInt(e.target.value) || 0,
-                                }))}
-                              />
-                              <p className="text-[10px] text-muted-foreground">Per user per week</p>
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Weekly Video Limit</Label>
-                              <Input
-                                type="number"
-                                value={settingsForm.default_video_weekly_limit}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  default_video_weekly_limit: parseInt(e.target.value) || 0,
-                                }))}
-                              />
-                              <p className="text-[10px] text-muted-foreground">Per user per week</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
 
-                      {/* Cost Configuration */}
-                      <div className="flex overflow-hidden rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm">
-                        <div className="w-1.5 bg-gradient-to-b from-amber-400 to-amber-600 shrink-0" />
-                        <div className="flex-1 p-5 space-y-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                              <DollarSign className="h-4 w-4 text-amber-500" />
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-semibold">Cost Configuration</h3>
-                              <p className="text-xs text-muted-foreground">Average cost estimates for budget tracking</p>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Image Cost (USD)</Label>
-                              <Input
-                                type="number"
-                                step="0.001"
-                                value={settingsForm.image_cost}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  image_cost: parseFloat(e.target.value) || 0,
-                                }))}
-                              />
-                              <p className="text-[10px] text-muted-foreground">Per image generation</p>
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Video Cost (USD)</Label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={settingsForm.video_cost}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  video_cost: parseFloat(e.target.value) || 0,
-                                }))}
-                              />
-                              <p className="text-[10px] text-muted-foreground">Per video generation</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                <TabsContent value="general">
+                  {settingsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin" />
                     </div>
-
-                    {/* Right column — Alerts */}
-                    <div className="lg:col-span-2">
-                      <div className="flex overflow-hidden rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm h-full">
-                        <div className="w-1.5 bg-gradient-to-b from-orange-400 to-red-500 shrink-0" />
-                        <div className="flex-1 p-5 space-y-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                              <Bell className="h-4 w-4 text-orange-500" />
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-semibold">Alerts & Monitoring</h3>
-                              <p className="text-xs text-muted-foreground">Budget notifications</p>
-                            </div>
+                  ) : costSettings ? (
+                      <div className="space-y-6">
+                        {settingsDirty && (
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="outline" size="sm" onClick={handleResetSettings}>
+                              Cancel
+                            </Button>
+                            <Button size="sm" onClick={handleSaveSettings} disabled={updateCostSetting.isPending} className="shadow-md">
+                              {updateCostSetting.isPending ? 'Saving...' : 'Save Settings'}
+                            </Button>
                           </div>
-                          <div className="space-y-4">
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Budget Alert Threshold (USD)</Label>
-                              <Input
-                                type="number"
-                                value={settingsForm.budget_alert_threshold}
-                                onChange={(e) => setSettingsForm(prev => ({
-                                  ...prev,
-                                  budget_alert_threshold: parseFloat(e.target.value) || 0,
-                                }))}
-                              />
-                              <p className="text-[10px] text-muted-foreground">Monthly budget threshold</p>
-                            </div>
-                            <div className="space-y-1.5">
-                              <Label className="text-xs">Admin Email Alerts</Label>
-                              <div className="flex items-center gap-2">
-                                <Switch
-                                  checked={settingsForm.admin_email_alerts}
-                                  onCheckedChange={(checked) => setSettingsForm(prev => ({
-                                    ...prev,
-                                    admin_email_alerts: checked,
-                                  }))}
-                                />
-                                <span className="text-sm">
-                                  {settingsForm.admin_email_alerts ? 'Enabled' : 'Disabled'}
-                                </span>
+                        )}
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                          {/* Left column — Quotas + Costs */}
+                          <div className="lg:col-span-3 space-y-6">
+                            {/* Quota Defaults */}
+                            <div className="flex overflow-hidden rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm">
+                              <div className="w-1.5 bg-gradient-to-b from-blue-400 to-blue-600 shrink-0" />
+                              <div className="flex-1 p-5 space-y-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                    <Users className="h-4 w-4 text-blue-500" />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-semibold">Quota Defaults</h3>
+                                    <p className="text-xs text-muted-foreground">Weekly generation limits for new users</p>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs">Weekly Image Limit</Label>
+                                    <Input
+                                      type="number"
+                                      value={settingsForm.default_image_weekly_limit}
+                                      onChange={(e) => setSettingsForm(prev => ({
+                                        ...prev,
+                                        default_image_weekly_limit: parseInt(e.target.value) || 0,
+                                      }))}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Per user per week</p>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs">Weekly Video Limit</Label>
+                                    <Input
+                                      type="number"
+                                      value={settingsForm.default_video_weekly_limit}
+                                      onChange={(e) => setSettingsForm(prev => ({
+                                        ...prev,
+                                        default_video_weekly_limit: parseInt(e.target.value) || 0,
+                                      }))}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Per user per week</p>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-[10px] text-muted-foreground">
-                                Send alerts when thresholds are exceeded
-                              </p>
+                            </div>
+
+                            {/* Cost Configuration */}
+                            <div className="flex overflow-hidden rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm">
+                              <div className="w-1.5 bg-gradient-to-b from-amber-400 to-amber-600 shrink-0" />
+                              <div className="flex-1 p-5 space-y-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                    <DollarSign className="h-4 w-4 text-amber-500" />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-semibold">Cost Configuration</h3>
+                                    <p className="text-xs text-muted-foreground">Average cost estimates for budget tracking</p>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs">Image Cost (USD)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.001"
+                                      value={settingsForm.image_cost}
+                                      onChange={(e) => setSettingsForm(prev => ({
+                                        ...prev,
+                                        image_cost: parseFloat(e.target.value) || 0,
+                                      }))}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Per image generation</p>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs">Video Cost (USD)</Label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={settingsForm.video_cost}
+                                      onChange={(e) => setSettingsForm(prev => ({
+                                        ...prev,
+                                        video_cost: parseFloat(e.target.value) || 0,
+                                      }))}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Per video generation</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right column — Alerts */}
+                          <div className="lg:col-span-2">
+                            <div className="flex overflow-hidden rounded-xl border border-border/40 bg-card/80 backdrop-blur-sm h-full">
+                              <div className="w-1.5 bg-gradient-to-b from-orange-400 to-red-500 shrink-0" />
+                              <div className="flex-1 p-5 space-y-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                                    <Bell className="h-4 w-4 text-orange-500" />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-semibold">Alerts & Monitoring</h3>
+                                    <p className="text-xs text-muted-foreground">Budget notifications</p>
+                                  </div>
+                                </div>
+                                <div className="space-y-4">
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs">Budget Alert Threshold (USD)</Label>
+                                    <Input
+                                      type="number"
+                                      value={settingsForm.budget_alert_threshold}
+                                      onChange={(e) => setSettingsForm(prev => ({
+                                        ...prev,
+                                        budget_alert_threshold: parseFloat(e.target.value) || 0,
+                                      }))}
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Monthly budget threshold</p>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <Label className="text-xs">Admin Email Alerts</Label>
+                                    <div className="flex items-center gap-2">
+                                      <Switch
+                                        checked={settingsForm.admin_email_alerts}
+                                        onCheckedChange={(checked) => setSettingsForm(prev => ({
+                                          ...prev,
+                                          admin_email_alerts: checked,
+                                        }))}
+                                      />
+                                      <span className="text-sm">
+                                        {settingsForm.admin_email_alerts ? 'Enabled' : 'Disabled'}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">
+                                      Send alerts when thresholds are exceeded
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
+
+                        <Separator />
+
+                        {/* Brand DNA Prompts */}
+                        <BrandDNAPrompts />
                       </div>
-                    </div>
+                  ) : null}
+                </TabsContent>
+
+                <TabsContent value="models">
+                  <div className="space-y-6">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => refetchModels()}>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh
+                        </Button>
+                        <Button onClick={() => handleOpenModelEditor()} className="gap-2 shadow-md">
+                          <Plus className="h-4 w-4" />
+                          Add Model
+                        </Button>
+                      </div>
+                      {modelsLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                        </div>
+                      ) : (
+                        <>
+                          {(() => {
+                            const imageModels = models?.filter(m => m.model_type === 'image') || [];
+                            const videoModels = models?.filter(m => m.model_type === 'video') || [];
+                            return (
+                              <>
+                                {/* Image Models Section */}
+                                <div className="space-y-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                                      <Image className="h-3.5 w-3.5 text-white" />
+                                    </div>
+                                    <h3 className="font-semibold">Image Models</h3>
+                                    <Badge variant="outline" className="text-xs">{imageModels.length}</Badge>
+                                  </div>
+                                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {imageModels.map((model) => (
+                                      <div
+                                        key={model.id}
+                                        className={cn(
+                                          'group relative flex overflow-hidden rounded-xl',
+                                          'border border-border/40 bg-card/80 backdrop-blur-sm',
+                                          'hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-0.5',
+                                          'transition-all duration-300',
+                                          !model.is_active && 'opacity-50',
+                                          model.is_default && 'ring-1 ring-primary/30',
+                                        )}
+                                      >
+                                        {/* Gradient accent strip */}
+                                        <div className="w-1.5 bg-gradient-to-b from-blue-500 to-indigo-600 shrink-0" />
+
+                                        <div className="flex-1 p-4 space-y-3 min-w-0">
+                                          <div className="flex items-start justify-between">
+                                            <div className="space-y-1 min-w-0">
+                                              <div className="flex items-center gap-2">
+                                                <h4 className="font-medium text-sm truncate">{model.name}</h4>
+                                                {model.is_default && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 shrink-0" />}
+                                              </div>
+                                              <p className="text-[10px] text-muted-foreground font-mono truncate">{model.model_id}</p>
+                                            </div>
+                                            <Badge
+                                              variant="outline"
+                                              className={cn(
+                                                'text-[10px] shrink-0',
+                                                model.is_active
+                                                  ? 'bg-violet-500/10 text-violet-600 border-violet-500/30 dark:text-violet-400'
+                                                  : 'bg-muted text-muted-foreground',
+                                              )}
+                                            >
+                                              {model.is_active ? 'Active' : 'Inactive'}
+                                            </Badge>
+                                          </div>
+
+                                          {model.description && (
+                                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{model.description}</p>
+                                          )}
+
+                                          <div className="flex flex-wrap gap-1">
+                                            {model.capabilities.slice(0, 4).map((cap) => (
+                                              <Badge key={cap} variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
+                                                {cap.replace(/_/g, ' ')}
+                                              </Badge>
+                                            ))}
+                                            {model.capabilities.length > 4 && (
+                                              <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
+                                                +{model.capabilities.length - 4}
+                                              </Badge>
+                                            )}
+                                          </div>
+
+                                          <div className="flex items-center gap-3 text-xs">
+                                            <span className="flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400">
+                                              <DollarSign className="h-3 w-3" />
+                                              {model.cost_per_generation.toFixed(3)}
+                                              <span className="text-muted-foreground font-normal">/img</span>
+                                            </span>
+                                            {(model.parameters as any)?.rate_limit_per_minute && (
+                                              <span className="text-muted-foreground">
+                                                {(model.parameters as any).rate_limit_per_minute} req/min
+                                              </span>
+                                            )}
+                                            {(model.parameters as any)?.max_sample_count > 1 && (
+                                              <span className="text-muted-foreground">
+                                                ×{(model.parameters as any).max_sample_count} max
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          <div className="flex items-center gap-1 pt-2 border-t border-border/30">
+                                            <Button variant="ghost" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleOpenModelEditor(model.id)}>
+                                              <Pencil className="h-3 w-3 mr-1" />
+                                              Edit
+                                            </Button>
+                                            {!model.is_default && (
+                                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleSetDefaultModel(model.id, model.model_type)} title="Set as default">
+                                                <StarOff className="h-3 w-3" />
+                                              </Button>
+                                            )}
+                                            <Switch checked={model.is_active} onCheckedChange={() => handleToggleModel(model.id, model.is_active)} />
+                                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteModelConfirm(model.id)}>
+                                              <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Video Models Section */}
+                                <div className="space-y-4">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                      <Video className="h-3.5 w-3.5 text-white" />
+                                    </div>
+                                    <h3 className="font-semibold">Video Models</h3>
+                                    <Badge variant="outline" className="text-xs">{videoModels.length}</Badge>
+                                  </div>
+                                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {videoModels.map((model) => {
+                                      const params = model.parameters as any;
+                                      const pricingTiers = params?.pricing_tiers || [];
+                                      return (
+                                        <div
+                                          key={model.id}
+                                          className={cn(
+                                            'group relative flex overflow-hidden rounded-xl',
+                                            'border border-border/40 bg-card/80 backdrop-blur-sm',
+                                            'hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-0.5',
+                                            'transition-all duration-300',
+                                            !model.is_active && 'opacity-50',
+                                            model.is_default && 'ring-1 ring-primary/30',
+                                          )}
+                                        >
+                                          {/* Gradient accent strip */}
+                                          <div className="w-1.5 bg-gradient-to-b from-purple-500 to-pink-600 shrink-0" />
+
+                                          <div className="flex-1 p-4 space-y-3 min-w-0">
+                                            <div className="flex items-start justify-between">
+                                              <div className="space-y-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                  <h4 className="font-medium text-sm truncate">{model.name}</h4>
+                                                  {model.is_default && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 shrink-0" />}
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground font-mono truncate">{model.model_id}</p>
+                                              </div>
+                                              <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                  'text-[10px] shrink-0',
+                                                  model.is_active
+                                                    ? 'bg-violet-500/10 text-violet-600 border-violet-500/30 dark:text-violet-400'
+                                                    : 'bg-muted text-muted-foreground',
+                                                )}
+                                              >
+                                                {model.is_active ? 'Active' : 'Inactive'}
+                                              </Badge>
+                                            </div>
+
+                                            {model.description && (
+                                              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{model.description}</p>
+                                            )}
+
+                                            {/* Pricing tiers */}
+                                            {pricingTiers.length > 0 && (
+                                              <div className="bg-muted/30 rounded-md p-2 space-y-0.5">
+                                                {pricingTiers.map((tier: any) => (
+                                                  <div key={tier.label} className="flex items-center justify-between text-[10px]">
+                                                    <span className="text-muted-foreground">{tier.label}</span>
+                                                    <span className="font-medium text-purple-600 dark:text-purple-400 tabular-nums">
+                                                      ${tier.per_second.toFixed(2)}/sec
+                                                    </span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+
+                                            <div className="flex flex-wrap gap-1">
+                                              {params?.supports_audio && (
+                                                <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
+                                                  audio
+                                                </Badge>
+                                              )}
+                                              {params?.supports_4k && (
+                                                <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20">
+                                                  4K
+                                                </Badge>
+                                              )}
+                                              {params?.durations && (
+                                                <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
+                                                  {params.durations.join('/')}s
+                                                </Badge>
+                                              )}
+                                              {model.capabilities.slice(0, 3).map((cap) => (
+                                                <Badge key={cap} variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/30">
+                                                  {cap.replace(/_/g, ' ')}
+                                                </Badge>
+                                              ))}
+                                            </div>
+
+                                            <div className="flex items-center gap-3 text-xs">
+                                              <span className="flex items-center gap-1 font-medium text-purple-600 dark:text-purple-400">
+                                                <DollarSign className="h-3 w-3" />
+                                                {params?.cost_per_second
+                                                  ? `${params.cost_per_second.toFixed(2)}`
+                                                  : model.cost_per_generation.toFixed(2)}
+                                                <span className="text-muted-foreground font-normal">
+                                                  {params?.cost_per_second ? '/sec' : '/gen'}
+                                                </span>
+                                              </span>
+                                              {params?.rate_limit_per_minute && (
+                                                <span className="text-muted-foreground">
+                                                  {params.rate_limit_per_minute} req/min
+                                                </span>
+                                              )}
+                                            </div>
+
+                                            <div className="flex items-center gap-1 pt-2 border-t border-border/30">
+                                              <Button variant="ghost" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleOpenModelEditor(model.id)}>
+                                                <Pencil className="h-3 w-3 mr-1" />
+                                                Edit
+                                              </Button>
+                                              {!model.is_default && (
+                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleSetDefaultModel(model.id, model.model_type)} title="Set as default">
+                                                  <StarOff className="h-3 w-3" />
+                                                </Button>
+                                              )}
+                                              <Switch checked={model.is_active} onCheckedChange={() => handleToggleModel(model.id, model.is_active)} />
+                                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteModelConfirm(model.id)}>
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </>
+                      )}
                   </div>
+                </TabsContent>
 
-                  <Separator />
+                <TabsContent value="camera">
+                  <CameraPresetAdmin />
+                </TabsContent>
 
-                  {/* Brand DNA Prompts */}
-                  <BrandDNAPrompts />
-                </>
-              )}
+                <TabsContent value="analytics">
+                  <AnalyticsTab />
+                </TabsContent>
+
+                <TabsContent value="quotas">
+                  <QuotasTab />
+                </TabsContent>
+
+                <TabsContent value="audit">
+                  <AuditTrailTab />
+                </TabsContent>
+
+                <TabsContent value="prompt-history">
+                  <PromptHistoryTab />
+                </TabsContent>
+              </Tabs>
             </div>
           </TabsContent>
         </Tabs>

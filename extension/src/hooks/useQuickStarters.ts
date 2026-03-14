@@ -33,6 +33,7 @@ const STANDARD_CATEGORIES: Record<string, { label: string; formCategory: PromptC
   'brand-overview': { label: 'Describe Brand', formCategory: 'general' },
   social: { label: 'Social Graphic', formCategory: 'image' },
   hero: { label: 'Hero Image', formCategory: 'image' },
+  cinematography: { label: 'Video / Cinematic', formCategory: 'image' },
   email: { label: 'Email Copy', formCategory: 'text' },
   blog: { label: 'Blog Post', formCategory: 'text' },
   presentation: { label: 'Presentation', formCategory: 'presentation' },
@@ -208,6 +209,47 @@ function buildGenericFallbacks(brandName: string): QuickStarterCategory[] {
           variableFields: [
             { key: 'subject', label: 'Subject or scene', type: 'text' },
             { key: 'energy', label: 'Energy level', type: 'select', options: ['High energy', 'Relaxed', 'Aspirational', 'Playful'], default_value: 'High energy' },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'cinematography',
+      label: 'Video / Cinematic',
+      formCategory: 'image',
+      presets: [
+        {
+          label: 'Brand film opener',
+          description: `${name} brand film opening — emotionally-driven, documentary feel, cinematic quality`,
+          variableFields: [
+            { key: 'subject', label: 'Subject or scene', type: 'text' },
+            { key: 'beat', label: 'Emotional beat', type: 'select', options: ['Hopeful', 'Joyful', 'Determined', 'Intimate', 'Triumphant'], default_value: 'Hopeful' },
+            { key: 'setting', label: 'Setting', type: 'select', options: ['Urban', 'Nature', 'Indoor', 'Mixed environments'], default_value: 'Urban' },
+          ],
+        },
+        {
+          label: 'Product showcase reel',
+          description: `${name} product showcase — clean, precise, feature-forward cinematography`,
+          variableFields: [
+            { key: 'product', label: 'Product or service', type: 'text' },
+            { key: 'feature', label: 'Key feature to highlight', type: 'text' },
+            { key: 'environment', label: 'Environment', type: 'select', options: ['Studio', 'In-situ', 'Lifestyle context'], default_value: 'In-situ' },
+          ],
+        },
+        {
+          label: 'Culture / behind-the-scenes',
+          description: `${name} culture or team moment — authentic, candid, human-forward`,
+          variableFields: [
+            { key: 'scene', label: 'Scene type', type: 'select', options: ['Team collaboration', 'Creative process', 'Community event', 'Milestone celebration'], default_value: 'Team collaboration' },
+            { key: 'energy', label: 'Energy', type: 'select', options: ['Warm and intimate', 'Energetic and alive', 'Quiet and focused'], default_value: 'Warm and intimate' },
+          ],
+        },
+        {
+          label: 'Campaign :30 spot',
+          description: `${name} campaign spot — 30-second narrative arc with strong opening, build, and CTA`,
+          variableFields: [
+            { key: 'theme', label: 'Campaign theme', type: 'text' },
+            { key: 'mood', label: 'Mood', type: 'select', options: ['Inspirational', 'Bold', 'Playful', 'Cinematic drama', 'Documentary'], default_value: 'Inspirational' },
           ],
         },
       ],

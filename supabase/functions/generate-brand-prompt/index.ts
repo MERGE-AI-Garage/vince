@@ -27,7 +27,15 @@ interface GenerateBrandPromptRequest {
   category: PromptCategory;
   platform?: string;
   brand_id?: string;
+  tone?: string;
 }
+
+const TONE_DESCRIPTIONS: Record<string, string> = {
+  clarity: 'Clear and purposeful with distinct personality — prioritize direct language, avoid abstraction',
+  poetic: 'Measured language with literary quality — precise word choice, evocative phrasing',
+  emotion: 'Heart-forward messaging that still delivers — lead with feeling, ground in function',
+  brave: 'Confident without ego, bold without noise — take a strong point of view, never boast',
+};
 
 interface BrandContext {
   brand: {
@@ -115,17 +123,54 @@ const GENERATION_RULES = `
 
 When generating a prompt, you MUST:
 1. Weave brand elements naturally — don't just dump a list of hex codes
-2. Adapt the level of visual detail based on the category (image prompts need more visual direction; text prompts need more voice direction)
+2. Adapt the format and detail based on the category (see category-specific rules below)
 3. Include specific hex color values when relevant to visual work
 4. Reference typography direction when relevant (what the fonts feel like, not just their names)
 5. Keep the generated prompt focused and usable — it should be ready to paste into any AI tool
-6. For image prompts: include visual direction, mood, color palette, composition guidance. NEVER include brand names, product model names, or any text you want rendered onto the image — describe products by their visual characteristics instead (e.g., "brushed chrome commercial flushometer" not "SLOAN ROYAL 186"). Image generation models will hallucinate text onto images if brand/product names appear in the prompt.
-7. For text prompts: include voice attributes, tone, style guidelines, do/don't examples
-8. For presentation prompts: include both visual and voice direction
-9. Never include internal instructions or meta-commentary in the output prompt — it should read as a clean creative brief
-10. NEVER use markdown formatting in your output — no asterisks, no bold markers, no bullet characters. Use plain text only. Use line breaks and short paragraphs for structure. Use dashes (-) for lists if needed. Section labels should be plain text followed by a colon, not wrapped in asterisks.
+6. Never include internal instructions or meta-commentary in the output prompt — it should read as a clean creative brief
+7. NEVER use markdown formatting in your output — no asterisks, no bold markers, no bullet characters. Use plain text only. Use line breaks and short paragraphs for structure. Use dashes (-) for lists if needed. Section labels should be plain text followed by a colon, not wrapped in asterisks.
 
-Keep prompts concise but comprehensive. Aim for 150-300 words. The prompt should feel like it was written by a senior art director or brand strategist who knows this brand inside and out.`;
+--- CATEGORY-SPECIFIC FORMAT RULES ---
+
+For IMAGE prompts (Midjourney, Adobe Firefly, Gemini Imagen):
+Structure the output as a visual production brief. Include:
+- Subject and environment with specific, concrete details
+- Lighting: quality (hard/soft/diffused), direction, color temperature in Kelvin
+- Lens: focal length feel, aperture (depth of field character), any film stock or sensor feel
+- Color: reference brand hex values in context of the scene (e.g., "sky echoing the brand's #4285F4 blue")
+- Composition: framing (rule of thirds, centered, diagonal), negative space, foreground/background relationship
+- Mood and atmosphere: one precise adjective cluster (e.g., "quiet optimism", "kinetic precision")
+- Post-processing direction: contrast approach, saturation, any color grade aesthetic
+NEVER include brand names, product model names, or text you want rendered — describe products by visual characteristics only. Image models hallucinate text onto images when brand/product names appear in the prompt.
+
+For CINEMATOGRAPHY / VIDEO prompts (Runway, Sora, Pika, Kling):
+Structure as a shot brief ready to paste. Include:
+- Opening shot description and how it evolves (e.g., "tight close-up on hands → slow pull back revealing full scene")
+- Camera movement: type (handheld/gimbal/static/crane), speed, direction
+- Lens direction: focal length feel, aperture, depth of field
+- Lighting: source type (natural/practical/studio), quality, color temperature, time of day if relevant
+- Color grade: film stock aesthetic, contrast approach, saturation level, overall palette feel
+- Pacing and editorial rhythm: slow/deliberate/urgent/flowing, cut style
+- Duration and format: aspect ratio (16:9/2.39:1/9:16), approximate length if specified
+NEVER include text overlays, lower thirds, or brand/product names in the prompt.
+
+For TEXT / COPY prompts (Gemini, Claude, ChatGPT for copywriting):
+Structure as a copywriter's brief. Include:
+- Voice direction: pull specific do/don't examples from the brand's tone of voice (e.g., "do: 'It just works.' / don't: 'Leverage our best-in-class solutions'")
+- Format spec: word count target, headline style, subhead structure, body paragraph approach
+- Emotional arc: what the reader feels at the start vs. end
+- CTA style: how the brand calls people to action (imperative/inviting/confident)
+- Platform constraints if provided (character limits, subject line rules, etc.)
+- What to avoid: jargon, clichés, or off-brand phrases specific to this brand
+
+For PRESENTATION prompts:
+Blend visual and voice direction. Include both design direction (colors, typography feel, layout approach) and messaging direction (voice tone, narrative arc, slide structure guidance).
+
+For GENERAL prompts:
+Apply brand voice and personality. Include tone direction, key messaging principles, and any relevant brand context for the task at hand.
+
+--- OUTPUT LENGTH ---
+Aim for 200-350 words for image and video prompts (more detail = better output). Text/copy briefs should be 150-250 words. The prompt should feel like it was written by a senior art director or brand strategist who knows this brand inside and out.`;
 
 /**
  * Build the system prompt dynamically from live brand data.
@@ -226,7 +271,7 @@ function buildSystemPrompt(ctx: BrandContext): string {
 }
 
 function buildUserMessage(req: GenerateBrandPromptRequest, brandName: string): string {
-  const { description, category, platform } = req;
+  const { description, category, platform, tone } = req;
 
   let msg = `Generate an on-brand ${brandName} prompt for the following request.\n\n`;
   msg += `What the user wants to create: ${description}\n\n`;
@@ -236,7 +281,11 @@ function buildUserMessage(req: GenerateBrandPromptRequest, brandName: string): s
     msg += `Target platform: ${platform} (tailor the prompt format if there are platform-specific considerations)\n`;
   }
 
-  msg += `\nGenerate the prompt now. Output ONLY the prompt as clean plain text — no markdown, no asterisks, no bold markers, no preamble. Just the prompt ready to paste.`;
+  if (tone && TONE_DESCRIPTIONS[tone]) {
+    msg += `\nVoice emphasis: ${tone} — ${TONE_DESCRIPTIONS[tone]}`;
+  }
+
+  msg += `\n\nGenerate the prompt now. Output ONLY the prompt as clean plain text — no markdown, no asterisks, no bold markers, no preamble. Just the prompt ready to paste.`;
 
   return msg;
 }

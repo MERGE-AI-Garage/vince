@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Camera, Plus, Trash2, ChevronDown, ChevronRight, Check, X, Power, PowerOff,
+  Camera, Plus, Trash2, ChevronDown, ChevronRight, Check, X, Power, PowerOff, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TabHeroHeader } from '@/components/creative-studio/TabHeroHeader';
@@ -204,7 +204,7 @@ export function CameraPresetAdmin() {
         badgeIcon={<Camera className="w-4 h-4 text-gray-700 dark:text-white/80" />}
         badgeLabel="Photography Controls"
         title="Camera Presets"
-        subtitle="Film stocks · lens options · lighting · composition presets"
+        subtitle="Define the photographic vocabulary available to your creative team in Creative Studio. Each preset — film stocks, camera bodies, lighting setups, lens characteristics — translates into a prompt fragment that shapes the visual style of every generated image."
         actions={
           <Button onClick={handleCreate} className="gap-2 shadow-md">
             <Plus className="h-4 w-4" />
@@ -212,6 +212,18 @@ export function CameraPresetAdmin() {
           </Button>
         }
       />
+
+      {/* Explainer */}
+      <div className="flex gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 px-5 py-4">
+        <Info className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Camera presets define the photographic vocabulary available in Creative Studio's generation interface.
+          Each preset — film stocks, camera bodies, lighting setups, and lens characteristics — translates into
+          a prompt fragment that shapes the visual style of generated images. Enable or disable presets to
+          control what your creative team sees when building a shot.
+        </p>
+      </div>
+
       <Card>
       <CardHeader>
         <div className="flex items-center justify-between">

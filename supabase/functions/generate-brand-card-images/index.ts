@@ -227,6 +227,7 @@ serve(async (req) => {
             cardKey: key,
             model_used: MODEL,
           },
+          modelUsed: MODEL,
         });
 
         results[key] = { status: "success", url: publicUrl };

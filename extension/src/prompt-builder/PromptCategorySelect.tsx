@@ -23,7 +23,7 @@ export function PromptCategorySelect({ value, onChange }: PromptCategorySelectPr
         display: 'block',
         fontSize: '10px',
         fontWeight: 600,
-        color: '#8fa89e',
+        color: '#6b7280',
         marginBottom: '6px',
         textTransform: 'uppercase',
         letterSpacing: '0.06em',
@@ -34,7 +34,7 @@ export function PromptCategorySelect({ value, onChange }: PromptCategorySelectPr
         display: 'flex',
         borderRadius: '10px',
         border: '1px solid rgba(19, 59, 52, 0.1)',
-        background: '#142e28',
+        background: '#f5f5f5',
         padding: '3px',
         gap: '2px',
       }}>
@@ -55,12 +55,12 @@ export function PromptCategorySelect({ value, onChange }: PromptCategorySelectPr
                 borderRadius: '8px',
                 border: 'none',
                 background: isActive ? '#fff' : 'transparent',
-                boxShadow: isActive ? '0 1px 3px rgba(19, 59, 52, 0.1)' : 'none',
+                boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                 cursor: 'pointer',
                 fontSize: '10px',
                 fontWeight: isActive ? 600 : 500,
                 fontFamily: 'Epilogue, system-ui, sans-serif',
-                color: isActive ? '#133B34' : '#636466',
+                color: isActive ? '#111111' : '#6b7280',
                 transition: 'all 0.2s ease',
               }}
             >

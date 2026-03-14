@@ -78,7 +78,7 @@ function getQuotaColor(used: number, limit: number, isUnlimited: boolean): strin
   const pct = limit > 0 ? (used / limit) * 100 : 0;
   if (pct >= 100) return 'bg-red-500';
   if (pct >= 80) return 'bg-orange-500';
-  return 'bg-green-500';
+  return 'bg-violet-500';
 }
 
 function formatDate(dateStr: string) {
@@ -430,7 +430,7 @@ export function QuotasTab() {
         badgeIcon={<Users className="w-4 h-4 text-gray-700 dark:text-white/80" />}
         badgeLabel="Access Management"
         title="User Quotas"
-        subtitle="Weekly generation limits · usage tracking · per-user overrides"
+        subtitle="Set weekly generation limits for each user to manage platform costs and ensure equitable access. Monitor real-time usage, identify high-volume creators, and apply individual overrides for team members with elevated production needs."
       />
 
       {/* Toolbar: search + summary badges */}

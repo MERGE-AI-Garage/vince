@@ -223,6 +223,7 @@ serve(async (req) => {
             model_used: MODEL,
             aspectRatio: section.aspectRatio,
           },
+          modelUsed: MODEL,
         });
 
         results[key] = { status: "success", url: publicUrl };

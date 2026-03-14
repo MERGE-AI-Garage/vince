@@ -13,9 +13,9 @@ const elements = [
 
 export function DesignSystemSection() {
   return (
-    <section id="design-system" style={{ padding: '20px 16px', borderTop: '1px solid rgba(19,59,52,0.1)' }}>
+    <section id="design-system" style={{ padding: '20px 16px', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
       <SectionHeading>Design Elements</SectionHeading>
-      <p style={{ fontSize: '12px', color: '#8fa89e', marginTop: '6px', lineHeight: 1.5, marginBottom: '12px' }}>
+      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: 1.5, marginBottom: '12px' }}>
         Our visual identity system is built to be distinctive, flexible, and unmistakably MERGE.
       </p>
 
@@ -29,7 +29,7 @@ export function DesignSystemSection() {
               gap: '10px',
               padding: '10px',
               borderRadius: '8px',
-              border: '1px solid rgba(19,59,52,0.1)',
+              border: '1px solid rgba(0,0,0,0.07)',
               background: '#fff',
             }}
           >
@@ -48,7 +48,7 @@ export function DesignSystemSection() {
               <div style={{ fontFamily: 'Fraunces, serif', fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>
                 {el.title}
               </div>
-              <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
+              <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5 }}>
                 {el.description}
               </p>
             </div>

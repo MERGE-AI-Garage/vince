@@ -5,20 +5,21 @@ import React, { useState, useMemo } from 'react';
 import { AuthGate } from './AuthGate';
 import { PromptBuilderTab } from './tabs/PromptBuilderTab';
 import { BrandKitTab } from './tabs/BrandKitTab';
+import { LogosTab } from './tabs/LogosTab';
+import { CreationsTab } from './tabs/CreationsTab';
 import { ChatTab } from './chat/ChatTab';
 import { useSiteDetection } from './hooks/useSiteDetection';
 import { useBrands, type Brand } from './hooks/useBrands';
-import { Wand2, BookOpen, MessageSquare, ChevronDown, Mic, MicOff, ArrowLeft } from 'lucide-react';
+import { Wand2, BookOpen, MessageSquare, ChevronDown, Mic, MicOff, ArrowLeft, Image, Sparkles } from 'lucide-react';
 import { useVinceVoice } from './hooks/useVinceVoice';
 import { VoiceStrip } from './voice/VoiceStrip';
 
-type TabId = 'prompt-builder' | 'brand-kit' | 'chat';
+type TabId = 'prompt-builder' | 'brand-kit' | 'logos' | 'creations' | 'chat';
 
 /** Derive header background (dark) and accent color from brand colors */
 function deriveBrandTheme(brand: Brand | undefined) {
   if (!brand || brand.is_default) {
-    // MERGE default theme
-    return { headerBg: '#133B34', accent: '#8b5cf6', dropdownBg: '#1a4a42' };
+    return { headerBg: '#0d0d0d', accent: '#8b5cf6', dropdownBg: '#1a1a1a' };
   }
 
   const primary = brand.primary_color || '#333333';
@@ -103,7 +104,7 @@ class ExtensionErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px', background: '#133B34', color: '#EAE8E3', fontFamily: 'Epilogue, system-ui, sans-serif', textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px', background: '#0d0d0d', color: '#EAE8E3', fontFamily: 'Epilogue, system-ui, sans-serif', textAlign: 'center' }}>
           <p style={{ fontSize: '16px', fontWeight: 600, color: '#ef4444', marginBottom: '8px' }}>Something went wrong</p>
           <p style={{ fontSize: '12px', color: '#EAE8E3', opacity: 0.7, marginBottom: '16px', maxWidth: '280px' }}>
             {this.state.error?.message || 'An unexpected error occurred'}
@@ -132,8 +133,10 @@ function TabLayout() {
   const vince = useVinceVoice(selectedBrandId);
 
   const tabs: { id: TabId; label: string; icon: typeof Wand2 }[] = [
-    { id: 'prompt-builder', label: 'Prompt Builder', icon: Wand2 },
-    { id: 'brand-kit', label: 'Brand Guidelines', icon: BookOpen },
+    { id: 'prompt-builder', label: 'Prompts', icon: Wand2 },
+    { id: 'brand-kit', label: 'Brand', icon: BookOpen },
+    { id: 'logos', label: 'Logos', icon: Image },
+    { id: 'creations', label: 'Create', icon: Sparkles },
     { id: 'chat', label: 'Chat', icon: MessageSquare },
   ];
 
@@ -142,7 +145,7 @@ function TabLayout() {
   const accentAlpha = (a: number) => `rgba(${accentRgb}, ${a})`;
 
   return (
-    <div style={{ fontFamily: 'Epilogue, system-ui, sans-serif', height: '100vh', display: 'flex', flexDirection: 'column', background: '#0f2820', color: '#e0ded9' }}>
+    <div style={{ fontFamily: 'Epilogue, system-ui, sans-serif', height: '100vh', display: 'flex', flexDirection: 'column', background: '#fafafa', color: '#111111' }}>
       {/* Header bar — two modes: full nav (tools) vs minimal chat header */}
       <div style={{
         position: 'sticky',
@@ -237,11 +240,27 @@ function TabLayout() {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <div style={{
-                    width: '8px', height: '8px', borderRadius: '50%',
-                    background: selectedBrand?.primary_color || theme.accent,
-                    border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0,
-                  }} />
+                  {/* Brand icon — prefer logo_mark_url (monogram), fall back to logo_url, then dot */}
+                  {(selectedBrand?.logo_mark_url || selectedBrand?.logo_url) ? (
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '4px',
+                      background: 'rgba(255,255,255,0.95)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden', flexShrink: 0,
+                    }}>
+                      <img
+                        src={selectedBrand.logo_mark_url || selectedBrand.logo_url!}
+                        alt={selectedBrand.name}
+                        style={{ maxWidth: '16px', maxHeight: '16px', objectFit: 'contain' }}
+                      />
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: '8px', height: '8px', borderRadius: '50%',
+                      background: selectedBrand?.primary_color || theme.accent,
+                      border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0,
+                    }} />
+                  )}
                   <span style={{ fontSize: '10px', fontWeight: 600, color: '#EAE8E3', letterSpacing: '0.01em' }}>
                     {selectedBrand?.name || 'Select brand'}
                   </span>
@@ -292,18 +311,9 @@ function TabLayout() {
               </div>
             )}
 
-            {/* Brand logo strip */}
-            {selectedBrand?.logo_url && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px 16px', borderBottom: `1px solid ${accentAlpha(0.08)}` }}>
-                <div style={{ height: '28px', padding: '4px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <img src={selectedBrand.logo_url} alt={selectedBrand.name} style={{ maxHeight: '20px', maxWidth: '120px', objectFit: 'contain' }} />
-                </div>
-              </div>
-            )}
-
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {/* Tabs — Prompt Builder, Brand Guidelines, Chat entry */}
-              <div style={{ display: 'flex', flex: 1 }}>
+              {/* Tabs — icon + label, compact for 5 tabs */}
+              <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -311,17 +321,21 @@ function TabLayout() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
+                      title={tab.label}
                       style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                        padding: '11px 0', background: 'none', border: 'none',
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                        padding: '10px 0', background: 'none', border: 'none',
                         borderBottom: isActive ? `2px solid ${theme.accent}` : '2px solid transparent',
-                        color: isActive ? theme.accent : 'rgba(234, 232, 227, 0.45)',
-                        cursor: 'pointer', fontSize: '11px', fontWeight: isActive ? 700 : 500,
-                        fontFamily: 'Epilogue, system-ui, sans-serif', transition: 'all 0.2s ease', letterSpacing: '0.01em',
+                        color: isActive ? theme.accent : 'rgba(234, 232, 227, 0.4)',
+                        cursor: 'pointer', fontSize: '10px', fontWeight: isActive ? 700 : 500,
+                        fontFamily: 'Epilogue, system-ui, sans-serif', transition: 'all 0.15s ease', letterSpacing: '0.01em',
+                        minWidth: 0,
                       }}
                     >
-                      <Icon size={13} strokeWidth={isActive ? 2.5 : 2} />
-                      {tab.label}
+                      <Icon size={12} strokeWidth={isActive ? 2.5 : 2} style={{ flexShrink: 0 }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {tab.label}
+                      </span>
                     </button>
                   );
                 })}
@@ -361,7 +375,7 @@ function TabLayout() {
       </div>
 
       {/* Tab content — ChatTab is always mounted to preserve history */}
-      <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0, background: '#0d0d0d' }}>
         <ChatTab
           brandId={selectedBrandId}
           voiceState={vince.voiceState}
@@ -374,7 +388,7 @@ function TabLayout() {
           onToggleMute={vince.toggleMute}
         />
       </div>
-      <div style={{ display: activeTab !== 'chat' ? 'flex' : 'none', flex: 1, overflowY: 'auto', flexDirection: 'column', paddingBottom: vince.voiceState !== 'idle' ? '180px' : 0 }}>
+      <div style={{ display: activeTab !== 'chat' ? 'flex' : 'none', flex: 1, overflowY: activeTab === 'logos' || activeTab === 'creations' ? 'hidden' : 'auto', flexDirection: 'column', background: '#fafafa', color: '#111111', paddingBottom: vince.voiceState !== 'idle' ? '180px' : 0 }}>
         {activeTab === 'prompt-builder' && (
           <PromptBuilderTab
             detectedPlatform={detectedPlatform}
@@ -386,6 +400,8 @@ function TabLayout() {
           />
         )}
         {activeTab === 'brand-kit' && <BrandKitTab brandId={selectedBrandId} isDefaultBrand={!!selectedBrand?.is_default} brandName={selectedBrand?.name} />}
+        {activeTab === 'logos' && <LogosTab brandId={selectedBrandId} brandColor={selectedBrand?.primary_color || undefined} />}
+        {activeTab === 'creations' && <CreationsTab brandId={selectedBrandId} brandColor={selectedBrand?.primary_color || undefined} />}
       </div>
 
       {/* Vince voice strip — hidden on chat tab (voice is inline there) */}

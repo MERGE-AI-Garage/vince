@@ -36,7 +36,7 @@ export function ColorCard({ color }: ColorCardProps) {
   ];
 
   return (
-    <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(19,59,52,0.1)', background: '#fff' }}>
+    <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.07)', background: '#ffffff' }}>
       <button
         onClick={() => setExpanded(!expanded)}
         style={{
@@ -45,15 +45,15 @@ export function ColorCard({ color }: ColorCardProps) {
           textAlign: 'left', fontFamily: 'Epilogue, system-ui, sans-serif',
         }}
       >
-        <div style={{ width: '36px', height: '36px', borderRadius: '6px', backgroundColor: color.hex, flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+        <div style={{ width: '36px', height: '36px', borderRadius: '6px', backgroundColor: color.hex, flexShrink: 0, border: '1px solid rgba(0,0,0,0.08)' }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#e0ded9' }}>{color.name}</div>
-          <div style={{ fontSize: '11px', color: '#8fa89e', fontFamily: 'monospace' }}>{color.hex}</div>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: '#111111' }}>{color.name}</div>
+          <div style={{ fontSize: '11px', color: '#6b7280', fontFamily: 'monospace' }}>{color.hex}</div>
         </div>
-        <ChevronDown size={14} style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', color: '#8fa89e', flexShrink: 0 }} />
+        <ChevronDown size={14} style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', color: '#6b7280', flexShrink: 0 }} />
       </button>
       {expanded && (
-        <div style={{ padding: '0 10px 10px', borderTop: '1px solid rgba(19,59,52,0.08)' }}>
+        <div style={{ padding: '0 10px 10px', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '8px' }}>
             {values.map(({ label, value }) => (
               <button
@@ -62,9 +62,9 @@ export function ColorCard({ color }: ColorCardProps) {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '4px 6px', borderRadius: '4px', border: 'none',
-                  background: copiedValue === value ? 'rgba(30,215,95,0.08)' : 'none',
+                  background: copiedValue === value ? 'rgba(139,92,246,0.07)' : 'rgba(0,0,0,0.02)',
                   cursor: 'pointer', width: '100%', fontSize: '12px',
-                  fontFamily: 'Epilogue, system-ui, sans-serif', color: '#e0ded9',
+                  fontFamily: 'Epilogue, system-ui, sans-serif', color: '#111111',
                 }}
               >
                 <span><span style={{ fontWeight: 600, marginRight: '6px' }}>{label}</span>{value}</span>
@@ -73,9 +73,9 @@ export function ColorCard({ color }: ColorCardProps) {
             ))}
           </div>
           {color.uses.length > 0 && (
-            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(19,59,52,0.08)' }}>
+            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(0,0,0,0.03)' }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: '#8b5cf6', marginBottom: '2px' }}>Uses</div>
-              {color.uses.map((use, i) => (<div key={i} style={{ fontSize: '11px', color: '#8fa89e' }}>{use}</div>))}
+              {color.uses.map((use, i) => (<div key={i} style={{ fontSize: '11px', color: '#6b7280' }}>{use}</div>))}
             </div>
           )}
         </div>

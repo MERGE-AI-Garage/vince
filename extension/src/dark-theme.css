@@ -1,85 +1,24 @@
-/* ABOUTME: Dark theme for the Vince Chrome extension side panel */
-/* ABOUTME: Matches the Creative Studio's teal-dark palette (hsl 165 range) */
+/* ABOUTME: Theme for the Vince Chrome extension side panel */
+/* ABOUTME: Light theme for brand guidelines and prompt builder; dark for chat */
 
 :root {
-  --ext-bg-0: #0f2820;      /* deepest background */
-  --ext-bg-1: #142e28;      /* card/surface */
-  --ext-bg-2: #1a3a32;      /* elevated surface */
-  --ext-bg-3: #0b1f19;      /* sunken/inset */
-  --ext-border: #1f4a3f;    /* subtle border */
-  --ext-border-mid: #2a5f52; /* mid border */
-  --ext-text: #e0ded9;      /* primary text */
-  --ext-text-muted: #8fa89e; /* muted/secondary text */
-  --ext-text-dim: #5e7a70;  /* dim text */
-  --ext-accent: #8b5cf6;    /* Vince purple accent */
+  /* Chat / dark surface tokens */
+  --ext-bg-0: #0d0d0d;
+  --ext-bg-1: #1a1a1a;
+  --ext-bg-2: #242424;
+  --ext-bg-3: #111111;
+  --ext-border: rgba(255,255,255,0.06);
+  --ext-border-mid: rgba(255,255,255,0.11);
+  --ext-text: #e0ded9;
+  --ext-text-muted: #9a9a9a;
+  --ext-text-dim: #606060;
+  --ext-accent: #8b5cf6;
 }
 
-/* Global dark background */
-body, html {
-  background: var(--ext-bg-0) !important;
-  color: var(--ext-text) !important;
-}
-
-/* Force dark on all card-like containers */
-div[style*="background: #fff"],
-div[style*="background: white"],
-div[style*="background: rgb(255"],
-div[style*="backgroundColor: #fff"],
-div[style*="background-color: #fff"],
-div[style*="background: #EAE8E3"],
-div[style*="background: #eae8e3"] {
-  background: var(--ext-bg-1) !important;
-  border-color: var(--ext-border) !important;
-}
-
-/* Fix text colors that assume light background */
-div[style*="color: #1a1a1a"],
-div[style*="color: #333"],
-div[style*="color: #212721"],
-div[style*="color: #000"],
-p[style*="color: #1a1a1a"],
-p[style*="color: #333"],
-span[style*="color: #333"],
-span[style*="color: #1a1a1a"],
-h2[style*="color: #133B34"],
-h2[style*="color: #1a1a1a"],
-h3[style*="color: #1a1a1a"],
-h3[style*="color: #333"] {
-  color: var(--ext-text) !important;
-}
-
-/* Muted text */
-p[style*="color: #636466"],
-span[style*="color: #636466"],
-p[style*="color: #666"],
-span[style*="color: #666"],
-p[style*="color: #999"],
-span[style*="color: #999"],
-div[style*="color: #636466"] {
-  color: var(--ext-text-muted) !important;
-}
-
-/* Input and textarea dark styling */
+/* Input and textarea dark styling (chat only, scoped by parent bg) */
 input, textarea, select {
-  background: var(--ext-bg-2) !important;
-  color: var(--ext-text) !important;
-  border-color: var(--ext-border) !important;
-}
-
-input::placeholder, textarea::placeholder {
-  color: var(--ext-text-dim) !important;
-}
-
-input:focus, textarea:focus, select:focus {
-  border-color: var(--ext-border-mid) !important;
-  outline-color: var(--ext-accent) !important;
-}
-
-/* Button overrides for light-styled buttons */
-button[style*="background: #f"] {
-  background: var(--ext-bg-2) !important;
-  color: var(--ext-text) !important;
-  border-color: var(--ext-border) !important;
+  color: inherit;
+  border-color: inherit;
 }
 
 /* Scrollbar styling */
@@ -87,12 +26,12 @@ button[style*="background: #f"] {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--ext-bg-0);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--ext-border);
+  background: rgba(0,0,0,0.12);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ext-border-mid);
+  background: rgba(0,0,0,0.2);
 }

@@ -38,8 +38,8 @@ export function SidebarNav({ sections, activeSection, onSectionClick }: SidebarN
         position: 'sticky',
         top: 40,
         zIndex: 30,
-        background: '#133B34',
-        borderBottom: '1px solid rgba(234, 232, 227, 0.1)',
+        background: '#ffffff',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
         fontFamily: 'Epilogue, system-ui, sans-serif',
       }}
     >
@@ -48,7 +48,7 @@ export function SidebarNav({ sections, activeSection, onSectionClick }: SidebarN
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           width: '100%', padding: '10px 16px', background: 'none', border: 'none',
-          color: '#EAE8E3', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+          color: '#111111', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
           fontFamily: 'Epilogue, system-ui, sans-serif',
         }}
       >
@@ -61,8 +61,8 @@ export function SidebarNav({ sections, activeSection, onSectionClick }: SidebarN
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0,
-          background: '#133B34', borderBottom: '1px solid rgba(234, 232, 227, 0.15)',
-          maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.06)',
+          maxHeight: '300px', overflowY: 'auto', boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
         }}>
           {sections.map((section) => (
             <button
@@ -70,8 +70,8 @@ export function SidebarNav({ sections, activeSection, onSectionClick }: SidebarN
               onClick={() => { onSectionClick(section.id); setOpen(false); }}
               style={{
                 display: 'block', width: '100%', padding: '8px 16px',
-                background: activeSection === section.id ? 'rgba(0, 133, 108, 0.3)' : 'none',
-                border: 'none', color: activeSection === section.id ? '#8b5cf6' : '#EAE8E3',
+                background: activeSection === section.id ? 'rgba(139,92,246,0.06)' : 'none',
+                border: 'none', color: activeSection === section.id ? '#8b5cf6' : '#111111',
                 cursor: 'pointer', fontSize: '12px',
                 fontWeight: activeSection === section.id ? 600 : 400,
                 textAlign: 'left', fontFamily: 'Epilogue, system-ui, sans-serif',

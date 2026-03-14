@@ -148,6 +148,12 @@ export function BrandDNABuilder({
   const [isSaving, setIsSaving] = useState(false);
   const [selectedLogoUrl, setSelectedLogoUrl] = useState<string | null>(null);
 
+  // Product catalog URL import
+  const [productUrlInput, setProductUrlInput] = useState('');
+  const [isExtractingProducts, setIsExtractingProducts] = useState(false);
+  const [extractedProductCount, setExtractedProductCount] = useState<number | null>(null);
+  const [productExtractError, setProductExtractError] = useState<string | null>(null);
+
   // Overwrite confirmation for existing brand_voice / visual_identity
   const [overwriteConfirm, setOverwriteConfirm] = useState<{
     brandVoice: boolean;
@@ -457,6 +463,38 @@ export function BrandDNABuilder({
     ? deduplicateColors(extractionData.css_colors, 50)
     : [];
 
+  const handleExtractProducts = async () => {
+    if (!productUrlInput.trim()) return;
+    setIsExtractingProducts(true);
+    setExtractedProductCount(null);
+    setProductExtractError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('extract-product-catalog', {
+        body: { url: productUrlInput.trim(), brand_id: brandId },
+      });
+
+      if (error || !data?.success) {
+        setProductExtractError(data?.error || error?.message || 'Extraction failed');
+        return;
+      }
+
+      if (data.product_count === 0) {
+        setProductExtractError(data.message || 'No products found on this page. Try a specific product page URL.');
+        return;
+      }
+
+      setExtractedProductCount(data.product_count);
+      setProductUrlInput('');
+      queryClient.invalidateQueries({ queryKey: ['brand-profiles'] });
+      toast.success(`Added ${data.product_count} product${data.product_count !== 1 ? 's' : ''} to catalog`);
+    } catch (err) {
+      setProductExtractError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setIsExtractingProducts(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] p-0 gap-0 rounded-2xl overflow-hidden flex flex-col">
@@ -664,6 +702,51 @@ export function BrandDNABuilder({
                 </p>
               </div>
             )}
+
+            {/* Product Catalog import — separate from brand website analysis */}
+            <div className="mt-6 pt-5 border-t space-y-3">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold">Product catalog</h3>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Import product data from a product page URL. This adds to the product catalog only — it won't affect brand identity, voice, or colors.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={productUrlInput}
+                  onChange={e => setProductUrlInput(e.target.value)}
+                  placeholder="https://store.example.com/products/model-name"
+                  className="flex-1"
+                  onKeyDown={e => { if (e.key === 'Enter' && !isExtractingProducts) handleExtractProducts(); }}
+                />
+                <Button
+                  onClick={handleExtractProducts}
+                  disabled={isExtractingProducts || !productUrlInput.trim()}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  {isExtractingProducts ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Package className="h-4 w-4" />
+                  )}
+                  {isExtractingProducts ? 'Extracting...' : 'Extract'}
+                </Button>
+              </div>
+              {productExtractError && (
+                <div className="flex items-start gap-2 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{productExtractError}</span>
+                </div>
+              )}
+              {extractedProductCount !== null && (
+                <div className="flex items-center gap-2 text-sm text-emerald-600">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>{extractedProductCount} product{extractedProductCount !== 1 ? 's' : ''} added to catalog</span>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           {/* Review & Edit Tab */}

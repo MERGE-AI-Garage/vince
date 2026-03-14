@@ -56,6 +56,7 @@ The "beyond text box" moment: when you brief a campaign by voice, Vince calls to
 - **Voice tool calling mid-conversation** — 26 tools callable during a live voice session, including async tools that don't block the WebSocket
 - **Fully conversational brand governance** — compliance guardrails generated, stored, and applied without the user interacting with any settings panel
 - **Chrome Extension** that brings Vince's full capability to any browser context
+- **iOS and Android mobile app** — brief a campaign on the go, assets sync to your library and are waiting when you get back to your desk
 
 ### What I learned
 
@@ -95,7 +96,7 @@ Brand intelligence is the actual product. Any tool can generate images from prom
 ## Try It Out
 
 - **Live Demo:** https://vince-359575203061.us-central1.run.app
-- **Demo credentials:** demo@vince.ai / BrandLens2026!
+- **Demo credentials:** demo@vince.ai / Vince2026!
 - **GitHub:** (repo URL)
 - **Chrome Extension:** (link to extension directory in repo)
 

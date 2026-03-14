@@ -28,9 +28,9 @@ export function ContrastRow({ combination, colors, ratio, passes }: ContrastRowP
           ) : (
             <Check size={12} style={{ color: '#f59e0b' }} />
           )}
-          <span style={{ fontSize: '10px', color: '#8fa89e' }}>{passes ? 'Pass' : 'Fail'}</span>
+          <span style={{ fontSize: '10px', color: 'var(--ext-text-muted)' }}>{passes ? 'Pass' : 'Fail'}</span>
         </div>
-        <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#8fa89e' }}>{ratio}</span>
+        <span style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--ext-text-muted)' }}>{ratio}</span>
       </div>
     </div>
   );

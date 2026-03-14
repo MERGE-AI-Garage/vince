@@ -8,6 +8,7 @@ import { PromptCategorySelect } from '../prompt-builder/PromptCategorySelect';
 import { PromptInput } from '../prompt-builder/PromptInput';
 import { PromptOutput } from '../prompt-builder/PromptOutput';
 import { PromptHistory, usePromptHistory } from '../prompt-builder/PromptHistory';
+import { ToneSelect } from '../prompt-builder/ToneSelect';
 import { generateBrandPrompt, favoritePrompt, incrementPresetUsage, type PromptCategory } from '../services/promptService';
 import { useQuickStarters } from '../hooks/useQuickStarters';
 
@@ -22,6 +23,7 @@ interface PromptBuilderTabProps {
 
 export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandColor, brandLogoUrl, isDefaultBrand }: PromptBuilderTabProps) {
   const [category, setCategory] = useState<PromptCategory>('general');
+  const [tone, setTone] = useState('balanced');
   const [description, setDescription] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
@@ -58,6 +60,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
         category,
         platform: detectedPlatform ?? undefined,
         brand_id: brandId ?? undefined,
+        tone: tone !== 'balanced' ? tone : undefined,
       });
       setGeneratedPrompt(response.prompt);
       setHistoryId(response.history_id);
@@ -86,13 +89,13 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
   const canGenerate = description.trim().length > 0 && !isLoading;
 
   // Brand-adaptive colors for the prompt builder UI (dark theme)
-  const accentDark = '#e0ded9';
+  const accentDark = '#111111';
   const accentLight = brandColor || '#8b5cf6';
   const accentMid = brandColor || '#8b5cf6';
   const accentGreen = '#8b5cf6';
 
   const displayName = brandName || 'Brand';
-  const title = `${displayName} Prompt Builder`;
+  const title = `${displayName} Prompt Studio`;
   const intro = brandName
     ? `Describe what you need for ${brandName}. Get a prompt grounded in the brand's voice, colors, and visual direction — consistent across every team and tool.`
     : "Describe what you need. Get a prompt grounded in your brand's voice, colors, and visual direction — consistent across every team and tool.";
@@ -159,7 +162,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
               background: showHelp ? hexToRgba(accentMid, 0.08) : hexToRgba(accentDark, 0.04),
               border: `1px solid ${showHelp ? hexToRgba(accentMid, 0.2) : hexToRgba(accentDark, 0.08)}`,
               cursor: 'pointer',
-              color: showHelp ? accentMid : '#636466',
+              color: showHelp ? accentMid : '#6b7280',
               transition: 'all 0.15s ease',
               borderRadius: '12px',
               fontSize: '9px',
@@ -175,7 +178,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
         <p style={{
           margin: 0,
           fontSize: '11px',
-          color: '#8fa89e',
+          color: '#6b7280',
           lineHeight: 1.5,
         }}>
           {intro}
@@ -194,9 +197,9 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
           <div style={{
             padding: '16px 14px',
             background: `linear-gradient(135deg, ${accentDark} 0%, ${accentLight} 100%)`,
-            color: '#EAE8E3',
+            color: '#ffffff',
           }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Fraunces, serif', marginBottom: '4px', color: accentGreen }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'Fraunces, serif', marginBottom: '4px', color: '#ffffff' }}>
               AI Brand Intelligence
             </div>
             <div style={{ fontSize: '10px', lineHeight: 1.5, opacity: 0.8 }}>
@@ -223,8 +226,8 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  background: accentDark,
-                  color: accentGreen,
+                  background: accentLight,
+                  color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -237,7 +240,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
                 </div>
                 <div>
                   <div style={{ fontSize: '11px', fontWeight: 600, color: accentDark, lineHeight: 1.3 }}>{item.title}</div>
-                  <div style={{ fontSize: '10px', color: '#8fa89e', lineHeight: 1.4, marginTop: '1px' }}>{item.desc}</div>
+                  <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.4, marginTop: '1px' }}>{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -247,8 +250,8 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
               <div style={{ fontSize: '10px', fontWeight: 700, color: accentDark, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
                 What's behind every prompt
               </div>
-              <div style={{ fontSize: '10px', color: '#8fa89e', lineHeight: 1.6, marginBottom: '10px' }}>
-                Each prompt is generated by <strong style={{ color: accentDark }}>Google Gemini 3.0 Flash</strong>, grounded
+              <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.6, marginBottom: '10px' }}>
+                Each prompt is generated by <strong style={{ color: accentDark }}>Gemini 3.1</strong>, grounded
                 in structured {brandName && !isDefaultBrand ? `${brandName} ` : ''}brand intelligence curated from brand guidelines and positioning.
                 The system ensures prompts are accurate, well-rounded, and consistently on-brand.
               </div>
@@ -275,7 +278,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
                     border: `1px solid ${hexToRgba(accentDark, 0.05)}`,
                   }}>
                     <div style={{ fontSize: '9px', fontWeight: 700, color: accentMid }}>{item.label}</div>
-                    <div style={{ fontSize: '8px', color: '#8fa89e', lineHeight: 1.3, marginTop: '1px' }}>{item.detail}</div>
+                    <div style={{ fontSize: '8px', color: '#6b7280', lineHeight: 1.3, marginTop: '1px' }}>{item.detail}</div>
                   </div>
                 ))}
               </div>
@@ -286,7 +289,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
               <div style={{ fontSize: '10px', fontWeight: 700, color: accentDark, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
                 Adapts to what you're making
               </div>
-              <div style={{ fontSize: '10px', color: '#8fa89e', lineHeight: 1.5 }}>
+              <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.5 }}>
                 <strong style={{ color: accentDark }}>Visual prompts</strong> emphasize
                 color palette, gradients, and composition. <strong style={{ color: accentDark }}>Copy prompts</strong> lean into
                 voice and tone. <strong style={{ color: accentDark }}>Presentations</strong> blend both. The right brand
@@ -306,7 +309,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
                 <div style={{ fontSize: '9px', fontWeight: 700, color: accentMid, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>
                   Multi-brand support
                 </div>
-                <div style={{ fontSize: '9px', color: '#8fa89e', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '9px', color: '#6b7280', lineHeight: 1.5 }}>
                   Select any client brand from the dropdown above. The system adapts automatically —
                   pulling that brand's DNA profile, photography direction, voice, and prompt
                   templates. Same tool, any brand.
@@ -363,14 +366,14 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
               fontWeight: 600,
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
-              color: '#8fa89e',
+              color: '#6b7280',
             }}>
               Quick start
             </span>
             <div style={{
               flex: 1,
               height: '1px',
-              background: 'rgba(19, 59, 52, 0.06)',
+              background: 'rgba(0, 0, 0, 0.06)',
             }} />
           </div>
           <QuickStarters categories={quickStarterCategories} isLoading={quickStartersLoading} brandColor={brandColor} onSelect={handleQuickStart} />
@@ -386,6 +389,9 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
       }}>
         {/* Category */}
         <PromptCategorySelect value={category} onChange={setCategory} />
+
+        {/* Tone emphasis */}
+        <ToneSelect value={tone} onChange={setTone} />
 
         {/* Description input */}
         <PromptInput value={description} onChange={setDescription} />
@@ -406,7 +412,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
             background: canGenerate
               ? `linear-gradient(135deg, ${accentDark} 0%, ${accentLight} 100%)`
               : hexToRgba(accentDark, 0.1),
-            color: canGenerate ? accentGreen : '#636466',
+            color: canGenerate ? '#ffffff' : '#6b7280',
             cursor: canGenerate ? 'pointer' : 'not-allowed',
             fontSize: '13px',
             fontWeight: 700,
@@ -462,8 +468,8 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
             background: accentMid,
             opacity: 0.6,
           }} />
-          <span style={{ fontSize: '9px', fontWeight: 600, color: '#8fa89e', opacity: 0.6, letterSpacing: '0.04em' }}>
-            Powered by Gemini 3.0 Flash
+          <span style={{ fontSize: '9px', fontWeight: 600, color: '#6b7280', opacity: 0.6, letterSpacing: '0.04em' }}>
+            Powered by Gemini 3.1
           </span>
           <div style={{
             width: '4px',
@@ -473,7 +479,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
             opacity: 0.6,
           }} />
         </div>
-        <div style={{ fontSize: '9px', color: '#8fa89e', opacity: 0.4 }}>
+        <div style={{ fontSize: '9px', color: '#6b7280', opacity: 0.4 }}>
           Vince
         </div>
       </div>

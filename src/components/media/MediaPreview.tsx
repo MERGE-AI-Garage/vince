@@ -55,7 +55,7 @@ export function MediaPreview({
   onNavigate,
 }: MediaPreviewProps) {
   const [zoom, setZoom] = useState(1);
-  const [showMetadata, setShowMetadata] = useState(false);
+  const [showMetadata, setShowMetadata] = useState(true);
   const [rotation, setRotation] = useState(0);
   const [promptDetailsOpen, setPromptDetailsOpen] = useState(false);
   const [synthIdInfoOpen, setSynthIdInfoOpen] = useState(false);

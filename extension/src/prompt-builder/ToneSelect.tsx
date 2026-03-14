@@ -23,7 +23,7 @@ export function ToneSelect({ value, onChange }: ToneSelectProps) {
         display: 'block',
         fontSize: '10px',
         fontWeight: 600,
-        color: '#8fa89e',
+        color: '#6b7280',
         marginBottom: '6px',
         textTransform: 'uppercase',
         letterSpacing: '0.06em',
@@ -50,7 +50,7 @@ export function ToneSelect({ value, onChange }: ToneSelectProps) {
                 fontSize: '10px',
                 fontWeight: isActive ? 600 : 500,
                 fontFamily: 'Epilogue, system-ui, sans-serif',
-                color: isActive ? '#8b5cf6' : '#636466',
+                color: isActive ? '#8b5cf6' : '#6b7280',
                 transition: 'all 0.2s ease',
                 whiteSpace: 'nowrap',
                 boxShadow: isActive ? '0 1px 3px rgba(0, 133, 108, 0.08)' : 'none',
@@ -65,7 +65,7 @@ export function ToneSelect({ value, onChange }: ToneSelectProps) {
         <div style={{
           marginTop: '6px',
           fontSize: '10px',
-          color: '#8fa89e',
+          color: '#6b7280',
           fontStyle: 'italic',
           lineHeight: 1.4,
         }}>

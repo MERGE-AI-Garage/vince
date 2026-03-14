@@ -12,10 +12,10 @@ export function BrandOverviewSection() {
       {/* Hero */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #133B34 0%, #00524F 100%)',
+          background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.03) 100%)',
           padding: '32px 16px 24px',
           textAlign: 'center',
-          color: '#EAE8E3',
+          color: '#111111',
         }}
       >
         <div
@@ -44,13 +44,13 @@ export function BrandOverviewSection() {
           style={{
             padding: '12px',
             borderRadius: '8px',
-            border: '1px solid rgba(19,59,52,0.1)',
+            border: '1px solid rgba(0,0,0,0.07)',
             background: '#fff',
             marginBottom: '16px',
           }}
         >
           <SectionHeading sub>{overview.title}</SectionHeading>
-          <p style={{ fontSize: '12px', color: '#8fa89e', marginTop: '6px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', lineHeight: 1.5 }}>
             {overview.intro}
           </p>
         </div>
@@ -75,13 +75,13 @@ export function BrandOverviewSection() {
           >
             M
           </div>
-          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#8fa89e', marginBottom: '6px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7280', marginBottom: '6px' }}>
             Brand Positioning
           </div>
           <p style={{ fontFamily: 'Fraunces, serif', fontSize: '14px', fontWeight: 500, lineHeight: 1.4, marginBottom: '8px' }}>
             {brandPositioning.statement}
           </p>
-          <p style={{ fontSize: '12px', color: '#8fa89e', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.5 }}>
             {brandPositioning.description}
           </p>
         </div>

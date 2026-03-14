@@ -10,6 +10,8 @@ export interface GeneratePromptRequest {
   category: PromptCategory;
   platform?: string;
   brand_id?: string;
+  tone?: string;
+  tone_description?: string;
 }
 
 export interface GeneratePromptResponse {
