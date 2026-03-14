@@ -18,6 +18,7 @@ interface EditorCanvasProps {
   selectedBrand?: CreativeStudioBrand;
   brandStats?: BrandStats;
   onOpenBrandDNA?: () => void;
+  onOpenArtDirection?: () => void;
   onOpenPromptLibrary?: () => void;
   onOpenBrandAgent?: () => void;
   onOpenGuidelines?: () => void;
@@ -29,6 +30,7 @@ export function EditorCanvas({
   selectedBrand,
   brandStats,
   onOpenBrandDNA,
+  onOpenArtDirection,
   onOpenPromptLibrary,
   onOpenBrandAgent,
   onOpenGuidelines,
@@ -403,6 +405,7 @@ export function EditorCanvas({
             brandStats={brandStats}
             onUploadClick={() => fileInputRef.current?.click()}
             onOpenBrandDNA={onOpenBrandDNA}
+            onOpenArtDirection={onOpenArtDirection}
             onOpenPromptLibrary={onOpenPromptLibrary}
             onOpenBrandAgent={onOpenBrandAgent}
             onOpenGuidelines={onOpenGuidelines}

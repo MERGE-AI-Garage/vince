@@ -24,6 +24,7 @@ import { BrandShopTopBar } from '@/components/creative-studio/BrandShopTopBar';
 import { BrandDNADialog } from '@/components/creative-studio/BrandDNADialog';
 import { CorporateDNADialog } from '@/components/creative-studio/BrandStoryDialog';
 import { BrandStandardsDialog } from '@/components/creative-studio/BrandStandardsDialog';
+import { ArtDirectionDialog } from '@/components/creative-studio/ArtDirectionDialog';
 import { AIGuidelinesDialog } from '@/components/creative-studio/AIGuidelinesDialog';
 import type { BrandDialogView } from '@/components/creative-studio/BrandDialogNav';
 import { BrandShopPromptBar, type GenerationMode } from '@/components/creative-studio/BrandShopPromptBar';
@@ -109,17 +110,20 @@ export default function CreativeStudio() {
   const [brandDNAOpen, setBrandDNAOpen] = useState(false);
   const [corporateDNAOpen, setCorporateDNAOpen] = useState(false);
   const [standardsDialogOpen, setStandardsDialogOpen] = useState(false);
+  const [artDirectionOpen, setArtDirectionOpen] = useState(false);
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
 
   const handleBrandDialogNavigate = (view: BrandDialogView) => {
     setBrandDNAOpen(false);
     setCorporateDNAOpen(false);
     setStandardsDialogOpen(false);
+    setArtDirectionOpen(false);
     requestAnimationFrame(() => {
       switch (view) {
         case 'brand-dna': setBrandDNAOpen(true); break;
         case 'corporate-dna': setCorporateDNAOpen(true); break;
         case 'brand-standards': setStandardsDialogOpen(true); break;
+        case 'art-direction': setArtDirectionOpen(true); break;
       }
     });
   };
@@ -1060,6 +1064,7 @@ export default function CreativeStudio() {
                   selectedBrand={selectedBrand}
                   brandStats={selectedBrandStats}
                   onOpenBrandDNA={() => setBrandDNAOpen(true)}
+                  onOpenArtDirection={() => setArtDirectionOpen(true)}
                   onOpenPromptLibrary={() => setPromptLibraryOpen(true)}
                   onOpenBrandAgent={handleToggleVince}
                   onOpenGuidelines={() => setGuidelinesOpen(true)}
@@ -1405,6 +1410,16 @@ export default function CreativeStudio() {
           brand={selectedBrand}
           open={corporateDNAOpen}
           onOpenChange={setCorporateDNAOpen}
+          onNavigate={handleBrandDialogNavigate}
+        />
+      )}
+
+      {/* Art Direction Dialog */}
+      {selectedBrand && (
+        <ArtDirectionDialog
+          brand={selectedBrand}
+          open={artDirectionOpen}
+          onOpenChange={setArtDirectionOpen}
           onNavigate={handleBrandDialogNavigate}
         />
       )}

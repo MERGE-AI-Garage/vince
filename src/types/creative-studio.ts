@@ -144,14 +144,16 @@ export type BrandCardImageKey =
   | 'ai_guidelines'
   | 'generation_prompt'
   | 'templates'
-  | 'brand_agent';
+  | 'brand_agent'
+  | 'art_direction';
 
 export const BRAND_CARD_IMAGE_LABELS: Record<BrandCardImageKey, { label: string; description: string }> = {
-  brand_dna: { label: 'Brand DNA', description: 'Visual intelligence & creative direction' },
-  ai_guidelines: { label: 'AI Guidelines', description: 'Tool compliance & governance' },
+  brand_dna: { label: 'Brand DNA', description: 'Visual identity, typography, and photography intelligence' },
+  ai_guidelines: { label: 'AI Guidelines', description: 'Approved tools and usage policies for client work' },
   generation_prompt: { label: 'Generation Prompt', description: 'Brand voice & prompt injection' },
   templates: { label: 'Templates', description: 'Saved generation configurations' },
   brand_agent: { label: 'Brand Agent', description: 'AI brand assistant' },
+  art_direction: { label: 'Art Direction', description: 'Shot types, composition, and visual production standards' },
 };
 
 export interface CreativeStudioBrand {
@@ -855,6 +857,7 @@ export interface QuotaCheckResult {
 export interface UserQuotaDisplay {
   user_id: string;
   full_name: string;
+  email?: string;
   avatar_url?: string;
   image_generations_used: number;
   image_limit: number;

@@ -31,28 +31,63 @@ interface BrandData {
   card_image_prompts?: Record<string, string>;
 }
 
+// ── Color palette helper ───────────────────────────────────────────────────
+// Returns up to 3 distinct colors from the brand palette, deduplicated against
+// primary and secondary. Used to produce more brand-accurate icon images.
+
+function buildPaletteString(b: BrandData): string {
+  const palette = b.color_palette ?? [];
+  const used = new Set([b.primary_color.toLowerCase(), b.secondary_color.toLowerCase()]);
+  const accents: string[] = [];
+  for (const c of palette) {
+    if (accents.length >= 2) break;
+    if (!used.has(c.toLowerCase())) {
+      accents.push(c);
+      used.add(c.toLowerCase());
+    }
+  }
+  const colors = [b.primary_color, b.secondary_color, ...accents];
+  return colors.join(", ");
+}
+
 // ── Default prompt builders per card key ──────────────────────────────────
-// Each produces a stylized 3D icon on a dark background — bold, centered,
-// minimal detail, readable at 100×100px. Brand colors are interpolated.
+// Each produces a polished 3D icon on a dark background — bold, centered,
+// minimal detail, readable at 100×100px. Brand colors and name are interpolated
+// for brand-accurate output.
 
 const CARD_PROMPT_BUILDERS: Record<
   string,
   (b: BrandData) => string
 > = {
-  brand_dna: (b) =>
-    `A stylized 3D icon of a glowing DNA double helix rendered in ${b.primary_color} and ${b.secondary_color} against a dark charcoal (#1a1a2e) background. The helix strands are luminous with a subtle ambient glow. Clean, minimal, modern icon style — like a premium app icon or game asset. Single centered subject with generous negative space. No text, no additional elements, no busy backgrounds. Bold enough to read clearly at 100×100 pixels. Soft studio lighting from above.`,
+  brand_dna: (b) => {
+    const palette = buildPaletteString(b);
+    return `A polished 3D icon representing brand identity — a glowing DNA double helix with precisely structured strands rendered in ${palette} against a dark charcoal (#1a1a2e) background. The helix suggests a systematic, codified visual language — not biological, but architectural. Premium icon aesthetic like a high-resolution system icon from a top-tier design system (SF Symbols, Material Symbols, Fluent Icons). Single centered subject, generous negative space. No text, no additional elements. Soft overhead studio lighting with subtle ambient glow on the strands.`;
+  },
 
-  ai_guidelines: (b) =>
-    `A stylized 3D icon of a crystalline shield with a subtle geometric checkmark pattern embossed on the surface, rendered in ${b.primary_color} with ${b.secondary_color} edge highlights against a dark charcoal (#1a1a2e) background. The shield has a polished glass-like surface with subtle refraction. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text, no logos. Bold and readable at small sizes. Soft studio lighting.`,
+  ai_guidelines: (b) => {
+    const palette = buildPaletteString(b);
+    return `A polished 3D icon of a precision crystalline shield — faceted surfaces with a subtle geometric checkmark motif embossed on the face, rendered in ${palette} against a dark charcoal (#1a1a2e) background. The shield reads as governance and compliance — authoritative but modern. Glass-like polished surfaces with soft refractive highlights. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols). Single centered subject, generous negative space. No text, no logos. Soft studio lighting with sharp specular edge highlight.`;
+  },
 
-  generation_prompt: (b) =>
-    `A stylized 3D icon of a magic wand with luminous sparkle particles trailing from its tip, rendered in ${b.primary_color} and ${b.secondary_color} against a dark charcoal (#1a1a2e) background. The sparkles form a subtle arc pattern. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text, no additional elements. The sparkles use the brand colors with varying opacity. Soft studio lighting from above.`,
+  generation_prompt: (b) => {
+    const palette = buildPaletteString(b);
+    return `A polished 3D icon of a sleek stylus or fine-tipped pen emitting a luminous arc of sparkling particles from its tip — the particles drift into a subtle swirl pattern, rendered in ${palette} against a dark charcoal (#1a1a2e) background. The image evokes precision prompt engineering and creative injection. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols, Fluent Icons). Single centered subject, generous negative space. No text, no additional elements. Soft overhead studio lighting.`;
+  },
 
-  templates: (b) =>
-    `A stylized 3D icon of three overlapping layout cards or panels stacked at slight angles, rendered in ${b.primary_color} and ${b.secondary_color} against a dark charcoal (#1a1a2e) background. Each card has subtle grid lines suggesting template structure. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text. The cards have a polished matte finish with soft shadows between layers. Soft studio lighting.`,
+  templates: (b) => {
+    const palette = buildPaletteString(b);
+    return `A polished 3D icon of three overlapping layout panels or cards stacked at slight depth angles, each with subtle grid lines and alignment guides suggesting reusable structure, rendered in ${palette} against a dark charcoal (#1a1a2e) background. The icon suggests modularity and systematic production. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols). Single centered subject, generous negative space. No text. Polished matte surfaces, soft drop shadows between layers. Soft studio lighting.`;
+  },
 
-  brand_agent: (b) =>
-    `A stylized 3D icon of a friendly AI assistant — an abstract geometric face or head shape with two softly glowing circular eyes, rendered in ${b.primary_color} and ${b.secondary_color} against a dark charcoal (#1a1a2e) background. The design is approachable and intelligent, not robotic. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text. Subtle ambient glow around the head shape. Soft studio lighting.`,
+  brand_agent: (b) => {
+    const palette = buildPaletteString(b);
+    return `A polished 3D icon of an abstract AI agent — a compact geometric form suggesting intelligence: a smooth rounded head shape with two softly glowing circular apertures as eyes, and subtle signal-arc lines radiating outward, rendered in ${palette} against a dark charcoal (#1a1a2e) background. The design is sophisticated and capable, not cartoonish. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols). Single centered subject, generous negative space. No text. Subtle ambient glow. Soft studio lighting.`;
+  },
+
+  art_direction: (b) => {
+    const palette = buildPaletteString(b);
+    return `A polished 3D icon of a professional cinema camera lens — precise concentric aperture blades partially open around a sharp focal point, with a beveled focusing ring, rendered in ${palette} against a dark charcoal (#1a1a2e) background. The icon evokes precision composition, art direction, and visual production — technical and purposeful. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols, Fluent Icons). Single centered subject, generous negative space. No text. Hard dramatic side lighting with a sharp specular highlight on the glass element.`;
+  },
 };
 
 const ALL_CARD_KEYS = Object.keys(CARD_PROMPT_BUILDERS);

@@ -41,6 +41,7 @@ interface WelcomeScreenProps {
   brandStats?: BrandStats;
   onUploadClick: () => void;
   onOpenBrandDNA?: () => void;
+  onOpenArtDirection?: () => void;
   onOpenPromptLibrary?: () => void;
   onOpenBrandAgent?: () => void;
   onOpenGuidelines?: () => void;
@@ -216,6 +217,7 @@ export function WelcomeScreen({
   brandStats,
   onUploadClick,
   onOpenBrandDNA,
+  onOpenArtDirection,
   onOpenPromptLibrary,
   onOpenBrandAgent,
   onOpenGuidelines,
@@ -231,6 +233,7 @@ export function WelcomeScreen({
         brandStats={brandStats}
         onUploadClick={onUploadClick}
         onOpenBrandDNA={onOpenBrandDNA}
+        onOpenArtDirection={onOpenArtDirection}
         onOpenPromptLibrary={onOpenPromptLibrary}
         onOpenBrandAgent={onOpenBrandAgent}
         onOpenGuidelines={onOpenGuidelines}
@@ -247,8 +250,6 @@ export function WelcomeScreen({
 
 // ── State A: No brand — System Capabilities ──────────────────────────────────
 
-const SYSTEM_HERO_IMAGE = '/images/studio-hero.jpeg';
-
 function SystemWelcome({
   onUploadClick,
   fileInputRef,
@@ -259,7 +260,6 @@ function SystemWelcome({
   onDemoClick?: () => void;
 }) {
   const { data: welcomeImages } = useStudioWelcomeImages();
-  const heroImage = welcomeImages?.hero || SYSTEM_HERO_IMAGE;
   return (
     <motion.div
       variants={containerVariants}
@@ -267,13 +267,8 @@ function SystemWelcome({
       animate="visible"
       className="relative w-full h-full overflow-y-auto bg-[#0D1B16]"
     >
-      {/* Background: MERGE image wash + emerald glow + vignette */}
+      {/* Background: ambient glow + vignette */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <img
-          src={heroImage}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover opacity-[0.10] blur-3xl scale-110"
-        />
         <div
           className="absolute -top-1/4 -left-1/4 w-3/4 h-3/4 rounded-full opacity-[0.08] blur-3xl animate-pulse"
           style={{
@@ -294,37 +289,78 @@ function SystemWelcome({
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center px-6 py-6">
-        {/* Hero banner */}
+        {/* Hero banner — CSS only */}
         <motion.div
           variants={itemVariants}
-          className="w-full max-w-4xl rounded-2xl overflow-hidden mb-8"
+          className="w-full max-w-4xl rounded-2xl overflow-hidden mb-6"
         >
-          <div className="relative h-48 overflow-hidden">
-            <img
-              src={heroImage}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
+          <div className="relative h-56 bg-[#0D1B16] flex flex-col items-center justify-center overflow-hidden">
+            <div
+              className="absolute -top-1/3 -left-1/4 w-3/4 h-3/4 rounded-full opacity-[0.16] blur-3xl"
+              style={{ background: 'radial-gradient(circle, #00856C, transparent)' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/20" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.3))]" />
-
-            {/* Bottom content */}
-            <div className="absolute bottom-0 inset-x-0 px-6 pb-4 pt-8 bg-gradient-to-t from-black/80 to-transparent">
-              <div className="flex items-end justify-between">
-                <div>
-                  <h2 className="font-fraunces text-2xl font-semibold text-white tracking-tight">
-                    Vince
-                  </h2>
-                  <p className="font-epilogue text-xs text-white/50 mt-1">
-                    Image, video, and editing across eight Google models
-                    <br />
-                    All brand-aware, all in one place
-                  </p>
-                </div>
-                <ModelBadges />
-              </div>
+            <div
+              className="absolute -bottom-1/3 -right-1/4 w-3/4 h-3/4 rounded-full opacity-[0.10] blur-3xl"
+              style={{ background: 'radial-gradient(circle, #1ED75F, transparent)' }}
+            />
+            <div className="relative z-10 flex flex-col items-center text-center px-8">
+              <h2 className="font-fraunces text-5xl font-semibold text-white tracking-tight mb-2">
+                Vince
+              </h2>
+              <p className="font-epilogue text-sm text-white/45 max-w-xs leading-relaxed">
+                Brand-aware AI image and video generation across eight Google models
+              </p>
+            </div>
+            <div className="absolute bottom-4 right-6">
+              <ModelBadges />
             </div>
           </div>
+        </motion.div>
+
+        {/* Getting started — visible above the fold */}
+        <motion.div variants={itemVariants} className="text-center space-y-3 max-w-lg mx-auto mb-8">
+          <p className="font-epilogue text-xs font-medium text-white/50 uppercase tracking-wider">
+            Get started
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 font-epilogue text-xs text-white/50">
+            <span className="inline-flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">1</span>
+              Select a brand above
+            </span>
+            <span className="hidden sm:inline text-white/10">/</span>
+            <span className="inline-flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">2</span>
+              Type a prompt below
+            </span>
+            <span className="hidden sm:inline text-white/10">/</span>
+            <span className="inline-flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">3</span>
+              Upload an image
+            </span>
+          </div>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Button
+              variant="ghost"
+              onClick={onUploadClick}
+              className="gap-2 rounded-full bg-white/[0.06] border border-white/[0.12] text-white/70 hover:bg-white/[0.10] hover:text-white"
+            >
+              <Upload className="w-4 h-4" />
+              Upload Image to Edit
+            </Button>
+            {onDemoClick && (
+              <Button
+                variant="ghost"
+                onClick={onDemoClick}
+                className="gap-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/50 hover:bg-white/[0.07] hover:text-white/80"
+              >
+                <Wand2 className="w-4 h-4" />
+                Platform Demo
+              </Button>
+            )}
+          </div>
+          <p className="font-epilogue text-[10px] text-white/30">
+            {navigator.platform.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter to generate
+          </p>
         </motion.div>
 
         {/* Capability cards — dark glass */}
@@ -437,51 +473,6 @@ function SystemWelcome({
           </div>
         </motion.div>
 
-        {/* Getting started */}
-        <motion.div variants={itemVariants} className="text-center space-y-4 max-w-lg mx-auto mb-8">
-          <p className="font-epilogue text-xs font-medium text-white/70">
-            Get started
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 font-epilogue text-xs text-white/50">
-            <span className="inline-flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">1</span>
-              Select a brand above
-            </span>
-            <span className="hidden sm:inline text-white/10">/</span>
-            <span className="inline-flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">2</span>
-              Type a prompt below
-            </span>
-            <span className="hidden sm:inline text-white/10">/</span>
-            <span className="inline-flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">3</span>
-              Upload an image
-            </span>
-          </div>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Button
-              variant="ghost"
-              onClick={onUploadClick}
-              className="gap-2 rounded-full bg-white/[0.06] border border-white/[0.12] text-white/70 hover:bg-white/[0.10] hover:text-white"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Image to Edit
-            </Button>
-            {onDemoClick && (
-              <Button
-                variant="ghost"
-                onClick={onDemoClick}
-                className="gap-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/50 hover:bg-white/[0.07] hover:text-white/80"
-              >
-                <Wand2 className="w-4 h-4" />
-                Platform Demo
-              </Button>
-            )}
-          </div>
-          <p className="font-epilogue text-[10px] text-white/30">
-            {navigator.platform.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter to generate
-          </p>
-        </motion.div>
 
       </div>
     </motion.div>
@@ -495,6 +486,7 @@ function BrandWelcome({
   brandStats,
   onUploadClick,
   onOpenBrandDNA,
+  onOpenArtDirection,
   onOpenPromptLibrary,
   onOpenBrandAgent,
   onOpenGuidelines,
@@ -505,6 +497,7 @@ function BrandWelcome({
   brandStats?: BrandStats;
   onUploadClick: () => void;
   onOpenBrandDNA?: () => void;
+  onOpenArtDirection?: () => void;
   onOpenPromptLibrary?: () => void;
   onOpenBrandAgent?: () => void;
   onOpenGuidelines?: () => void;
@@ -684,24 +677,24 @@ function BrandWelcome({
               </div>
               <div className="pr-20">
                 <h3 className="font-fraunces text-base font-semibold text-white">Brand DNA</h3>
-                <p className="font-epilogue text-[11px] text-white/50">Visual intelligence & creative direction</p>
+                <p className="font-epilogue text-[11px] text-white/70">Visual identity, typography, and photography intelligence</p>
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', brandStats?.hasProfile ? 'bg-green-400' : 'bg-white/20')} />
-                  <span className="font-epilogue text-[11px] text-white/45">
+                  <span className="font-epilogue text-[11px] text-white/60">
                     {brandStats?.hasProfile ? 'Visual DNA active' : 'Visual DNA not built'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', generationPrompt ? 'bg-green-400' : 'bg-white/20')} />
-                  <span className="font-epilogue text-[11px] text-white/45">
-                    {generationPrompt ? 'Generation prompt active' : 'No generation prompt'}
+                  <span className="font-epilogue text-[11px] text-white/60">
+                    {generationPrompt ? 'Prompt injection active' : 'Prompt injection not configured'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', brand.brand_voice ? 'bg-green-400' : 'bg-white/20')} />
-                  <span className="font-epilogue text-[11px] text-white/45">
+                  <span className="font-epilogue text-[11px] text-white/60">
                     {brand.brand_voice ? 'Brand voice configured' : 'No brand voice'}
                   </span>
                 </div>
@@ -737,7 +730,7 @@ function BrandWelcome({
               </div>
               <div className="pr-20">
                 <h3 className="font-fraunces text-base font-semibold text-white">AI Guidelines</h3>
-                <p className="font-epilogue text-[11px] text-white/50">Tool compliance & governance</p>
+                <p className="font-epilogue text-[11px] text-white/70">Approved tools and usage policies for client work</p>
               </div>
               {toolApprovals.length > 0 ? (
                 <div className="space-y-1.5">
@@ -750,7 +743,7 @@ function BrandWelcome({
                     return (
                       <div key={approval.id} className="flex items-center gap-2">
                         <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', dotColor)} />
-                        <span className="font-epilogue text-[11px] text-white/45 truncate">
+                        <span className="font-epilogue text-[11px] text-white/60 truncate">
                           {approval.product.name}
                         </span>
                       </div>
@@ -758,7 +751,7 @@ function BrandWelcome({
                   })}
                 </div>
               ) : (
-                <p className="font-epilogue text-[11px] text-white/40">
+                <p className="font-epilogue text-[11px] text-white/55">
                   Configure brand-specific tool approvals in admin
                 </p>
               )}
@@ -797,42 +790,37 @@ function BrandWelcome({
               <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">
                 {generationPrompt ? 'Generation Prompt' : 'Brand Voice'}
               </h3>
-              <p className="font-epilogue text-[11px] text-white/45 leading-relaxed">
+              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
                 {generationPrompt
                   ? `${GENERATION_PROMPT_SECTIONS.filter(s => generationPrompt.section_toggles[s.key]).length} sections directing identity, style, color & typography`
-                  : `Prompts shaped by ${brand.name}'s voice and visual direction`}
+                  : `Brand context automatically injected into every generation`}
               </p>
             </div>
           </motion.div>
 
-          {/* Brand DNA */}
+          {/* Art Direction */}
           <motion.div
             variants={itemVariants}
-            className={cn(
-              'group/card rounded-xl overflow-hidden', GLASS, GLASS_HOVER,
-              brandStats?.hasProfile && 'cursor-pointer',
-            )}
-            onClick={brandStats?.hasProfile ? onOpenBrandDNA : undefined}
+            className={cn('group/card rounded-xl cursor-pointer overflow-hidden', GLASS, GLASS_HOVER)}
+            onClick={onOpenArtDirection}
           >
             <div className="h-14 relative overflow-hidden">
-              {brand.card_images?.brand_dna ? (
-                <img src={brand.card_images.brand_dna} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              {brand.card_images?.art_direction ? (
+                <img src={brand.card_images.art_direction} alt="" className="absolute inset-0 w-full h-full object-cover" />
               ) : (
                 <div
                   className="h-full flex items-center justify-center relative"
-                  style={{ background: `linear-gradient(135deg, #0D948060, #0D948025)` }}
+                  style={{ background: `linear-gradient(135deg, #05966960, #05966925)` }}
                 >
-                  <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 70% 50%, #2DD4BF, transparent 60%)' }} />
-                  <Dna className="w-6 h-6 text-teal-300 relative z-10" />
+                  <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 60% 40%, #6EE7B7, transparent 60%)' }} />
+                  <Camera className="w-6 h-6 text-emerald-300 relative z-10" />
                 </div>
               )}
             </div>
             <div className="p-4">
-              <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Brand DNA</h3>
-              <p className="font-epilogue text-[11px] text-white/45 leading-relaxed">
-                {brandStats?.hasProfile
-                  ? 'Visual style profile guiding output aesthetics and quality'
-                  : 'Build a visual intelligence profile from brand imagery'}
+              <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Art Direction</h3>
+              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
+                Shot types, composition rules, and visual production standards
               </p>
             </div>
           </motion.div>
@@ -858,10 +846,10 @@ function BrandWelcome({
             </div>
             <div className="p-4">
               <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Templates</h3>
-              <p className="font-epilogue text-[11px] text-white/45 leading-relaxed">
+              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
                 {brandStats && brandStats.promptCount > 0
                   ? `${brandStats.promptCount} saved generation configurations`
-                  : 'Save and reuse your favorite generation setups'}
+                  : 'Reusable configurations for consistent campaign output'}
               </p>
             </div>
           </motion.div>
@@ -887,8 +875,8 @@ function BrandWelcome({
             </div>
             <div className="p-4">
               <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Brand Agent</h3>
-              <p className="font-epilogue text-[11px] text-white/45 leading-relaxed">
-                Crafts on-brand prompts and picks the right model for the job
+              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
+                Interprets briefs and composes on-brand prompts with model selection
               </p>
             </div>
           </motion.div>

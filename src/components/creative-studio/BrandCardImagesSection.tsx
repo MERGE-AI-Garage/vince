@@ -28,7 +28,7 @@ import { useBrand } from '@/hooks/useCreativeStudioBrands';
 import { ImageGenerationConfirm, type PendingImageGeneration } from '@/components/ui/image-generation-confirm';
 
 const ALL_CARD_KEYS: BrandCardImageKey[] = [
-  'brand_dna', 'ai_guidelines', 'generation_prompt', 'templates', 'brand_agent',
+  'brand_dna', 'ai_guidelines', 'generation_prompt', 'templates', 'brand_agent', 'art_direction',
 ];
 
 interface BrandCardImagesSectionProps {
@@ -120,7 +120,7 @@ export function BrandCardImagesSection({ brand, onUpdate }: BrandCardImagesSecti
         <Label>Card Images</Label>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-[10px]">
-            <CheckCircle2 className="h-2.5 w-2.5 mr-1 text-emerald-500" />
+            <CheckCircle2 className="h-2.5 w-2.5 mr-1 text-purple-500" />
             {presentCount}/{ALL_CARD_KEYS.length}
           </Badge>
           {missingCount > 0 && (
@@ -199,7 +199,7 @@ export function BrandCardImagesSection({ brand, onUpdate }: BrandCardImagesSecti
                 )}
                 <div className={cn(
                   'absolute top-1 right-1 w-1.5 h-1.5 rounded-full',
-                  url ? 'bg-emerald-500' : 'bg-gray-400',
+                  url ? 'bg-purple-500' : 'bg-gray-400',
                 )} />
               </div>
 
@@ -540,7 +540,7 @@ function CardImageDetailDialog({
                       className={cn(
                         'shrink-0 rounded-md overflow-hidden border-2 transition-all hover:opacity-90',
                         isCurrent
-                          ? 'border-emerald-500 ring-1 ring-emerald-500/30'
+                          ? 'border-purple-500 ring-1 ring-purple-500/30'
                           : 'border-transparent hover:border-muted-foreground/30',
                       )}
                       onClick={() => !isCurrent && handleRestoreVersion(gen.image_url)}
