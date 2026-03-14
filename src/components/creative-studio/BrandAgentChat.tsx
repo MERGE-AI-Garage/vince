@@ -127,8 +127,8 @@ export function BrandAgentChat({
             </p>
             <div className="space-y-1.5">
               {[
-                `Hero shot of the Italian BMT for Instagram`,
-                `Lifestyle scene with fresh ingredients on marble`,
+                `Hero shot of the flagship product for Instagram`,
+                `Lifestyle scene with the product in a natural setting`,
                 `Close-up product shot for print campaign`,
               ].map((suggestion, i) => (
                 <button

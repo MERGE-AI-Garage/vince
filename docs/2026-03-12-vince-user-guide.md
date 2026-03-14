@@ -75,7 +75,7 @@ Vince will check your brand references, consult the camera inventory, recall rel
 > "Include our logo mark in the upper left."
 
 ### Use reference images
-> "Use the product reference collection for the BMT sandwich."
+> "Use the product reference collection for the hero product."
 > "Make sure the character matches our brand spokesperson."
 
 First ask what's available:

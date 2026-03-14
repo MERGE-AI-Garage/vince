@@ -20,7 +20,7 @@ const VINCE_TOOLS = [
     parameters: {
       type: 'object',
       properties: {
-        name: { type: 'string', description: 'Short descriptive name (e.g., "Italian BMT Hero Shot")' },
+        name: { type: 'string', description: 'Short descriptive name (e.g., "Product Hero Shot")' },
         category: {
           type: 'string',
           enum: ['product', 'lifestyle', 'campaign', 'social', 'hero', 'editorial', 'cinematography'],

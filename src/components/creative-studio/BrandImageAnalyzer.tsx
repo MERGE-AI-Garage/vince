@@ -534,7 +534,7 @@ export function BrandImageAnalyzer({ brandId, brandName, brandSlug, open, onOpen
                 <Textarea
                   value={analysisDirectives}
                   onChange={e => setAnalysisDirectives(e.target.value)}
-                  placeholder="Focus on ingredient layering order, sauce drip patterns, bread coloring..."
+                  placeholder="Focus on logo placement, color usage, lighting style, composition patterns..."
                   rows={2}
                   className="text-sm"
                 />
