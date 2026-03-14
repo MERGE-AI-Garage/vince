@@ -4,7 +4,7 @@
 import { useState, Fragment } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Copy, Check, Clock, Layers, Sparkles, ShieldCheck, MonitorPlay } from 'lucide-react';
+import { Download, Copy, Check, Clock, Layers, Sparkles, ShieldCheck, MonitorPlay, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface PackagePart {
@@ -41,6 +41,7 @@ interface CreativePackageDisplayProps {
   deliverableNames?: string[];
   brandAlignment?: BrandAlignment;
   onLoadToCanvas?: (imageUrl: string) => void;
+  onImageInfo?: (index: number, name: string, imageUrl: string) => void;
 }
 
 function cleanCopyText(text: string): string {
@@ -160,6 +161,7 @@ export function CreativePackageDisplay({
   deliverableNames = [],
   brandAlignment,
   onLoadToCanvas,
+  onImageInfo,
 }: CreativePackageDisplayProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const imageCount = parts.filter(p => p.type === 'image').length;
@@ -192,7 +194,7 @@ export function CreativePackageDisplay({
           </div>
           <p className="text-sm font-semibold text-foreground">{brandName}</p>
           {brief && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{brief}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{brief}</p>
           )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
@@ -335,6 +337,17 @@ export function CreativePackageDisplay({
                           >
                             <MonitorPlay className="w-3 h-3" />
                             Use in Canvas
+                          </Button>
+                        )}
+                        {onImageInfo && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-7 w-7 p-0"
+                            title="Image info"
+                            onClick={() => onImageInfo(group.index, group.name, imageUrls[group.index] || group.imageUrl!)}
+                          >
+                            <Info className="w-3 h-3" />
                           </Button>
                         )}
                         <Button
