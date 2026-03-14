@@ -40,7 +40,7 @@ export function StorytellingSection() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <div style={{ padding: '4px', borderRadius: '50%', background: 'rgba(30, 215, 95, 0.2)', display: 'flex' }}>
-                <pillar.icon size={16} color="#1ED75F" />
+                <pillar.icon size={16} color="#8b5cf6" />
               </div>
               <span style={{ fontFamily: 'Fraunces, serif', fontSize: '14px', fontWeight: 600 }}>
                 {pillar.title}

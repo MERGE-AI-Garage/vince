@@ -11,7 +11,7 @@ export function SectionHeading({ children, sub }: SectionHeadingProps) {
     <h2
       style={{
         fontFamily: 'Fraunces, serif',
-        color: '#00856C',
+        color: '#8b5cf6',
         fontSize: sub ? '16px' : '20px',
         fontWeight: sub ? 500 : 600,
         margin: 0,

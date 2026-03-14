@@ -24,7 +24,7 @@ export function TypographySection() {
           background: '#fff',
         }}
       >
-        <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: '#00856C', color: '#fff' }}>
+        <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: '#8b5cf6', color: '#fff' }}>
           {typography.primary.category}
         </span>
         <div style={{ fontFamily: 'Fraunces, serif', fontSize: '24px', fontWeight: 600, marginTop: '8px' }}>
@@ -56,7 +56,7 @@ export function TypographySection() {
           background: '#fff',
         }}
       >
-        <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: '#00856C', color: '#fff' }}>
+        <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '999px', background: '#8b5cf6', color: '#fff' }}>
           {typography.secondary.category}
         </span>
         <div style={{ fontFamily: 'Epilogue, sans-serif', fontSize: '24px', fontWeight: 600, marginTop: '8px' }}>

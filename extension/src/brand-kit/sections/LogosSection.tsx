@@ -38,7 +38,7 @@ export function LogosSection() {
           src="./mergelogos/Merge_Logo_Primary_Dark-Green_RGB.png"
           alt="MERGE Logo - Dark Green on E-Green"
           label="Dark Green on E-Green"
-          bgColor="#1ED75F"
+          bgColor="#8b5cf6"
         />
       </div>
 
@@ -52,7 +52,7 @@ export function LogosSection() {
           gap: '6px',
           marginTop: '10px',
           fontSize: '12px',
-          color: '#00856C',
+          color: '#8b5cf6',
           fontWeight: 600,
           textDecoration: 'none',
         }}
@@ -79,7 +79,7 @@ export function LogosSection() {
             >
               <img src="./images/brand-guidelines/Merge_Logo_Clear_Space.png" alt="Clear Space Diagram" style={{ maxWidth: '100%', height: 'auto' }} />
             </div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#00856C' }}>{logos.primary.clearSpace.title}</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#8b5cf6' }}>{logos.primary.clearSpace.title}</div>
             <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
               {logos.primary.clearSpace.description}
             </p>
@@ -98,7 +98,7 @@ export function LogosSection() {
             >
               <img src="./images/brand-guidelines/Merge_Logo.png" alt="Minimum Size" style={{ height: '12px', maxWidth: '90px' }} />
             </div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#00856C' }}>{logos.primary.minimumSize.title}</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#8b5cf6' }}>{logos.primary.minimumSize.title}</div>
             <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
               {logos.primary.minimumSize.description}
             </p>
@@ -147,7 +147,7 @@ export function LogosSection() {
             gap: '6px',
             marginTop: '10px',
             fontSize: '12px',
-            color: '#00856C',
+            color: '#8b5cf6',
             fontWeight: 600,
             textDecoration: 'none',
           }}

@@ -87,7 +87,7 @@ export function TemplatesGlossarySection() {
                 <span style={{ fontSize: '12px', color: '#8fa89e', textDecoration: 'line-through' }}>
                   {item.old}
                 </span>
-                <ArrowRight size={12} color="#00856C" />
+                <ArrowRight size={12} color="#8b5cf6" />
                 <span style={{ fontSize: '12px', fontWeight: 600 }}>{item.new}</span>
               </div>
               {item.note && (

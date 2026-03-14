@@ -54,10 +54,10 @@ function lightenHex(hex: string, amount: number): string {
 
 /** Derive accent colors from a brand color, falling back to MERGE defaults */
 function deriveAccents(brandColor?: string | null) {
-  const primary = brandColor || '#00856C';
+  const primary = brandColor || '#8b5cf6';
   const dark = brandColor ? darkenHex(brandColor, 40) : '#133B34';
   const darkAlt = brandColor ? darkenHex(brandColor, 20) : '#00524F';
-  const highlight = brandColor ? lightenHex(brandColor, 80) : '#1ED75F';
+  const highlight = brandColor ? lightenHex(brandColor, 80) : '#8b5cf6';
   return { primary, dark, darkAlt, highlight };
 }
 

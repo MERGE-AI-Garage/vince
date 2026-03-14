@@ -64,7 +64,7 @@ export function PromptInput({ value, onChange, placeholder }: PromptInputProps) 
             boxShadow: '0 1px 2px rgba(19, 59, 52, 0.04)',
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = '#00856C';
+            e.currentTarget.style.borderColor = '#8b5cf6';
             e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 133, 108, 0.08)';
           }}
           onBlur={(e) => {

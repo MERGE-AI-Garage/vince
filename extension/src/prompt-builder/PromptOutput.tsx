@@ -30,7 +30,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
           width: '28px',
           height: '28px',
           border: '2.5px solid rgba(30, 215, 95, 0.2)',
-          borderTopColor: '#1ED75F',
+          borderTopColor: '#8b5cf6',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite',
           marginBottom: '12px',
@@ -38,7 +38,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <p style={{
           fontSize: '13px',
-          color: '#1ED75F',
+          color: '#8b5cf6',
           fontWeight: 600,
           margin: 0,
           fontFamily: 'Epilogue, system-ui, sans-serif',
@@ -131,14 +131,14 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
             width: '6px',
             height: '6px',
             borderRadius: '50%',
-            background: '#1ED75F',
+            background: '#8b5cf6',
           }} />
           <span style={{
             fontSize: '10px',
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
-            color: '#00856C',
+            color: '#8b5cf6',
           }}>
             On-brand prompt
           </span>
@@ -190,7 +190,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
             padding: '9px',
             borderRadius: '8px',
             border: 'none',
-            background: copied ? '#1ED75F' : 'linear-gradient(135deg, #133B34 0%, #00524F 100%)',
+            background: copied ? '#8b5cf6' : 'linear-gradient(135deg, #133B34 0%, #00524F 100%)',
             color: copied ? '#133B34' : '#EAE8E3',
             cursor: 'pointer',
             fontSize: '11px',
@@ -216,7 +216,7 @@ export function PromptOutput({ prompt, isLoading, error, onRegenerate, onSave, d
               border: '1px solid rgba(19, 59, 52, 0.08)',
               background: saved ? 'rgba(30, 215, 95, 0.08)' : '#fff',
               cursor: 'pointer',
-              color: saved ? '#1ED75F' : '#636466',
+              color: saved ? '#8b5cf6' : '#636466',
               transition: 'all 0.2s ease',
             }}
           >

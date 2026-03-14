@@ -68,13 +68,13 @@ export function ColorCard({ color }: ColorCardProps) {
                 }}
               >
                 <span><span style={{ fontWeight: 600, marginRight: '6px' }}>{label}</span>{value}</span>
-                {copiedValue === value ? <Check size={12} color="#1ED75F" /> : <Copy size={12} style={{ opacity: 0.4 }} />}
+                {copiedValue === value ? <Check size={12} color="#8b5cf6" /> : <Copy size={12} style={{ opacity: 0.4 }} />}
               </button>
             ))}
           </div>
           {color.uses.length > 0 && (
             <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(19,59,52,0.08)' }}>
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#00856C', marginBottom: '2px' }}>Uses</div>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: '#8b5cf6', marginBottom: '2px' }}>Uses</div>
               {color.uses.map((use, i) => (<div key={i} style={{ fontSize: '11px', color: '#8fa89e' }}>{use}</div>))}
             </div>
           )}

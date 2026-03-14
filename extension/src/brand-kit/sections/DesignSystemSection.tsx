@@ -42,7 +42,7 @@ export function DesignSystemSection() {
                 flexShrink: 0,
               }}
             >
-              <el.icon size={16} color="#00856C" />
+              <el.icon size={16} color="#8b5cf6" />
             </div>
             <div>
               <div style={{ fontFamily: 'Fraunces, serif', fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>

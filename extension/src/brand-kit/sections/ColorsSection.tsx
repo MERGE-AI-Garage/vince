@@ -53,7 +53,7 @@ export function ColorsSection() {
         <div style={{ marginTop: '8px' }}>
           {colors.usage.breakdown.map((item) => (
             <div key={item.number} style={{ marginBottom: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#00856C' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#8b5cf6' }}>
                 {item.number}. {item.title}
               </div>
               <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>
@@ -89,7 +89,7 @@ export function ColorsSection() {
             </p>
           </div>
           <div>
-            <div style={{ height: '48px', borderRadius: '6px', background: 'linear-gradient(135deg, #133B34 0%, #00524F 50%, #00856C 100%)' }} />
+            <div style={{ height: '48px', borderRadius: '6px', background: 'linear-gradient(135deg, #133B34 0%, #00524F 50%, #8b5cf6 100%)' }} />
             <p style={{ fontSize: '10px', color: '#8fa89e', textAlign: 'center', marginTop: '4px' }}>
               Dark Green to Forest Green to Viridian
             </p>

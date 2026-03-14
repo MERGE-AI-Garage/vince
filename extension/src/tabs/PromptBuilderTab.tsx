@@ -87,9 +87,9 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
 
   // Brand-adaptive colors for the prompt builder UI (dark theme)
   const accentDark = '#e0ded9';
-  const accentLight = brandColor || '#1ED75F';
-  const accentMid = brandColor || '#1ED75F';
-  const accentGreen = '#1ED75F';
+  const accentLight = brandColor || '#8b5cf6';
+  const accentMid = brandColor || '#8b5cf6';
+  const accentGreen = '#8b5cf6';
 
   const displayName = brandName || 'Brand';
   const title = `${displayName} Prompt Builder`;

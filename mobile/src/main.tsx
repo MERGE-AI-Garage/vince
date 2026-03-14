@@ -4,7 +4,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MobileApp } from './MobileApp';
-import { forceCleanup } from '@/services/brand-agent/brandAgentLiveService';
 import '@/index.css';
 
 const root = createRoot(document.getElementById('root')!);
@@ -15,9 +14,11 @@ root.render(
   </StrictMode>
 );
 
-// Clean up voice sessions when the page is hidden (app backgrounded or closed)
+// Lazy import — only needed when app is backgrounded, no reason to pull it in at startup
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
-    forceCleanup();
+    import('@/services/brand-agent/brandAgentLiveService').then(({ forceCleanup }) => {
+      forceCleanup();
+    });
   }
 });

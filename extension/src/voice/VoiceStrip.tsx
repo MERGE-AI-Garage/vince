@@ -2,15 +2,19 @@
 // ABOUTME: Shows audio bars, live transcript, and end button during voice sessions
 
 import React, { useEffect, useRef } from 'react';
-import type { VoiceState } from '../hooks/useVinceVoice';
+import type { VoiceState, ToolResult } from '../hooks/useVinceVoice';
 import type { TranscriptItem } from '@/services/brand-agent/brandAgentLiveService';
+import { ToolResultRenderer } from '../chat/ToolResultRenderer';
+
+// Vince always speaks in purple regardless of selected brand
+const PURPLE = '#8b5cf6';
 
 interface VoiceStripProps {
   voiceState: VoiceState;
   transcript: TranscriptItem[];
+  toolResults: ToolResult[];
   volumeRef: React.MutableRefObject<number>;
   onStop: () => void;
-  accent: string;
   headerBg: string;
 }
 
@@ -23,7 +27,7 @@ const MAX_HEIGHT = 18;
 const MIN_HEIGHT = 3;
 const STAGGER = [0, 0.15, 0.05, 0.2, 0.1];
 
-function AudioBars({ volumeRef, accent }: { volumeRef: React.MutableRefObject<number>; accent: string }) {
+function AudioBars({ volumeRef }: { volumeRef: React.MutableRefObject<number> }) {
   const barsRef = useRef<(HTMLDivElement | null)[]>([]);
   const rafRef = useRef(0);
 
@@ -76,8 +80,7 @@ function AudioBars({ volumeRef, accent }: { volumeRef: React.MutableRefObject<nu
             height: MIN_HEIGHT,
             marginLeft: i > 0 ? BAR_GAP : 0,
             borderRadius: 2,
-            background: accent,
-            transition: 'background 0.2s ease',
+            background: PURPLE,
           }}
         />
       ))}
@@ -90,9 +93,9 @@ function AudioBars({ volumeRef, accent }: { volumeRef: React.MutableRefObject<nu
 export const VoiceStrip: React.FC<VoiceStripProps> = ({
   voiceState,
   transcript,
+  toolResults,
   volumeRef,
   onStop,
-  accent,
   headerBg,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -110,7 +113,7 @@ export const VoiceStrip: React.FC<VoiceStripProps> = ({
   const isConnecting = voiceState === 'connecting';
   const isError = voiceState === 'error';
 
-  const statusDotColor = isError ? '#ef4444' : isConnecting ? '#f59e0b' : accent;
+  const statusDotColor = isError ? '#ef4444' : isConnecting ? '#f59e0b' : PURPLE;
   const statusLabel = isError ? 'Error' : isConnecting ? 'Connecting...' : 'Vince Live';
 
   return (
@@ -138,7 +141,7 @@ export const VoiceStrip: React.FC<VoiceStripProps> = ({
           background: statusDotColor,
           flexShrink: 0,
           animation: isConnecting ? 'vinceStripPulse 1.2s ease-in-out infinite' : undefined,
-          boxShadow: !isConnecting && !isError ? `0 0 6px ${accent}` : undefined,
+          boxShadow: !isConnecting && !isError ? `0 0 6px ${PURPLE}` : undefined,
         }} />
         <span style={{
           fontSize: '10px',
@@ -152,7 +155,7 @@ export const VoiceStrip: React.FC<VoiceStripProps> = ({
 
         {/* Audio bars */}
         {voiceState === 'active' && (
-          <AudioBars volumeRef={volumeRef} accent={accent} />
+          <AudioBars volumeRef={volumeRef} />
         )}
 
         <div style={{ flex: 1 }} />
@@ -206,12 +209,21 @@ export const VoiceStrip: React.FC<VoiceStripProps> = ({
               lineHeight: 1.4,
               opacity: item.isFinal ? 1 : 0.7,
               borderLeft: item.role === 'model'
-                ? `2px solid ${accent}`
+                ? `2px solid ${PURPLE}`
                 : '2px solid rgba(234, 232, 227, 0.2)',
               paddingLeft: '8px',
             }}>
               {item.text}
             </p>
+          ))}
+        </div>
+      )}
+
+      {/* Tool results — creative packages, images, videos */}
+      {toolResults.length > 0 && (
+        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {toolResults.map((result, i) => (
+            <ToolResultRenderer key={i} result={result} />
           ))}
         </div>
       )}

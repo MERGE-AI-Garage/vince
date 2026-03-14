@@ -65,7 +65,7 @@ export function BrandOverviewSection() {
               width: '36px',
               height: '36px',
               borderRadius: '50%',
-              backgroundColor: '#00856C',
+              backgroundColor: '#8b5cf6',
               color: '#fff',
               fontFamily: 'Fraunces, serif',
               fontSize: '20px',

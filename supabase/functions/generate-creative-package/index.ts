@@ -136,6 +136,7 @@ interface PackageRequest {
   system_context?: string;
   user_id?: string;
   reference_image_urls?: string[];
+  pre_generated_image_url?: string;
 }
 
 interface PackagePart {
@@ -143,6 +144,7 @@ interface PackagePart {
   content?: string;
   image_base64?: string;
   mime_type?: string;
+  image_url?: string;
 }
 
 async function fetchImageAsBase64(url: string): Promise<{ data: string; mimeType: string } | null> {
@@ -189,7 +191,7 @@ serve(async (req) => {
     } catch { /* non-critical */ }
 
     const body = await req.json() as PackageRequest;
-    const { brand_id, brief, deliverables, system_context, reference_image_urls } = body;
+    const { brand_id, brief, deliverables, system_context, reference_image_urls, pre_generated_image_url } = body;
     if (!brand_id || !brief) throw new Error('brand_id and brief are required');
 
     // Fallback: when called via service role (no JWT sub), use user_id from body
@@ -308,10 +310,31 @@ serve(async (req) => {
       }
     }
 
-    // Call Gemini with interleaved output
     const ai = new GoogleGenAI({ apiKey });
     const startTime = Date.now();
+    const parts: PackagePart[] = [];
+    const imageUrls: string[] = [];
 
+    if (pre_generated_image_url) {
+      // Copy-only path: user already has a generated image (e.g. from generate_headshot_scene).
+      // Generate text copy with a fast text model, then attach the pre-generated image.
+      console.log('[generate-creative-package] pre_generated_image_url provided — generating copy only');
+      const copyPrompt = deliverablePrompt + '\n\nGenerate only the written copy (headlines, body text, CTAs). Do NOT generate any images.';
+      const copyResponse = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{ role: 'user', parts: [{ text: copyPrompt }] }],
+        config: {
+          responseModalities: ['TEXT'],
+          systemInstruction: fullSystemInstruction,
+        },
+      });
+      for (const part of copyResponse.candidates?.[0]?.content?.parts ?? []) {
+        if (part.text) parts.push({ type: 'text', content: part.text });
+      }
+      parts.push({ type: 'image', image_url: pre_generated_image_url });
+      imageUrls.push(pre_generated_image_url);
+    } else {
+    // Call Gemini with interleaved output
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: [{ role: 'user', parts: [{ text: deliverablePrompt }] }],
@@ -321,16 +344,10 @@ serve(async (req) => {
       },
     });
 
-    const latencyMs = Date.now() - startTime;
-
-    // Parse response parts
-    const parts: PackagePart[] = [];
     const candidate = response.candidates?.[0];
     if (!candidate?.content?.parts) {
       throw new Error('No content in Gemini response');
     }
-
-    const imageUrls: string[] = [];
 
     for (const part of candidate.content.parts) {
       if (part.text) {
@@ -387,7 +404,9 @@ serve(async (req) => {
         }
       }
     }
+    } // end else (full interleaved generation path)
 
+    const latencyMs = Date.now() - startTime;
     const deliverableNames = resolvedDeliverables.length > 0
       ? resolvedDeliverables.map((d, i) => {
           if (d.name) return d.name;

@@ -99,19 +99,27 @@ export function MediaLibraryTab() {
 
   useEffect(() => {
     fetchData();
-    fetchStats();
   }, [currentFolderId, fileTypeFilter]);
+
+  useEffect(() => {
+    if (showTagDialog && tags.length === 0) {
+      supabase.from('media_tags').select('*').order('name').then(({ data }) => {
+        if (data) setTags(data);
+      });
+    }
+  }, [showTagDialog]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
+      // Select only columns needed for display — avoids fetching heavy jsonb fields
       let mediaQuery = supabase
         .from('media')
-        .select('*')
+        .select('id, filename, title, url, thumbnail_url, mime_type, file_type, folder_id, created_at, size_bytes, created_by', { count: 'exact' })
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
-        .limit(300);
+        .limit(100);
 
       if (currentFolderId) {
         mediaQuery = mediaQuery.eq('folder_id', currentFolderId);
@@ -123,7 +131,7 @@ export function MediaLibraryTab() {
 
       let foldersQuery = supabase
         .from('media_folders')
-        .select('*')
+        .select('id, name, parent_id, icon, color, path')
         .order('name');
 
       if (currentFolderId) {
@@ -133,57 +141,39 @@ export function MediaLibraryTab() {
       }
 
       const [
-        { data: mediaData, error: mediaError },
+        { data: mediaData, error: mediaError, count: totalCount },
         { data: foldersData, error: foldersError },
-        { data: tagsData, error: tagsError },
         { data: allFoldersData, error: allFoldersError },
       ] = await Promise.all([
         mediaQuery,
         foldersQuery,
-        supabase.from('media_tags').select('*').order('name'),
-        supabase.from('media_folders').select('*').order('path'),
+        supabase.from('media_folders').select('id, name, parent_id, icon, color, path').order('path'),
       ]);
 
       if (mediaError) throw mediaError;
       if (foldersError) throw foldersError;
-      if (tagsError) throw tagsError;
       if (allFoldersError) throw allFoldersError;
 
       setMedia(mediaData || []);
       setFolders(foldersData || []);
-      setTags(tagsData || []);
       setAllFolders(allFoldersData || []);
+
+      // Compute stats from fetched data — no extra query needed
+      const files = mediaData || [];
+      const filesByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
+      const sizeByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
+      let totalSize = 0;
+      files.forEach((file) => {
+        const type = file.file_type as FileType;
+        filesByType[type] = (filesByType[type] || 0) + 1;
+        sizeByType[type] = (sizeByType[type] || 0) + (file.size_bytes || 0);
+        totalSize += file.size_bytes || 0;
+      });
+      setStats({ totalFiles: totalCount ?? files.length, totalSize, filesByType, sizeByType, recentUploads: 0, largestFiles: [] });
     } catch (error: any) {
       toast.error(`Failed to load media: ${error.message}`);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('media')
-        .select('file_type, size_bytes')
-        .is('deleted_at', null);
-
-      if (error) throw error;
-
-      const totalFiles = data?.length || 0;
-      const totalSize = data?.reduce((sum, file) => sum + (file.size_bytes || 0), 0) || 0;
-
-      const filesByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
-      const sizeByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
-
-      data?.forEach((file) => {
-        const type = file.file_type as FileType;
-        filesByType[type] = (filesByType[type] || 0) + 1;
-        sizeByType[type] = (sizeByType[type] || 0) + (file.size_bytes || 0);
-      });
-
-      setStats({ totalFiles, totalSize, filesByType, sizeByType, recentUploads: 0, largestFiles: [] });
-    } catch (error: any) {
-      console.error('Failed to fetch stats:', error);
     }
   };
 
@@ -719,9 +709,15 @@ export function MediaLibraryTab() {
                                 />
                               </div>
                               {file.file_type === 'image' ? (
-                                <img src={file.url} alt={file.filename} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                <img
+                                  src={file.thumbnail_url || file.url}
+                                  alt={file.filename}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                  loading="lazy"
+                                  decoding="async"
+                                />
                               ) : file.file_type === 'video' ? (
-                                <video src={file.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" preload="metadata" />
+                                <video src={file.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" preload="none" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">{getFileIcon(file.file_type)}</div>
                               )}
@@ -785,9 +781,9 @@ export function MediaLibraryTab() {
                               </div>
                               <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
                                 {file.file_type === 'image' ? (
-                                  <img src={file.url} alt={file.filename} className="w-full h-full object-cover rounded" />
+                                  <img src={file.thumbnail_url || file.url} alt={file.filename} className="w-full h-full object-cover rounded" loading="lazy" decoding="async" />
                                 ) : file.file_type === 'video' ? (
-                                  <video src={file.url} className="w-full h-full object-cover rounded" preload="metadata" />
+                                  <video src={file.url} className="w-full h-full object-cover rounded" preload="none" />
                                 ) : (
                                   getFileIcon(file.file_type)
                                 )}

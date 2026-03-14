@@ -21,7 +21,7 @@ export function CollageLayoutSection() {
           background: '#fff',
         }}
       >
-        <div style={{ fontFamily: 'Fraunces, serif', fontSize: '14px', fontWeight: 600, color: '#00856C', marginBottom: '6px' }}>
+        <div style={{ fontFamily: 'Fraunces, serif', fontSize: '14px', fontWeight: 600, color: '#8b5cf6', marginBottom: '6px' }}>
           {collagePersonas.title}
         </div>
         <p style={{ fontSize: '11px', lineHeight: 1.5, marginBottom: '4px' }}>{collagePersonas.description}</p>
@@ -78,7 +78,7 @@ export function CollageLayoutSection() {
           href="https://drive.google.com/drive/folders/1Gp5-FdA9qVNONZPPzdGqrU_mn8eqeTto?usp=drive_link"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#00856C', fontWeight: 600, textDecoration: 'none' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#8b5cf6', fontWeight: 600, textDecoration: 'none' }}
         >
           <Download size={14} />
           Download tagline lockups
@@ -94,7 +94,7 @@ export function CollageLayoutSection() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {layoutStructure.elements.map((el) => (
             <div key={el.number}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#00856C' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#8b5cf6' }}>
                 {el.number}. {el.title}
               </div>
               <p style={{ fontSize: '11px', color: '#8fa89e', lineHeight: 1.5 }}>

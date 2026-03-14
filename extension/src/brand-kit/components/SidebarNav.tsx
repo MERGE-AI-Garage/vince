@@ -71,11 +71,11 @@ export function SidebarNav({ sections, activeSection, onSectionClick }: SidebarN
               style={{
                 display: 'block', width: '100%', padding: '8px 16px',
                 background: activeSection === section.id ? 'rgba(0, 133, 108, 0.3)' : 'none',
-                border: 'none', color: activeSection === section.id ? '#1ED75F' : '#EAE8E3',
+                border: 'none', color: activeSection === section.id ? '#8b5cf6' : '#EAE8E3',
                 cursor: 'pointer', fontSize: '12px',
                 fontWeight: activeSection === section.id ? 600 : 400,
                 textAlign: 'left', fontFamily: 'Epilogue, system-ui, sans-serif',
-                borderLeft: activeSection === section.id ? '3px solid #1ED75F' : '3px solid transparent',
+                borderLeft: activeSection === section.id ? '3px solid #8b5cf6' : '3px solid transparent',
               }}
             >
               {section.name}

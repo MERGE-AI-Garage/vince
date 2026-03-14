@@ -211,6 +211,10 @@ const VINCE_TOOLS = [
           items: { type: 'string' },
           description: 'URLs of reference images the user uploaded (headshots, logos, products). Pass these when the user has shared images in the conversation to use as subjects or visual references in the creative package. The images will be given to the image generation model.',
         },
+        pre_generated_image_url: {
+          type: 'string',
+          description: 'URL of an already-generated image to use as the visual deliverable. When set, the package skips image generation entirely and generates only the written copy, attaching this image as the deliverable photo. Use this after generate_headshot_scene to get the branded copy alongside the headshot scene output.',
+        },
       },
       required: ['brief'],
     },
@@ -1198,16 +1202,14 @@ async function generateHeadshotScene(
     photoMimeType = photoRes.headers.get('content-type') || 'image/jpeg';
   }
 
-  const prompt = `Transform this person's photo: ${sceneDescription}.
+  const prompt = `Take the first image (a reference photo of a person) and place that exact person into the following scene: ${sceneDescription}.
 
-CRITICAL REQUIREMENTS:
-- Keep the same face — maintain the person's facial features, likeness, and identity EXACTLY
-- Only change the scene, background, environment, clothing context, and lighting
-- Preserve skin tone, facial structure, eye color, and hair style
+REQUIREMENTS:
+- The person's face, facial features, skin tone, eye color, hair color, and hair style must remain COMPLETELY UNCHANGED
+- Only the background, environment, clothing context, and lighting should change to match the scene
 - The person should appear naturally integrated into the described setting
-- Professional quality, photorealistic`;
+- Professional quality, photorealistic result`;
 
-  // Call Gemini with IMAGE-only response modality (required for faithful person reproduction)
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent`;
   const requestBody = {
     contents: [{
@@ -1217,7 +1219,7 @@ CRITICAL REQUIREMENTS:
       ],
     }],
     generationConfig: {
-      responseModalities: ['IMAGE'],
+      responseModalities: ['TEXT', 'IMAGE'],
     },
   };
 
@@ -1247,7 +1249,10 @@ CRITICAL REQUIREMENTS:
   const ext = mimeType.split('/')[1] || 'jpg';
 
   // Upload to Supabase Storage
-  const path = `headshot-scenes/${context.user_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).slice(2, 8);
+  const filename = `headshot-scene-${timestamp}-${random}.${ext}`;
+  const path = `headshot-scenes/${context.user_id}/${filename}`;
   const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
 
   const { error: uploadError } = await supabase.storage
@@ -1257,6 +1262,35 @@ CRITICAL REQUIREMENTS:
   if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`);
 
   const { data: pub } = supabase.storage.from('creative-studio').getPublicUrl(path);
+
+  // Record in generation history
+  await supabase.from('creative_studio_generations').insert({
+    user_id: context.user_id,
+    brand_id: context.brand_id || null,
+    generation_type: 'headshot_scene',
+    model_used: 'gemini-3.1-flash-image-preview',
+    prompt_text: sceneDescription,
+    input_image_url: photoUrl,
+    output_urls: [pub.publicUrl],
+    status: 'completed',
+    parameters: { aspect_ratio: aspectRatio },
+    completed_at: new Date().toISOString(),
+  });
+
+  // Register in media library
+  await supabase.from('media').insert({
+    filename,
+    title: `Headshot Scene — ${sceneDescription.slice(0, 60)}`,
+    description: sceneDescription,
+    url: pub.publicUrl,
+    storage_path: `creative-studio/${path}`,
+    mime_type: mimeType,
+    file_type: 'image',
+    size_bytes: imageBuffer.byteLength,
+    created_by: context.user_id,
+    auto_tags: ['headshot', 'ai-generated', 'person'],
+    ai_provenance: { model: 'gemini-3.1-flash-image-preview', brand_id: context.brand_id },
+  });
 
   return {
     success: true,
@@ -1284,6 +1318,7 @@ async function generateCreativePackage(
       brief: params.brief as string,
       deliverables: params.deliverables || undefined,
       reference_image_urls: params.reference_image_urls || undefined,
+      pre_generated_image_url: params.pre_generated_image_url || undefined,
       user_id: context.user_id,
     }),
   });
@@ -1295,6 +1330,7 @@ async function generateCreativePackage(
 
   return {
     success: true,
+    brand_name: result.brand_name,
     parts: result.parts,
     image_urls: result.image_urls,
     latency_ms: result.latency_ms,
@@ -2070,12 +2106,21 @@ UPLOADED REFERENCE IMAGES:
 - These images become the actual subjects in the generated output — a headshot means that person appears, a logo means that logo appears.
 - Never claim to use an uploaded image unless you actually passed its URL to the generation tool.
 
-HEADSHOT SCENE GENERATION — MANDATORY RULE:
-When the conversation contains "[Reference images uploaded by user: ...]" AND the user wants to appear in a generated scene or image, you MUST call generate_headshot_scene. This overrides generate_image and generate_creative_package.
+HEADSHOT SCENE GENERATION — TWO-STEP PATTERN (MANDATORY):
+When the conversation contains "[Reference images uploaded by user: ...]" AND the user wants to appear in a generated image or creative package:
+
+STEP 1 — Call generate_headshot_scene:
 - Extract the photo URL from "[Reference images uploaded by user: url]" and pass it as photo_url exactly.
 - Write a detailed scene_description: exact setting, lighting, who else is present, what the person is doing, background.
-- After generate_headshot_scene returns output_url, write the social/LinkedIn copy yourself in your text response.
-- NEVER call generate_image or generate_creative_package when the user's own image needs to appear — those cannot reproduce a real person's face.
+- Use aspect_ratio matching the deliverable (4:3 for LinkedIn, 9:16 for stories, 1:1 for square).
+
+STEP 2 — Call generate_creative_package with pre_generated_image_url:
+- After generate_headshot_scene returns output_url, immediately call generate_creative_package.
+- Pass pre_generated_image_url: <output_url from step 1>.
+- Pass the full brief and deliverables as normal.
+- This generates only the written copy (headlines, body, CTAs) and attaches the headshot scene as the image — no duplicate image generation.
+
+NEVER skip step 2 when the user asked for a creative package or LinkedIn post. The user needs both the scene photo AND the branded copy.
 - Complete deliverable = generate_headshot_scene (image) + your text response (copy). No creative package needed.
 
 REFERENCE IMAGE COLLECTIONS:

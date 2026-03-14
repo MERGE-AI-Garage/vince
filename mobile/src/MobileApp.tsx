@@ -2,6 +2,8 @@
 // ABOUTME: Full-screen Vince chat/voice interface with brand picker, mobile-optimized layout
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { MemoryRouter } from 'react-router-dom';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -206,6 +208,12 @@ export function MobileApp() {
   const [splashDone, setSplashDone] = useState(false);
   const handleSplashComplete = useCallback(() => setSplashDone(true), []);
 
+  // Hide the native Capacitor splash overlay as soon as this component mounts.
+  // This must live here (not in MobileSplash) so it fires even if a child crashes.
+  useEffect(() => {
+    SplashScreen.hide();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -213,7 +221,9 @@ export function MobileApp() {
           {!splashDone && <MobileSplash onComplete={handleSplashComplete} />}
           <AuthGate>
             <AuthProvider>
-              <VinceHome />
+              <MemoryRouter>
+                <VinceHome />
+              </MemoryRouter>
             </AuthProvider>
           </AuthGate>
         </MobileErrorBoundary>

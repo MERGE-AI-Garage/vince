@@ -14,13 +14,22 @@ import type { UserContext } from '@/services/brand-agent/brandAgentGeminiService
 
 export type VoiceState = 'idle' | 'connecting' | 'active' | 'error';
 
+export type ToolResult =
+  | { type: 'creative_package'; data: Record<string, unknown> }
+  | { type: 'generated_images'; data: { image_urls: string[] } }
+  | { type: 'generated_videos'; data: { video_urls: string[] } }
+  | { type: 'competitor_analysis'; data: Record<string, unknown> };
+
 export interface UseVinceVoice {
   voiceState: VoiceState;
   isReady: boolean;
+  isMuted: boolean;
   transcript: TranscriptItem[];
+  toolResults: ToolResult[];
   volumeRef: React.MutableRefObject<number>;
   startVoice: () => Promise<void>;
   stopVoice: () => void;
+  toggleMute: () => void;
   errorMessage: string | null;
 }
 
@@ -76,7 +85,9 @@ async function ensureMicPermission(): Promise<boolean> {
 export function useVinceVoice(brandId: string | null): UseVinceVoice {
   const [voiceState, setVoiceState] = useState<VoiceState>('idle');
   const [isReady, setIsReady] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
+  const [toolResults, setToolResults] = useState<ToolResult[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const volumeRef = useRef(0);
   const sessionRef = useRef<LiveSessionControl | null>(null);
@@ -135,8 +146,18 @@ export function useVinceVoice(brandId: string | null): UseVinceVoice {
     forceCleanup();
     volumeRef.current = 0;
     setVoiceState('idle');
+    setIsMuted(false);
     setTranscript([]);
+    setToolResults([]);
     setErrorMessage(null);
+  }, []);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const next = !prev;
+      sessionRef.current?.setMuted(next);
+      return next;
+    });
   }, []);
 
   const startVoice = useCallback(async () => {
@@ -175,6 +196,23 @@ export function useVinceVoice(brandId: string | null): UseVinceVoice {
             return [...filtered, item];
           });
         },
+        onToolResult: (toolName, result) => {
+          if (toolName === 'generate_creative_package') {
+            setToolResults(prev => [...prev, { type: 'creative_package', data: result }]);
+          } else if (toolName === 'generate_image') {
+            const urls = (result as Record<string, unknown>).image_urls as string[] | undefined;
+            if (urls?.length) {
+              setToolResults(prev => [...prev, { type: 'generated_images', data: { image_urls: urls } }]);
+            }
+          } else if (toolName === 'generate_video') {
+            const urls = (result as Record<string, unknown>).video_urls as string[] | undefined;
+            if (urls?.length) {
+              setToolResults(prev => [...prev, { type: 'generated_videos', data: { video_urls: urls } }]);
+            }
+          } else if (toolName === 'analyze_competitor_content') {
+            setToolResults(prev => [...prev, { type: 'competitor_analysis', data: result }]);
+          }
+        },
       },
       userContextRef.current || undefined,
       brandId,
@@ -200,5 +238,5 @@ export function useVinceVoice(brandId: string | null): UseVinceVoice {
     };
   }, []);
 
-  return { voiceState, isReady, transcript, volumeRef, startVoice, stopVoice, errorMessage };
+  return { voiceState, isReady, isMuted, transcript, toolResults, volumeRef, startVoice, stopVoice, toggleMute, errorMessage };
 }

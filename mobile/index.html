@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -58,6 +58,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Show JS errors on screen so we can diagnose crashes without Xcode -->
+    <script>
+      window.onerror = function(msg, src, line, col, err) {
+        document.body.style.cssText = 'background:#0f0a1e;color:#f87171;font:14px monospace;padding:40px 20px;word-break:break-all;';
+        document.body.innerHTML = '<b>JS Error</b><br><br>' + msg + '<br><br>' + (src||'') + ':' + line + '<br><br>' + (err && err.stack ? err.stack : '');
+      };
+      window.onunhandledrejection = function(e) {
+        document.body.style.cssText = 'background:#0f0a1e;color:#f87171;font:14px monospace;padding:40px 20px;word-break:break-all;';
+        document.body.innerHTML = '<b>Unhandled Promise</b><br><br>' + (e.reason && e.reason.stack ? e.reason.stack : String(e.reason));
+      };
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

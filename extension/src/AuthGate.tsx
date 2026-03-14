@@ -163,7 +163,7 @@ const styles: Record<string, React.CSSProperties> = {
   heading: {
     fontSize: '20px',
     fontWeight: 700,
-    color: '#1ED75F',
+    color: '#8b5cf6',
     marginBottom: '4px',
     fontFamily: 'Fraunces, serif',
   },
@@ -205,7 +205,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: '24px',
     height: '24px',
     border: '3px solid rgba(234, 232, 227, 0.2)',
-    borderTopColor: '#00856C',
+    borderTopColor: '#8b5cf6',
     borderRadius: '50%',
     marginBottom: '12px',
     animation: 'authSpinnerSpin 0.8s linear infinite',

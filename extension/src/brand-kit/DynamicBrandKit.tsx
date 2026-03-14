@@ -298,7 +298,7 @@ function CorporateProfileSection({ data }: DynamicBrandKitProps) {
 function BrandIdentitySection({ data }: DynamicBrandKitProps) {
   const identity = data.profile?.brand_identity;
   if (!identity) return null;
-  const primaryColor = data.brand.primary_color || '#00856C';
+  const primaryColor = data.brand.primary_color || '#8b5cf6';
 
   const hasValues = identity.brand_values && identity.brand_values.length > 0;
   const hasMessaging = identity.messaging && identity.messaging.length > 0;
@@ -454,7 +454,7 @@ function BrandVoiceSection({ data }: DynamicBrandKitProps) {
 function VisualDNASection({ data }: DynamicBrandKitProps) {
   const dna = data.profile?.visual_dna;
   if (!dna || Object.keys(dna).length === 0) return null;
-  const primaryColor = data.brand.primary_color || '#00856C';
+  const primaryColor = data.brand.primary_color || '#8b5cf6';
 
   const signatureStyle = dna.signature_style as string | undefined;
   const visualPrinciples = dna.visual_principles as string[] | undefined;
@@ -781,7 +781,7 @@ function CompositionSection({ data }: DynamicBrandKitProps) {
 function ProductCatalogSection({ data }: DynamicBrandKitProps) {
   const catalog = data.profile?.product_catalog;
   if (!catalog || Object.keys(catalog).length === 0) return null;
-  const primaryColor = data.brand.primary_color || '#00856C';
+  const primaryColor = data.brand.primary_color || '#8b5cf6';
 
   const categories = Object.entries(catalog).map(([key, val]) => {
     const v = val as Record<string, unknown>;

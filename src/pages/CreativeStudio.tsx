@@ -619,7 +619,7 @@ export default function CreativeStudio() {
           include_logo: imageParams.includeLogo || undefined,
           image_size: imageParams.imageSize || undefined,
           thinking_level: imageParams.thinkingLevel || undefined,
-          use_grounding: imageParams.useGrounding || undefined,
+          use_grounding: (selectedModelData?.parameters?.supports_grounding && imageParams.useGrounding) || undefined,
         };
 
         if (imageParams.cameraControlsEnabled && imageParams.cameraPreset) {

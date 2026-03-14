@@ -153,9 +153,9 @@ export function GenerationInfoDialog({ generation, onClose }: GenerationInfoDial
         </DialogHeader>
 
         {/* Two-panel body */}
-        <div className="flex flex-col md:flex-row" style={{ maxHeight: 'calc(85vh - 64px)' }}>
+        <div className="flex flex-col md:flex-row min-h-0" style={{ height: 'calc(85vh - 64px)' }}>
           {/* Left panel — Visuals */}
-          <div className="md:w-[42%] p-4 border-r overflow-y-auto bg-muted/20 shrink-0">
+          <div className="md:w-[42%] p-4 border-r overflow-y-auto bg-muted/20 shrink-0 min-h-0">
             <div className="space-y-4">
               {outputUrls.length > 0 && (
                 <div className={`grid gap-2 ${outputUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -293,7 +293,7 @@ export function GenerationInfoDialog({ generation, onClose }: GenerationInfoDial
           </div>
 
           {/* Right panel — Prompt & Metadata */}
-          <div className="md:w-[58%] overflow-y-auto">
+          <div className="md:w-[58%] overflow-y-auto min-h-0">
             <div className="p-5 space-y-5">
               {/* Prompt */}
               {generation.prompt_text && (

@@ -152,7 +152,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
           <span style={{
             fontSize: '9px',
             fontWeight: 600,
-            color: '#00856C',
+            color: '#8b5cf6',
             background: 'rgba(0, 133, 108, 0.08)',
             padding: '1px 6px',
             borderRadius: '8px',
@@ -192,7 +192,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
                   <span style={{
                     fontSize: '9px',
                     fontWeight: 600,
-                    color: '#00856C',
+                    color: '#8b5cf6',
                     background: 'rgba(0, 133, 108, 0.06)',
                     padding: '1px 6px',
                     borderRadius: '6px',
@@ -212,7 +212,7 @@ export function PromptHistory({ history, onReuse, onRemove, onClear }: PromptHis
                       background: 'none',
                       border: 'none',
                       cursor: 'pointer',
-                      color: copiedId === entry.id ? '#1ED75F' : '#636466',
+                      color: copiedId === entry.id ? '#8b5cf6' : '#636466',
                       opacity: copiedId === entry.id ? 1 : 0.4,
                       display: 'flex',
                       alignItems: 'center',

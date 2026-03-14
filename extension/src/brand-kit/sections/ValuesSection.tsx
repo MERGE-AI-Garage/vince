@@ -23,7 +23,7 @@ export function ValuesSection() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', fontWeight: 600, color: '#00856C' }}>
+              <span style={{ fontFamily: 'Fraunces, serif', fontSize: '20px', fontWeight: 600, color: '#8b5cf6' }}>
                 {value.number}
               </span>
               <span style={{ fontFamily: 'Fraunces, serif', fontSize: '16px', fontWeight: 600 }}>
@@ -53,7 +53,7 @@ export function ValuesSection() {
               style={{
                 padding: '4px 12px',
                 borderRadius: '999px',
-                backgroundColor: '#00856C',
+                backgroundColor: '#8b5cf6',
                 color: '#fff',
                 fontSize: '12px',
                 fontWeight: 600,
