@@ -813,6 +813,7 @@ export interface CreativeStudioGeneration {
   actual_cost_usd?: number;
   error_message?: string;
   metadata: Record<string, unknown>;
+  copy_blocks?: Array<{ type: 'text' | 'image'; content?: string; image_base64?: string; mime_type?: string }> | null;
   created_at: string;
   completed_at?: string;
 }

@@ -459,6 +459,7 @@ serve(async (req) => {
       estimated_cost_usd: 0,
       parameters: { deliverable_count: resolvedDeliverables.length },
       metadata: { package: true, deliverable_names: deliverableNames },
+      copy_blocks: parts,
     });
     if (insertError) console.error('[generate-creative-package] Generation record insert failed:', insertError.code, insertError.message, { user_id: userId, brand_id });
 

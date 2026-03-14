@@ -74,6 +74,8 @@ import {
   Chrome,
   HelpCircle,
   FileImage,
+  Package,
+  Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { GoogleLogo, MergeLogo } from '@/components/ai-pulse/vendorLogos';
@@ -120,6 +122,7 @@ import { BrandIntelligenceTab } from '@/components/creative-studio/BrandIntellig
 import { BrandEditorDialog } from '@/components/creative-studio/BrandEditorDialog';
 import { BrandDNABuilder } from '@/components/creative-studio/BrandDNABuilder';
 import { MediaLibraryTab } from '@/components/creative-studio/MediaLibraryTab';
+import { CampaignsTab } from '@/components/creative-studio/CampaignsTab';
 import { CameraPresetAdmin } from '@/components/creative-studio/CameraPresetAdmin';
 import { BrandDNAPrompts } from '@/components/creative-studio/BrandDNAPrompts';
 import { BrandCard } from '@/components/creative-studio/BrandCard';
@@ -541,6 +544,10 @@ export default function CreativeStudioAdmin() {
                 <Image className="h-3.5 w-3.5" />
                 Generations
               </TabsTrigger>
+              <TabsTrigger value="campaigns">
+                <Layers className="h-3.5 w-3.5" />
+                Campaigns
+              </TabsTrigger>
               <TabsTrigger value="media">
                 <FileImage className="h-3.5 w-3.5" />
                 Media
@@ -561,9 +568,9 @@ export default function CreativeStudioAdmin() {
                 <MessageSquare className="h-3.5 w-3.5" />
                 Prompt History
               </TabsTrigger>
-              <TabsTrigger value="extension">
-                <Chrome className="h-3.5 w-3.5" />
-                Extension
+              <TabsTrigger value="downloads">
+                <Package className="h-3.5 w-3.5" />
+                Downloads
               </TabsTrigger>
               <TabsTrigger value="welcome">
                 <Image className="h-3.5 w-3.5" />
@@ -588,7 +595,7 @@ export default function CreativeStudioAdmin() {
                 badgeIcon={<GoogleLogo className="w-5 h-5 text-gray-800 dark:text-white/80" />}
                 badgeLabel="Google Vertex AI"
                 title="AI Models"
-                subtitle="Curated Vertex AI models for image and video generation — capabilities, cost-per-generation pricing, and rate limits"
+                subtitle="Curated Vertex AI models powering image and video generation across Creative Studio. Enable or disable models per use case, set defaults for each content type, and monitor cost-per-generation pricing to govern your team's AI spend."
                 actions={
                   <>
                     <Button variant="outline" size="sm" onClick={() => refetchModels()} className="bg-white/60 dark:bg-white/10 border-gray-300/60 dark:border-white/20">
@@ -867,7 +874,7 @@ export default function CreativeStudioAdmin() {
                 badgeIcon={<Palette className="w-4 h-4 text-white/80" />}
                 badgeLabel="Brand Management"
                 title="Brands"
-                subtitle="Visual systems, color palettes, logo libraries, and creative direction presets"
+                subtitle="Manage every brand's visual identity, creative DNA, and style guidelines in one place. Each brand configured here becomes available across Creative Studio, the Chrome Extension, and the Vince mobile app — consistently applied to every generation."
                 actions={
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={() => refetchBrands()} className="bg-white/10 border border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
@@ -923,6 +930,11 @@ export default function CreativeStudioAdmin() {
           {/* Generations Tab */}
           <TabsContent value="generations">
             <GenerationsTab />
+          </TabsContent>
+
+          {/* Campaigns Tab */}
+          <TabsContent value="campaigns">
+            <CampaignsTab />
           </TabsContent>
 
           {/* Media Library Tab */}
@@ -996,8 +1008,8 @@ export default function CreativeStudioAdmin() {
             <CameraPresetAdmin />
           </TabsContent>
 
-          {/* Extension Tab */}
-          <TabsContent value="extension">
+          {/* Downloads Tab */}
+          <TabsContent value="downloads">
             <ExtensionTab />
           </TabsContent>
 
@@ -1012,7 +1024,7 @@ export default function CreativeStudioAdmin() {
                 badgeIcon={<Image className="w-4 h-4 text-gray-700 dark:text-white/80" />}
                 badgeLabel="Welcome Page"
                 title="Welcome Page Images"
-                subtitle="Gemini-generated icon images for the system welcome screen — hero banner and 8 capability cards"
+                subtitle="Manage the hero imagery and capability card visuals displayed on the Creative Studio welcome screen. Generate new images with Gemini's vision models, or upload custom assets — these are the first visuals users see when they log in."
               />
               <WelcomeImagesTab />
             </div>
@@ -1029,7 +1041,7 @@ export default function CreativeStudioAdmin() {
                 badgeIcon={<Settings className="w-4 h-4 text-gray-700 dark:text-white/80" />}
                 badgeLabel="Configuration"
                 title="Settings"
-                subtitle="Platform-wide defaults for cost governance, budget alerting, generation quotas, and brand generation prompts"
+                subtitle="Control platform-wide behavior: generation cost limits, monthly budget alerts, per-user quotas, and the AI system prompts that power brand DNA analysis. Changes here affect every user and every brand in the system."
                 actions={
                   settingsDirty ? (
                     <>
