@@ -40,85 +40,85 @@ const DELIVERABLE_TEMPLATES: Record<DeliverableType, DeliverableTemplate> = {
     name: 'LinkedIn Post',
     default_aspect_ratio: '4:3',
     image_instructions: `Professional marketing image suitable for LinkedIn. Include the brand logo subtly in a corner or along the bottom edge. Render a bold, concise headline in clean sans-serif typography in the upper portion of the image. Use the brand's primary color as an accent bar or background element at the bottom. The overall composition should feel polished and corporate-creative — not stock photography.`,
-    copy_instructions: `Write a LinkedIn post (200–300 characters) with a strong hook, 2–3 value sentences, and a closing call-to-action or question. Return this as the text block BEFORE the image.`,
+    copy_instructions: `Write a complete, publish-ready LinkedIn post:\n- Opening hook line (15–25 words, pattern-interrupt or bold claim)\n- 3–4 substantive sentences with specific details, proof points, or insight (brand voice throughout)\n- A closing call-to-action or thought-provoking question\n- 3–5 relevant hashtags\nTotal: 150–250 words. Label sections: **Hook**, **Body**, **CTA**, **Hashtags**. Return this as the text block BEFORE the image.`,
   },
   product_shot_with_text: {
     name: 'Product Shot',
     default_aspect_ratio: '1:1',
     image_instructions: `Clean product photography on a brand-appropriate surface or background. Render the product name or a 3–5 word headline in the brand's typographic style in the upper or lower third. Place the brand logo in a corner with adequate breathing room. The product should be the clear hero — text and logo are supporting elements, not competing.`,
-    copy_instructions: `Write a 2–3 sentence product caption that highlights the key benefit and includes a CTA. Return this as the text block BEFORE the image.`,
+    copy_instructions: `Write a full product copy package:\n- **Headline**: 4–6 punchy words\n- **Subheadline**: 10–15 words expanding on the core benefit\n- **Body**: 3–4 sentences (60–90 words) highlighting key features, benefits, and brand differentiation\n- **CTA**: 3–5 words\n- **Social Caption**: 60–100 word caption suitable for posting the image on social, including 3–5 hashtags\nReturn this as the text block BEFORE the image.`,
   },
   social_story: {
     name: 'Social Story',
     default_aspect_ratio: '9:16',
     image_instructions: `Vertical social story format (9:16). Render a bold, punchy headline in the upper third in large brand typography. A hero visual fills the middle section. Render a short CTA or swipe-up prompt at the bottom in a contrasting brand color. Brand logo sits in the top corner. The design should feel native to Instagram or TikTok stories — bold, immediate, scroll-stopping.`,
-    copy_instructions: `Write a 1-sentence hook and a 3–5 word CTA for the story overlay. Return this as the text block BEFORE the image.`,
+    copy_instructions: `Write complete story copy:\n- **Hook**: scroll-stopping opening line (10–15 words, rendered on the story)\n- **On-screen text**: 3–5 word overlay text for the middle of the frame\n- **CTA**: 3–5 word swipe-up or tap prompt\n- **Post Caption**: 50–80 word caption for when this story is shared as a feed post, including 4–6 hashtags\nReturn this as the text block BEFORE the image.`,
   },
   display_banner: {
     name: 'Display Banner',
     default_aspect_ratio: '16:9',
     image_instructions: `Horizontal display advertising banner. Clean, high-contrast layout. Render a main headline in bold brand typography on the left or upper portion. Render a shorter subheadline below it. Include a CTA button shape with the CTA text rendered inside it in the lower right. Brand logo in the upper left corner. Background uses the brand's primary or secondary color palette. Professional, ad-ready composition.`,
-    copy_instructions: `Write a headline (6–8 words), a subheadline (10–14 words), and a CTA button label (2–3 words). Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write display banner copy:\n- **Headline**: 6–8 words (bold, benefit-forward)\n- **Subheadline**: 10–14 words (supporting context or offer)\n- **CTA Button**: 2–4 words\n- **Ad Copy Rationale**: 2–3 sentences explaining the creative strategy and what makes this message compelling for this placement\nReturn this as the text block BEFORE the image.`,
   },
   email_header: {
     name: 'Email Header',
     default_aspect_ratio: '3:4',
     image_instructions: `Email newsletter masthead image. Brand logo prominently placed at the top center or top left. Render the email campaign title or subject line in the brand's heading typography below the logo. A supporting visual or brand color background fills the lower portion. Clean, professional, optimized for email rendering — minimal complexity, high contrast.`,
-    copy_instructions: `Write the email subject line (50 characters max) and a preview text snippet (90 characters max). Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write a complete email campaign copy package:\n- **Subject Line**: 40–50 characters (create curiosity, avoid spam triggers)\n- **Preview Text**: 80–100 characters (complements subject, adds urgency or intrigue)\n- **Email Headline**: 8–12 words (the first thing they read after opening)\n- **Opening Body**: 3–4 sentences (60–90 words) — warm, personal, benefit-forward\n- **Middle Body**: 3–4 sentences (60–90 words) — core message, offer details, or story\n- **CTA Button Label**: 3–5 words\n- **PS Line**: optional 1-sentence postscript for emphasis\nReturn this as the text block BEFORE the image.`,
   },
   tiktok_reel: {
     name: 'TikTok / Reels',
     default_aspect_ratio: '9:16',
     image_instructions: `Vertical TikTok/Reels-native format (9:16). Bold, immediate, hook-forward composition. Place a punchy 3–5 word hook in the upper safe zone (top 20%) in large, high-contrast typography — white or brand color with a subtle drop shadow. The central visual is the hero: a single powerful image, product, or person that commands attention. Reserve the bottom safe zone (bottom 20%) for the brand logo and a short CTA. The overall aesthetic should feel native to the For You Page — raw energy, high contrast, scroll-stopping. No busy backgrounds. No stock-photo feel.`,
-    copy_instructions: `Write a 1-sentence TikTok hook (under 10 words), the 3–5 word on-screen text overlay, and 3–5 relevant hashtags. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write complete TikTok/Reels copy:\n- **Hook**: scroll-stopping first line under 8 words (rendered on screen, must stop the scroll)\n- **On-screen Overlay**: 3–5 words of text for the center of the frame\n- **Script/Voiceover**: 3–5 sentences (40–70 words) — what would be said in the video or read as captions\n- **Video Caption**: 80–120 word post caption with energy matching the brand voice\n- **Hashtags**: 5–8 relevant hashtags (mix of broad and niche)\nReturn this as the text block BEFORE the image.`,
   },
   instagram_feed_portrait: {
     name: 'Instagram Feed (Portrait)',
     default_aspect_ratio: '4:5',
     image_instructions: `Instagram feed portrait format (4:5). Optimized for maximum organic reach — the dominant crop in the Instagram feed. The subject (product, person, or lifestyle visual) is centered and fills the frame with breathing room on the sides. Lower third contains a subtle brand color wash or gradient overlay with the brand logo placed cleanly above it. Optional: render a 2–4 word brand or campaign tagline in refined brand typography in the lower third. Composition should feel aspirational, editorial, and native to a premium Instagram feed — not ad-like.`,
-    copy_instructions: `Write an Instagram caption: a 1-sentence lead (hook), 2–3 sentences of brand storytelling, and a closing CTA. Include 5–8 hashtags at the end. Return this as the text block BEFORE the image.`,
+    copy_instructions: `Write a complete Instagram post package:\n- **Caption Hook**: first 1–2 lines (show before "more" tap) — aspirational, editorial voice, stops the scroll\n- **Body**: 3–4 sentences of brand storytelling with sensory details and emotional resonance (80–120 words)\n- **CTA**: 1 sentence directing to bio link or action\n- **Hashtags**: 8–12 hashtags (mix of broad, niche, and brand-specific)\nReturn this as the text block BEFORE the image.`,
   },
   print_full_page: {
     name: 'Print Ad — Full Page',
     default_aspect_ratio: '3:4',
     image_instructions: `Full-page magazine advertisement composition. Professional studio photography aesthetic. Single dominant visual with generous white space for headline placement. CMYK-safe color palette — avoid neon or oversaturated hues that don't reproduce in print. Rich shadow and highlight detail, tonal range suitable for offset printing. No text overlaid — leave a clear zone for headline at the top and body copy at the bottom third. Ultra-high detail, large-format print production quality.`,
-    copy_instructions: `Write a magazine ad: one powerful 5–7 word headline, one 10–15 word subheadline, one 15–20 word body line, one CTA phrase (3–5 words). Tone: authoritative, aspirational. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write full-page magazine ad copy:\n- **Headline**: 5–7 words (powerful, provocative, or poetic — the single most important line)\n- **Subheadline**: 12–18 words (deepens the headline, adds intrigue or context)\n- **Body Copy**: 3–4 sentences (50–80 words) — authoritative, aspirational, benefit-driven brand voice. This is the space to tell the story.\n- **Tagline**: existing brand tagline or a campaign-specific line (3–6 words)\n- **CTA**: 3–5 words\n- **Art Director's Note**: 1–2 sentences on the creative strategy — why this headline and visual combination is the right choice for this brand and brief\nReturn this as the text block BEFORE the image.`,
   },
   print_ooh_billboard: {
     name: 'OOH — Billboard',
     default_aspect_ratio: '16:9',
     image_instructions: `Outdoor billboard advertisement designed to be read at 60mph from 300 feet. Bold, high-contrast composition with a single dominant visual — no clutter. Maximum three words of text rendered in the design, extremely large and legible. High-brightness colors, strong silhouettes, and deep contrast. CMYK-safe color palette. Ultra-high detail for large-format outdoor printing. The composition must work at massive scale: nothing small, nothing subtle.`,
-    copy_instructions: `Write billboard copy: a 3–5 word headline (must work at large scale, read in under 3 seconds), a 2–3 word tagline or CTA, and the brand name. Nothing else — billboards live or die on brevity. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write billboard copy:\n- **Primary Headline**: 3–5 words maximum (must be read and understood in under 3 seconds at highway speed)\n- **Tagline/CTA**: 2–3 words\n- **Campaign Rationale**: 2–3 sentences explaining why this specific message and this level of brevity is the right creative choice for outdoor — what makes it land at scale\nReturn this as the text block BEFORE the image.`,
   },
   print_ooh_transit: {
     name: 'OOH — Transit Shelter',
     default_aspect_ratio: '2:3',
     image_instructions: `Transit shelter advertisement in vertical format, viewed by pedestrians at street level from 5–10 feet away. Strong vertical visual hierarchy: bold visual filling the top half, clear message zone in the bottom half. High contrast for daylight and nighttime readability. CMYK-safe color palette with print-production detail. The composition should feel direct and human — this is street-level communication, not broadcasting from a distance.`,
-    copy_instructions: `Write transit ad copy: a 5–8 word headline, one 10–15 word supporting line, and one CTA. Approachable, human tone. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write transit shelter ad copy:\n- **Headline**: 5–8 words (direct, human, conversational — this is street-level)\n- **Supporting Line**: 12–18 words (adds context, offer, or emotional hook)\n- **CTA**: 3–5 words\n- **Campaign Context**: 2–3 sentences on the audience this is speaking to and why this message resonates with pedestrian transit riders\nReturn this as the text block BEFORE the image.`,
   },
   print_direct_mail: {
     name: 'Direct Mail',
     default_aspect_ratio: '4:3',
     image_instructions: `Direct mail postcard front in horizontal format. Immediate visual impact — this piece must stand out in a stack of mail. Warm, inviting composition with a product or lifestyle hero as the dominant visual. Leave a clear zone for headline overlay text in the upper or lower third. High-quality print aesthetic, CMYK-safe, suitable for offset or digital print production.`,
-    copy_instructions: `Write direct mail copy: an attention-grabbing 5–7 word headline, one 15–20 word offer statement, and one CTA with urgency. Conversational, benefit-forward tone. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write complete direct mail copy:\n- **Outer Headline** (front of card): 5–7 attention-grabbing words — must make the recipient stop discarding\n- **Offer Statement**: 15–25 words — clear value, specific offer or benefit, urgency if appropriate\n- **Body Copy** (back of card): 3–4 sentences (60–90 words) — conversational, personal, benefit-forward\n- **CTA**: 4–6 words with urgency or specificity\n- **P.S. Line**: 1 sentence reinforcing the offer (direct mail P.S. lines are often the second-most-read element)\nReturn this as the text block BEFORE the image.`,
   },
   print_collateral: {
     name: 'Collateral — Sell Sheet',
     default_aspect_ratio: '3:4',
     image_instructions: `Corporate collateral cover — brochure, sell sheet, or folder insert. Clean, professional composition. Brand colors are dominant throughout. Subtle texture or gradient background adds depth without clutter. Clear space for document title text in the top third and brand logo in the bottom right. Premium print quality, CMYK-safe, rich tonal detail suitable for offset printing.`,
-    copy_instructions: `Write collateral cover copy: a document title (3–5 words), one 8–12 word value proposition line, and the brand name/tagline. Tone: confident, professional, trustworthy. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write complete sell sheet / collateral copy:\n- **Document Title**: 3–5 words (the name of this piece)\n- **Value Proposition**: 10–15 words (the single strongest reason a prospect should care)\n- **Section Headlines** (3): three 4–6 word section titles covering the key messages (e.g., product features, proof points, next steps)\n- **Intro Paragraph**: 3–4 sentences (50–70 words) — confident, professional, establishes credibility\n- **Key Benefits**: 3 bulleted benefit statements (10–15 words each)\n- **Contact/CTA**: closing line with call to action\nReturn this as the text block BEFORE the image.`,
   },
   banner_leaderboard: {
     name: 'Banner — Leaderboard',
     default_aspect_ratio: '8:1',
     image_instructions: `IAB 728×90 leaderboard display ad (8:1 extreme horizontal format). Three-zone layout: brand logo and product visual on the left third, headline text in the center third in bold brand typography, CTA button on the right third with contrasting brand color fill. High contrast background using the brand's primary or secondary color. Text must be large enough to read at screen size — no fine print. Clean, ad-ready composition with clear visual hierarchy.`,
-    copy_instructions: `Write a 4–6 word headline and a 2–3 word CTA button label. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write leaderboard banner copy:\n- **Headline**: 4–6 words (center zone text — bold, benefit-forward)\n- **CTA Button**: 2–3 words\n- **A/B Variant**: an alternative headline (4–6 words) for testing\n- **Placement Strategy Note**: 1–2 sentences on what pages or audience segments this banner should run against and why\nReturn this as the text block BEFORE the image.`,
   },
   banner_skyscraper: {
     name: 'Banner — Skyscraper',
     default_aspect_ratio: '1:4',
     image_instructions: `IAB 160×600 wide skyscraper display ad (1:4 extreme vertical format). Three-zone vertical stack: brand logo at top with adequate padding, a product or lifestyle visual filling the wide middle section, CTA button at the bottom in a contrasting brand color with the CTA text rendered inside. Background uses the brand's primary color or a clean neutral. Text elements must be large enough to read comfortably — the column format demands bold, legible typography. Professional, ad-ready.`,
-    copy_instructions: `Write a 3–5 word headline and a 2–3 word CTA button label. Return these as the text block BEFORE the image.`,
+    copy_instructions: `Write skyscraper banner copy:\n- **Headline**: 3–5 words (top of the ad, immediate brand message)\n- **Supporting Line**: 6–10 words (middle section, adds context or offer)\n- **CTA Button**: 2–4 words\n- **A/B Variant Headline**: alternative 3–5 word headline for testing\n- **Placement Strategy Note**: 1–2 sentences on what content environments this skyscraper should appear alongside\nReturn this as the text block BEFORE the image.`,
   },
 };
 
@@ -242,7 +242,7 @@ serve(async (req) => {
 
     const baseInstruction = system_context
       ? `${system_context}\n\n${brandContext}`
-      : `You are Vince, an expert AI creative director for Vince. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.`;
+      : `You are Vince, an expert AI creative director for Vince. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.\n\nCRITICAL: Every image you generate must be a FULLY DESIGNED MARKETING ASSET — not a photograph or portrait. Each image must have text rendered directly on it (headlines, CTAs), the brand logo placed in the composition, and brand color treatments applied. Think: finished ad creative, not a photo shoot. If a subject reference is provided, incorporate them INTO the designed layout as a visual element within the composition — the subject does not replace the design.`;
     const fullSystemInstruction = `${baseInstruction}${memoryRules}`;
 
     // Default to 3 standard deliverables when none are specified
@@ -306,7 +306,7 @@ serve(async (req) => {
       }
       if (descriptions.length > 0) {
         const subjectBlock = descriptions.map((d, i) => `Reference subject ${i + 1}: ${d}`).join('\n');
-        deliverablePrompt = `SUBJECT REFERENCE:\n${subjectBlock}\n\nFeature the above subject(s) as the primary visual in all generated images. Match the described appearance closely.\n\n${deliverablePrompt}`;
+        deliverablePrompt = `SUBJECT REFERENCE:\n${subjectBlock}\n\nIncorporate the above subject(s) into each deliverable's designed layout. The subject is a visual element within the composition — not the entire image. Each deliverable must still include all required design elements (headlines, logo, brand colors, typography) rendered directly on the image as specified.\n\n${deliverablePrompt}`;
       }
     }
 
@@ -315,25 +315,35 @@ serve(async (req) => {
     const parts: PackagePart[] = [];
     const imageUrls: string[] = [];
 
-    if (pre_generated_image_url) {
-      // Copy-only path: user already has a generated image (e.g. from generate_headshot_scene).
-      // Generate text copy with a fast text model, then attach the pre-generated image.
-      console.log('[generate-creative-package] pre_generated_image_url provided — generating copy only');
-      const copyPrompt = deliverablePrompt + '\n\nGenerate only the written copy (headlines, body text, CTAs). Do NOT generate any images.';
-      const copyResponse = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: [{ role: 'user', parts: [{ text: copyPrompt }] }],
-        config: {
-          responseModalities: ['TEXT'],
-          systemInstruction: fullSystemInstruction,
-        },
-      });
-      for (const part of copyResponse.candidates?.[0]?.content?.parts ?? []) {
-        if (part.text) parts.push({ type: 'text', content: part.text });
+    // If a pre-generated image is provided (e.g. from generate_headshot_scene), treat it as a
+    // reference subject via Vision analysis so the full interleaved generation path produces
+    // properly designed deliverables incorporating that subject.
+    if (pre_generated_image_url && !(reference_image_urls && reference_image_urls.length > 0)) {
+      console.log('[generate-creative-package] pre_generated_image_url provided — analyzing as subject reference');
+      const img = await fetchImageAsBase64(pre_generated_image_url);
+      if (img) {
+        try {
+          const visionAi = new GoogleGenAI({ apiKey });
+          const visionRes = await visionAi.models.generateContent({
+            model: 'gemini-2.0-flash',
+            contents: [{
+              role: 'user',
+              parts: [
+                { inlineData: { mimeType: img.mimeType, data: img.data } },
+                { text: 'Describe this image concisely for use as a subject reference in image generation. If it shows a person, describe their physical appearance (hair color and style, eye color if visible, skin tone, approximate age, build, attire, expression). Be specific and visual — 2-4 sentences.' },
+              ],
+            }],
+          });
+          const desc = visionRes.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (desc) {
+            deliverablePrompt = `SUBJECT REFERENCE:\nReference subject 1: ${desc.trim()}\n\nIncorporate the above subject into each deliverable's designed layout. The subject is a visual element within the composition — not the entire image. Each deliverable must still include all required design elements (headlines, logo, brand colors, typography) rendered directly on the image as specified.\n\n${deliverablePrompt}`;
+          }
+        } catch (e) {
+          console.warn('[generate-creative-package] Vision analysis of pre_generated_image_url failed:', e);
+        }
       }
-      parts.push({ type: 'image', image_url: pre_generated_image_url });
-      imageUrls.push(pre_generated_image_url);
-    } else {
+    }
+
     // Call Gemini with interleaved output
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
@@ -405,8 +415,6 @@ serve(async (req) => {
         }
       }
     }
-    } // end else (full interleaved generation path)
-
     const latencyMs = Date.now() - startTime;
     const ASPECT_RATIO_NAMES: Record<string, string> = {
       '16:9': 'Widescreen',
