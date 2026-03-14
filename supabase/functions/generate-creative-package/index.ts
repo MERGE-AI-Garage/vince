@@ -315,35 +315,26 @@ serve(async (req) => {
     const parts: PackagePart[] = [];
     const imageUrls: string[] = [];
 
-    // If a pre-generated image is provided (e.g. from generate_headshot_scene), treat it as a
-    // reference subject via Vision analysis so the full interleaved generation path produces
-    // properly designed deliverables incorporating that subject.
-    if (pre_generated_image_url && !(reference_image_urls && reference_image_urls.length > 0)) {
-      console.log('[generate-creative-package] pre_generated_image_url provided — analyzing as subject reference');
-      const img = await fetchImageAsBase64(pre_generated_image_url);
-      if (img) {
-        try {
-          const visionAi = new GoogleGenAI({ apiKey });
-          const visionRes = await visionAi.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: [{
-              role: 'user',
-              parts: [
-                { inlineData: { mimeType: img.mimeType, data: img.data } },
-                { text: 'Describe this image concisely for use as a subject reference in image generation. If it shows a person, describe their physical appearance (hair color and style, eye color if visible, skin tone, approximate age, build, attire, expression). Be specific and visual — 2-4 sentences.' },
-              ],
-            }],
-          });
-          const desc = visionRes.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (desc) {
-            deliverablePrompt = `SUBJECT REFERENCE:\nReference subject 1: ${desc.trim()}\n\nIncorporate the above subject into each deliverable's designed layout. The subject is a visual element within the composition — not the entire image. Each deliverable must still include all required design elements (headlines, logo, brand colors, typography) rendered directly on the image as specified.\n\n${deliverablePrompt}`;
-          }
-        } catch (e) {
-          console.warn('[generate-creative-package] Vision analysis of pre_generated_image_url failed:', e);
-        }
+    if (pre_generated_image_url) {
+      // Copy-only path: caller has already generated the visual (e.g. generate_headshot_scene).
+      // Generate only the written copy with a fast text model, then attach the supplied image.
+      // This preserves the person's actual likeness — re-generating the image would lose it.
+      console.log('[generate-creative-package] pre_generated_image_url set — generating copy only, skipping image generation');
+      const copyPrompt = deliverablePrompt + '\n\nGenerate ONLY the written copy (headlines, body text, CTAs, hashtags). Do NOT generate or describe any images.';
+      const copyResponse = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{ role: 'user', parts: [{ text: copyPrompt }] }],
+        config: {
+          responseModalities: ['TEXT'],
+          systemInstruction: fullSystemInstruction,
+        },
+      });
+      for (const p of copyResponse.candidates?.[0]?.content?.parts ?? []) {
+        if (p.text) parts.push({ type: 'text', content: p.text });
       }
-    }
-
+      parts.push({ type: 'image', image_url: pre_generated_image_url });
+      imageUrls.push(pre_generated_image_url);
+    } else {
     // Call Gemini with interleaved output
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
@@ -415,6 +406,8 @@ serve(async (req) => {
         }
       }
     }
+    } // end else (full interleaved generation)
+
     const latencyMs = Date.now() - startTime;
     const ASPECT_RATIO_NAMES: Record<string, string> = {
       '16:9': 'Widescreen',
