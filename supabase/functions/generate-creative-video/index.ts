@@ -345,14 +345,37 @@ serve(async (req) => {
     const stripImageDataUri = (s: string) => s.replace(/^data:image\/[a-zA-Z0-9+]+;base64,/i, '');
     const stripVideoDataUri = (s: string) => s.replace(/^data:video\/[a-zA-Z0-9+]+;base64,/i, '');
 
+    // Fetch a URL and return base64 string + mime type
+    async function fetchToBase64(url: string): Promise<{ data: string; mimeType: string }> {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Failed to fetch image: HTTP ${res.status} from ${url}`);
+      const buffer = await res.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return {
+        data: btoa(binary),
+        mimeType: res.headers.get('content-type')?.split(';')[0] || 'image/jpeg',
+      };
+    }
+
     const instance: Record<string, unknown> = {
       prompt: prompt,
     };
 
     // Add input image for image-to-video or keyframe start (inlineData format)
     if (input_image && (generation_type === 'image_to_video' || generation_type === 'keyframe_video')) {
+      let imageData: string;
+      let imageMime = 'image/jpeg';
+      if (input_image.startsWith('http')) {
+        const fetched = await fetchToBase64(input_image);
+        imageData = fetched.data;
+        imageMime = fetched.mimeType;
+      } else {
+        imageData = stripImageDataUri(input_image);
+      }
       instance.image = {
-        inlineData: { mimeType: 'image/png', data: stripImageDataUri(input_image) },
+        inlineData: { mimeType: imageMime, data: imageData },
       };
     }
 
@@ -404,23 +427,24 @@ serve(async (req) => {
       };
     }
 
-    // Add reference images (Veo 3.1 Quality only — fast model silently skips)
+    // Add reference images into instance (referenceImages belongs in instances, not parameters)
     if (reference_images && reference_images.length > 0) {
-      if (modelUsed.includes('fast')) {
-        log('API_CALL', 'Reference images skipped — not supported by fast model, use quality model');
-      } else {
-        // Reference images require 8-second videos
-        if (parameters.durationSeconds !== 8) {
-          parameters.durationSeconds = 8;
-          log('API_CALL', 'Duration forced to 8s for reference image generation');
-        }
-        parameters.referenceImages = reference_images.slice(0, 3).map((img: string) => ({
-          image: {
-            inlineData: { mimeType: 'image/png', data: stripImageDataUri(img) },
-          },
-          referenceType: 'asset',
-        }));
-      }
+      const refImageParts = await Promise.all(
+        reference_images.slice(0, 3).map(async (img: string) => {
+          let data: string;
+          let mimeType = 'image/jpeg';
+          if (img.startsWith('http')) {
+            const fetched = await fetchToBase64(img);
+            data = fetched.data;
+            mimeType = fetched.mimeType;
+          } else {
+            data = stripImageDataUri(img);
+          }
+          return { image: { inlineData: { mimeType, data } }, referenceType: 'asset' };
+        })
+      );
+      instance.referenceImages = refImageParts;
+      log('API_CALL', `Added ${refImageParts.length} reference image(s) to instance`);
     }
 
     const requestBody = {

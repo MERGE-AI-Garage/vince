@@ -24,6 +24,7 @@ import {
   type BrandCardImageKey,
   type CreativeStudioBrand,
 } from '@/types/creative-studio';
+import { useBrand } from '@/hooks/useCreativeStudioBrands';
 import { ImageGenerationConfirm, type PendingImageGeneration } from '@/components/ui/image-generation-confirm';
 
 const ALL_CARD_KEYS: BrandCardImageKey[] = [
@@ -42,7 +43,8 @@ export function BrandCardImagesSection({ brand, onUpdate }: BrandCardImagesSecti
   const [pendingGen, setPendingGen] = useState<PendingImageGeneration | null>(null);
   const [mediaPickerKey, setMediaPickerKey] = useState<BrandCardImageKey | null>(null);
 
-  const images = (brand.card_images || {}) as Record<string, string>;
+  const { data: liveBrand } = useBrand(brand.id);
+  const images = ((liveBrand?.card_images ?? brand.card_images) || {}) as Record<string, string>;
   const presentCount = ALL_CARD_KEYS.filter(k => images[k]).length;
   const missingCount = ALL_CARD_KEYS.length - presentCount;
 

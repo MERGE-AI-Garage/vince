@@ -65,7 +65,7 @@ interface Brand {
   logo_url: string | null;
 }
 
-function BrandLensHome() {
+function VinceHome() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loadingBrands, setLoadingBrands] = useState(true);
@@ -213,7 +213,7 @@ export function MobileApp() {
           {!splashDone && <MobileSplash onComplete={handleSplashComplete} />}
           <AuthGate>
             <AuthProvider>
-              <BrandLensHome />
+              <VinceHome />
             </AuthProvider>
           </AuthGate>
         </MobileErrorBoundary>

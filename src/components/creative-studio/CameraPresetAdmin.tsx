@@ -300,7 +300,7 @@ export function CameraPresetAdmin() {
             No camera options configured.
           </p>
         ) : (
-          <div className="max-h-[600px] overflow-y-auto">
+          <div>
             {/* Select all header */}
             <div className="flex items-center gap-2 px-3 py-1.5 mb-1">
               <Checkbox

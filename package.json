@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:functions": "bash scripts/deploy-functions.sh"
   },
   "dependencies": {
     "@google/genai": "^1.44.0",

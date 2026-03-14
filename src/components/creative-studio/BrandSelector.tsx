@@ -70,7 +70,7 @@ export function BrandSelector({
                 <span className="font-medium">{selectedBrand.name}</span>
               </div>
             ) : (
-              <span className="text-muted-foreground">No Brand</span>
+              <span className="text-muted-foreground">Select a brand to get started</span>
             )}
           </SelectValue>
         </SelectTrigger>

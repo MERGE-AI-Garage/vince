@@ -522,10 +522,10 @@ export function BrandAgentApp({
         }
       }
 
-      // Extract edit_image result
+      // Extract edit_image or generate_headshot_scene result (both return output_url)
       let editedImage: EditedImage | undefined;
       const editAction = response.tool_actions?.find(
-        (a: ToolAction) => a.toolName === 'edit_image' && a.success
+        (a: ToolAction) => (a.toolName === 'edit_image' || a.toolName === 'generate_headshot_scene') && a.success
       );
       if (editAction?.result) {
         const r = editAction.result as Record<string, unknown>;
@@ -831,7 +831,7 @@ export function BrandAgentApp({
                   generated_videos: (result.output_urls as string[]),
                 },
               }));
-            } else if (toolName === 'edit_image' && result.output_url) {
+            } else if ((toolName === 'edit_image' || toolName === 'generate_headshot_scene') && result.output_url) {
               const editMsgId = uuidv4();
               setMessages(prev => [...prev, {
                 id: editMsgId,

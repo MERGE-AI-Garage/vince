@@ -24,7 +24,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 
 ### Infrastructure
 - [x] Supabase project provisioned (all tables, RLS policies, seed data)
-- [x] Auth working — demo user (`demo@brandlens.dev`) with admin role
+- [x] Auth working — demo user (`demo@vince.ai`) with admin role
 - [x] Storage buckets: `creative-studio`, `media`, `brand-logos`
 - [x] 2 demo brands seeded in `creative_studio_brands`
 - [x] 6 image generation models seeded in `creative_studio_models`

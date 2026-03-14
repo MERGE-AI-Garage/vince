@@ -177,7 +177,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'generate_creative_package',
-    description: 'Generate a complete creative package with interleaved text and images in a single call. Use this when the user asks for a campaign, a set of deliverables, or multiple assets at once. This generates ALL copy AND images together — much faster than generating images one by one. Returns alternating text blocks (headlines, body copy, strategy notes) and images. PREFER this over generate_image when the user wants a creative campaign or multiple deliverables. Use deliverable_type for common named formats (linkedin_post, product_shot_with_text, social_story, display_banner, email_header) — these include pre-built instructions for branded typography and layout rendered directly into the image.',
+    description: 'Generate a complete creative package with interleaved text and images in a single call. Use this when the user asks for a campaign, a set of deliverables, or multiple assets at once. This generates ALL copy AND images together — much faster than generating images one by one. Returns alternating text blocks (headlines, body copy, strategy notes) and images. PREFER this over generate_image when the user wants a creative campaign or multiple deliverables. Use deliverable_type for common named formats (linkedin_post, product_shot_with_text, social_story, display_banner, email_header) — these include pre-built instructions for branded typography and layout rendered directly into the image. WARNING: Do NOT use this tool when the conversation contains "[Reference images uploaded by user: ...]" and the user wants their own face/likeness to appear in the output — use generate_headshot_scene instead, as this tool cannot reproduce a specific real person\'s face.',
     parameters: {
       type: 'object',
       properties: {
@@ -206,8 +206,36 @@ const VINCE_TOOLS = [
           },
           description: 'Specific deliverables to generate. Use deliverable_type for named formats which include branded text rendering. Mix typed and custom deliverables freely.',
         },
+        reference_image_urls: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'URLs of reference images the user uploaded (headshots, logos, products). Pass these when the user has shared images in the conversation to use as subjects or visual references in the creative package. The images will be given to the image generation model.',
+        },
       },
       required: ['brief'],
+    },
+  },
+  {
+    name: 'generate_headshot_scene',
+    description: 'Place a specific person (from their uploaded headshot) into a new scene or environment using image-to-image transformation. Use this when the user has uploaded a headshot and wants to appear in a generated image. The person\'s face and likeness are preserved while the scene, background, and environment are changed. ALWAYS use this instead of generate_image when the user has provided a headshot URL and wants to appear in the scene.',
+    parameters: {
+      type: 'object',
+      properties: {
+        photo_url: {
+          type: 'string',
+          description: 'URL of the uploaded headshot. Use the URL from "[Reference images uploaded by user: ...]" in the conversation.',
+        },
+        scene_description: {
+          type: 'string',
+          description: 'Description of the scene to place the person in. Be specific: setting, lighting, activity, background, other people, props, attire if different.',
+        },
+        aspect_ratio: {
+          type: 'string',
+          enum: ['1:1', '4:5', '16:9', '9:16', '4:3', '3:4'],
+          description: 'Output aspect ratio. Default 4:5 for LinkedIn/Instagram portrait. Use 16:9 for banners.',
+        },
+      },
+      required: ['photo_url', 'scene_description'],
     },
   },
   {
@@ -572,6 +600,8 @@ async function executeTool(
       return await listBrandReferences(parameters, context, supabase);
     case 'generate_creative_package':
       return await generateCreativePackage(parameters, context, supabase);
+    case 'generate_headshot_scene':
+      return await generateHeadshotScene(parameters, context, supabase);
     case 'create_brand':
       return await createBrand(parameters, context, supabase);
     case 'analyze_brand_website':
@@ -1120,6 +1150,121 @@ async function setGuardrailActive(
   };
 }
 
+async function generateHeadshotScene(
+  params: Record<string, unknown>,
+  context: { brand_id: string; user_id: string },
+  supabase: ReturnType<typeof createClient>,
+) {
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) throw new Error('GEMINI_API_KEY not configured');
+
+  const photoUrl = params.photo_url as string;
+  const sceneDescription = params.scene_description as string;
+  const aspectRatio = (params.aspect_ratio as string) || '4:5';
+
+  // Download the photo via service role storage client to handle private/authenticated buckets
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  let photoBase64: string;
+  let photoMimeType: string;
+
+  const publicPrefix = `${supabaseUrl}/storage/v1/object/public/creative-studio/`;
+  if (photoUrl.startsWith(publicPrefix)) {
+    const bucketPath = photoUrl.slice(publicPrefix.length);
+    const { data: blobData, error: downloadError } = await supabase.storage
+      .from('creative-studio')
+      .download(bucketPath);
+    if (downloadError || !blobData) throw new Error(`Failed to download reference photo: ${downloadError?.message}`);
+    const photoBuffer = await blobData.arrayBuffer();
+    const photoBytes = new Uint8Array(photoBuffer);
+    const chunkSize = 8192;
+    let binary = '';
+    for (let i = 0; i < photoBytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...photoBytes.subarray(i, Math.min(i + chunkSize, photoBytes.length)));
+    }
+    photoBase64 = btoa(binary);
+    photoMimeType = blobData.type || 'image/jpeg';
+  } else {
+    // Fallback: direct fetch for URLs outside our storage (e.g., external images)
+    const photoRes = await fetch(photoUrl);
+    if (!photoRes.ok) throw new Error(`Failed to fetch reference photo: HTTP ${photoRes.status}`);
+    const photoBuffer = await photoRes.arrayBuffer();
+    const photoBytes = new Uint8Array(photoBuffer);
+    const chunkSize = 8192;
+    let binary = '';
+    for (let i = 0; i < photoBytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...photoBytes.subarray(i, Math.min(i + chunkSize, photoBytes.length)));
+    }
+    photoBase64 = btoa(binary);
+    photoMimeType = photoRes.headers.get('content-type') || 'image/jpeg';
+  }
+
+  const prompt = `Transform this person's photo: ${sceneDescription}.
+
+CRITICAL REQUIREMENTS:
+- Keep the same face — maintain the person's facial features, likeness, and identity EXACTLY
+- Only change the scene, background, environment, clothing context, and lighting
+- Preserve skin tone, facial structure, eye color, and hair style
+- The person should appear naturally integrated into the described setting
+- Professional quality, photorealistic`;
+
+  // Call Gemini with IMAGE-only response modality (required for faithful person reproduction)
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent`;
+  const requestBody = {
+    contents: [{
+      parts: [
+        { inline_data: { mime_type: photoMimeType, data: photoBase64 } },
+        { text: prompt },
+      ],
+    }],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
+  };
+
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Gemini API error: ${response.status} — ${err.slice(0, 300)}`);
+  }
+
+  const data = await response.json();
+  const imagePart = data.candidates?.[0]?.content?.parts?.find((p: { inlineData?: unknown }) => p.inlineData);
+  if (!(imagePart as { inlineData?: { data?: string } })?.inlineData?.data) {
+    const finishReason = data.candidates?.[0]?.finishReason;
+    const safetyRatings = data.candidates?.[0]?.safetyRatings;
+    const blockReason = data.promptFeedback?.blockReason;
+    console.error('[generateHeadshotScene] No image returned. finishReason:', finishReason, '| blockReason:', blockReason, '| safetyRatings:', JSON.stringify(safetyRatings), '| full response:', JSON.stringify(data).slice(0, 500));
+    throw new Error(`No image returned from Gemini (finishReason: ${finishReason || 'unknown'}, blockReason: ${blockReason || 'none'})`);
+  }
+
+  const base64Image = (imagePart as { inlineData: { data: string; mimeType?: string } }).inlineData.data;
+  const mimeType = (imagePart as { inlineData: { mimeType?: string } }).inlineData.mimeType || 'image/jpeg';
+  const ext = mimeType.split('/')[1] || 'jpg';
+
+  // Upload to Supabase Storage
+  const path = `headshot-scenes/${context.user_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const imageBuffer = Uint8Array.from(atob(base64Image), c => c.charCodeAt(0));
+
+  const { error: uploadError } = await supabase.storage
+    .from('creative-studio')
+    .upload(path, imageBuffer, { contentType: mimeType, upsert: false });
+
+  if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`);
+
+  const { data: pub } = supabase.storage.from('creative-studio').getPublicUrl(path);
+
+  return {
+    success: true,
+    output_url: pub.publicUrl,
+    message: 'Scene generated with the person placed in the requested environment.',
+  };
+}
+
 async function generateCreativePackage(
   params: Record<string, unknown>,
   context: { brand_id: string; user_id: string },
@@ -1138,6 +1283,7 @@ async function generateCreativePackage(
       brand_id: context.brand_id,
       brief: params.brief as string,
       deliverables: params.deliverables || undefined,
+      reference_image_urls: params.reference_image_urls || undefined,
       user_id: context.user_id,
     }),
   });
@@ -1259,13 +1405,13 @@ async function generateVideo(
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-  const modelParam = (params.model as string) || 'fast';
-  const modelId = modelParam === 'quality' ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
-
   const referenceImages: string[] = [];
   if (params.reference_image_url) {
     referenceImages.push(params.reference_image_url as string);
   }
+
+  const modelParam = (params.model as string) || 'fast';
+  const modelId = modelParam === 'quality' ? 'veo-3.1-generate-preview' : 'veo-3.1-fast-generate-preview';
 
   const body = JSON.stringify({
     generation_type: (params.generation_type as string) || 'text_to_video',
@@ -1918,6 +2064,20 @@ GENERATION FLOW:
 7. After generation, present the results and offer to save the prompt to the library if it's a keeper.
 8. If quota is exhausted, inform the user of the reset date and offer to save the prompt for later.
 
+UPLOADED REFERENCE IMAGES:
+- When the user uploads images (headshots, logos, products), you will see "[Reference images uploaded by user: url1, url2]" in their message.
+- ALWAYS include those URLs as reference_image_urls when calling generate_creative_package or generate_image.
+- These images become the actual subjects in the generated output — a headshot means that person appears, a logo means that logo appears.
+- Never claim to use an uploaded image unless you actually passed its URL to the generation tool.
+
+HEADSHOT SCENE GENERATION — MANDATORY RULE:
+When the conversation contains "[Reference images uploaded by user: ...]" AND the user wants to appear in a generated scene or image, you MUST call generate_headshot_scene. This overrides generate_image and generate_creative_package.
+- Extract the photo URL from "[Reference images uploaded by user: url]" and pass it as photo_url exactly.
+- Write a detailed scene_description: exact setting, lighting, who else is present, what the person is doing, background.
+- After generate_headshot_scene returns output_url, write the social/LinkedIn copy yourself in your text response.
+- NEVER call generate_image or generate_creative_package when the user's own image needs to appear — those cannot reproduce a real person's face.
+- Complete deliverable = generate_headshot_scene (image) + your text response (copy). No creative package needed.
+
 REFERENCE IMAGE COLLECTIONS:
 - When the user mentions a specific product, person, or character by name, use list_brand_references to check if reference collections exist.
 - For "show our CEO at a conference" requests, include the character collection for that person via reference_collections.
@@ -1945,6 +2105,17 @@ Use generate_video when the user asks for a video, motion concept, or moving cam
 - Use reference_image_url when the user wants consistent subject/logo/product in the video — quality model only.
 - Video renders in 1-3 minutes and appears in the History panel automatically.
 - NEVER narrate generating a video without calling generate_video — text descriptions do nothing.
+
+VIDEO WITH HEADSHOT — MANDATORY TWO-STEP RULE:
+When the user wants to appear in a video (has uploaded a headshot AND wants to be placed in a scene), you MUST chain two tool calls:
+1. Call generate_headshot_scene with photo_url=<headshot URL> and a vivid scene_description (location, action, lighting, what they're wearing, who else is present).
+2. When generate_headshot_scene returns output_url, immediately call generate_video with generation_type="image_to_video" and input_image_url=<output_url from step 1>.
+   - The prompt for generate_video should describe camera motion and action (e.g., "slow push-in, applause from audience, dramatic stage lighting").
+   - Model can be fast or quality — both support image_to_video.
+3. NEVER call generate_video with text_to_video when the user wants to appear in it — that generates a fictional person, not them.
+Example: user says "put me on stage at Google Next" →
+  Step 1: generate_headshot_scene(photo_url=<headshot>, scene_description="person in blazer on stage at Google Next, dramatic stage lighting, large audience, Google branding visible on backdrop")
+  Step 2: generate_video(generation_type="image_to_video", input_image_url=<step1 output_url>, prompt="slow cinematic push-in, audience clapping, celebratory atmosphere")
 
 CRITICAL — TOOL USAGE FOR GENERATION:
 - NEVER say "I've generated", "here are your images", or "I created the image" unless you have ACTUALLY called the generate_image tool.
@@ -2197,7 +2368,13 @@ serve(async (req) => {
     let response = result.response;
 
     const toolCalls: ToolCall[] = [];
-    let functionCallsResult = response.functionCalls();
+    let functionCallsResult: ReturnType<typeof response.functionCalls>;
+    try {
+      functionCallsResult = response.functionCalls();
+    } catch (fcErr) {
+      console.error('[Vince] response.functionCalls() threw — treating as no tool calls:', fcErr instanceof Error ? fcErr.message : String(fcErr));
+      functionCallsResult = undefined;
+    }
 
     while (functionCallsResult && functionCallsResult.length > 0) {
       const functionCall = functionCallsResult[0];
@@ -2207,6 +2384,27 @@ serve(async (req) => {
       // Gemini hallucinates URLs for inline images — always use the actual inline data
       if (toolName === 'analyze_brand_image' && inlineImageDataUris.length > 0) {
         parameters.image_urls = inlineImageDataUris;
+      }
+
+      // Auto-inject uploaded reference image into video/headshot tools when Gemini omits it.
+      // Gemini frequently ignores the system prompt rule about passing reference_image_url.
+      // Scan current message and conversation history for the uploaded image marker.
+      if ((toolName === 'generate_video' || toolName === 'generate_headshot_scene') && !parameters.input_image_url && !parameters.reference_image_url && !parameters.photo_url) {
+        const allContent = [user_message || '', ...messages.slice(0, -1).map(m => m.content)];
+        for (const content of allContent) {
+          const match = content.match(/\[Reference images uploaded by user: ([^\]]+)\]/);
+          if (match) {
+            const urls = match[1].split(',').map(u => u.trim()).filter(Boolean);
+            if (urls.length > 0) {
+              if (toolName === 'generate_headshot_scene') {
+                parameters.photo_url = urls[0];
+                console.log(`[Vince] Auto-injected photo_url into generate_headshot_scene: ${urls[0]}`);
+              }
+              // generate_video: only auto-inject when explicitly image_to_video; don't force it for text_to_video
+              break;
+            }
+          }
+        }
       }
 
       console.log(`[Vince] Executing tool: ${toolName}`, JSON.stringify(parameters).slice(0, 200));

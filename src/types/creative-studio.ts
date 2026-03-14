@@ -23,7 +23,9 @@ export type GenerationType =
   | 'keyframe_video'
   | 'ingredients_to_video'
   | 'json_prompt_video'
-  | 'scene_extension';
+  | 'scene_extension'
+  | 'creative_package'
+  | 'brand_card';
 
 export type GenerationStatus = 'pending' | 'processing' | 'completed' | 'failed';
 

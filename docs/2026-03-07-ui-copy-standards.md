@@ -10,7 +10,7 @@ Vince uses neutral, product-agnostic copy throughout. These are the conventions 
 - Placeholder brand examples use well-known neutral brands: Nike, Apple, Patagonia
 - Placeholder approval notes use: `"e.g. Approved for all client work"`
 - `approved_workflow_stage` DB values use `'Agency Marketing'`
-- User-Agent strings use `BrandLens-*` prefix (`BrandLens-Bot/1.0`, `BrandLens-Analyzer/1.0`)
+- User-Agent strings use `Vince-*` prefix (`Vince-Bot/1.0`, `Vince-Analyzer/1.0`)
 - Compliance guidance refers to "team members" generically
 
 ## File Reference
@@ -30,10 +30,10 @@ Vince uses neutral, product-agnostic copy throughout. These are the conventions 
 - `approved_workflow_stage` type union: `'Agency Marketing'`
 
 ### `supabase/functions/_shared/content-scraper.ts`
-- User-Agent: `BrandLens-Bot/1.0`
+- User-Agent: `Vince-Bot/1.0`
 
 ### `supabase/functions/analyze-brand-website/index.ts`
-- User-Agent: `BrandLens-Analyzer/1.0`
+- User-Agent: `Vince-Analyzer/1.0`
 - Gemini prompt examples use neutral brand names
 
 ### `src/components/creative-studio/AIGuidelinesDialog.tsx`

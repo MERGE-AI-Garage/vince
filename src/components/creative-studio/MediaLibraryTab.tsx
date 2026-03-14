@@ -110,19 +110,16 @@ export function MediaLibraryTab() {
         .from('media')
         .select('*')
         .is('deleted_at', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(300);
 
       if (currentFolderId) {
         mediaQuery = mediaQuery.eq('folder_id', currentFolderId);
       }
-      // At root: show all files (not restricted to folder_id = null)
 
       if (fileTypeFilter !== 'all') {
         mediaQuery = mediaQuery.eq('file_type', fileTypeFilter);
       }
-
-      const { data: mediaData, error: mediaError } = await mediaQuery;
-      if (mediaError) throw mediaError;
 
       let foldersQuery = supabase
         .from('media_folders')
@@ -135,19 +132,21 @@ export function MediaLibraryTab() {
         foldersQuery = foldersQuery.is('parent_id', null);
       }
 
-      const { data: foldersData, error: foldersError } = await foldersQuery;
+      const [
+        { data: mediaData, error: mediaError },
+        { data: foldersData, error: foldersError },
+        { data: tagsData, error: tagsError },
+        { data: allFoldersData, error: allFoldersError },
+      ] = await Promise.all([
+        mediaQuery,
+        foldersQuery,
+        supabase.from('media_tags').select('*').order('name'),
+        supabase.from('media_folders').select('*').order('path'),
+      ]);
+
+      if (mediaError) throw mediaError;
       if (foldersError) throw foldersError;
-
-      const { data: tagsData, error: tagsError } = await supabase
-        .from('media_tags')
-        .select('*')
-        .order('name');
       if (tagsError) throw tagsError;
-
-      const { data: allFoldersData, error: allFoldersError } = await supabase
-        .from('media_folders')
-        .select('*')
-        .order('path');
       if (allFoldersError) throw allFoldersError;
 
       setMedia(mediaData || []);

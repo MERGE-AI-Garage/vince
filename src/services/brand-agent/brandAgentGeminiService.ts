@@ -327,15 +327,51 @@ export async function sendMessageToBrandAgent(
   const settings = await getBrandAgentSettings();
   const activeBrandId = brandId || settings.default_brand_id;
 
-  // Build multimodal parts[] if attachments are present
-  const parts = attachments && attachments.length > 0
-    ? [
-        { text: message },
-        ...attachments.map(att => ({
-          inlineData: { mimeType: att.mimeType, data: att.data },
-        })),
-      ]
-    : undefined;
+  // Upload image attachments to storage so their URLs can be passed to generation tools.
+  // Track which attachment indices were successfully uploaded — those skip inline data below.
+  const uploadedIndices = new Set<number>();
+  const referenceImageUrls: string[] = [];
+  if (attachments && attachments.length > 0 && userId) {
+    for (let i = 0; i < attachments.length; i++) {
+      const att = attachments[i];
+      if (att.mimeType.startsWith('image/')) {
+        try {
+          const ext = att.mimeType === 'image/png' ? 'png'
+            : att.mimeType === 'image/gif' ? 'gif'
+            : att.mimeType === 'image/webp' ? 'webp'
+            : 'jpg';
+          const path = `reference-images/${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+          const buffer = Uint8Array.from(atob(att.data), c => c.charCodeAt(0));
+          const { error: uploadError } = await supabase.storage
+            .from('creative-studio')
+            .upload(path, buffer, { contentType: att.mimeType, upsert: false });
+          if (!uploadError) {
+            const { data: pub } = supabase.storage.from('creative-studio').getPublicUrl(path);
+            referenceImageUrls.push(pub.publicUrl);
+            uploadedIndices.add(i);
+          }
+        } catch { /* non-critical — image falls back to inline data */ }
+      }
+    }
+  }
+
+  // Build multimodal parts[] if attachments are present.
+  // Images uploaded to storage are sent as URLs only — their base64 data can be several MB,
+  // which can exceed the edge function request body limit.
+  const messageParts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+  if (attachments && attachments.length > 0) {
+    messageParts.push({ text: message });
+    for (let i = 0; i < attachments.length; i++) {
+      const att = attachments[i];
+      if (!uploadedIndices.has(i)) {
+        messageParts.push({ inlineData: { mimeType: att.mimeType, data: att.data } });
+      }
+    }
+    if (referenceImageUrls.length > 0) {
+      messageParts.push({ text: `[Reference images uploaded by user: ${referenceImageUrls.join(', ')}]` });
+    }
+  }
+  const parts = messageParts.length > 0 ? messageParts : undefined;
 
   const { data, error } = await supabase.functions.invoke('brand-prompt-agent', {
     body: {

@@ -17,7 +17,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 
-const EXTENSION_DOWNLOAD_URL = '';
+const EXTENSION_DOWNLOAD_URL = '/vince-extension.zip';
 const EXTENSION_VERSION = '1.0.0';
 
 const features = [

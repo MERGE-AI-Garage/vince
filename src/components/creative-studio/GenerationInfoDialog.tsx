@@ -336,6 +336,9 @@ export function GenerationInfoDialog({ generation, onClose }: GenerationInfoDial
                     <tbody className="divide-y divide-border/20">
                       <MetaRow label="Model" value={formatModelName(generation.model_used)} emphasis />
                       <MetaRow label="Type" value={formatGenerationType(generation.generation_type)} emphasis />
+                      {Array.isArray(meta.deliverable_names) && (meta.deliverable_names as string[]).length > 0 && (
+                        <MetaRow label="Deliverables" value={(meta.deliverable_names as string[]).join(', ')} emphasis />
+                      )}
                       <MetaRow label="Aspect Ratio" value={String(params.aspect_ratio || '—')} />
                       <MetaRow label="Outputs" value={`${outputUrls.length}/${numOutputs} generated`} />
                       {generation.generation_time_ms != null && (

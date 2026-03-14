@@ -85,7 +85,7 @@ export function useMyGenerations(limit = 50) {
           model:creative_studio_models(*),
           brand:creative_studio_brands(*)
         `)
-        .eq('user_id', profile.id)
+        .or(`user_id.eq.${profile.id},user_id.is.null`)
         .order('created_at', { ascending: false })
         .limit(limit);
 

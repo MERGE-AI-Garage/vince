@@ -15,7 +15,7 @@ import { QuotaDisplay } from '@/components/creative-studio/QuotaDisplay';
 import { MultiImageStagingArea, type StagedImage } from '@/components/creative-studio/MultiImageStagingArea';
 import { ConversationalEditPanel, type ConversationTurn } from '@/components/creative-studio/ConversationalEditPanel';
 import { UpscalePanel } from '@/components/creative-studio/UpscalePanel';
-import { ProductRecontextPanel } from '@/components/creative-studio/ProductRecontextPanel';
+import { ExtensionDownloadPanel } from '@/components/creative-studio/ExtensionDownloadPanel';
 import { VirtualTryOnPanel } from '@/components/creative-studio/VirtualTryOnPanel';
 import { BrandAgentApp } from '@/components/creative-studio/BrandAgentApp';
 import { PromptLibraryPanel } from '@/components/creative-studio/PromptLibraryPanel';
@@ -818,49 +818,6 @@ export default function CreativeStudio() {
     }
   };
 
-  const handleRecontextGenerate = async (params: { generation_type: 'product_recontext'; input_image: string; prompt: string; num_outputs: number; model_id: string }) => {
-    if (!user?.id) { toast.error('You must be logged in'); return; }
-    setCurrentOperation('generating');
-    setCurrentProgress(0);
-    try {
-      const response = await supabase.functions.invoke('generate-creative-image', {
-        body: {
-          generation_type: params.generation_type,
-          model_id: params.model_id,
-          prompt: params.prompt,
-          input_image: params.input_image,
-          num_outputs: params.num_outputs,
-          brand_id: selectedBrandId || undefined,
-        },
-      });
-      if (response.error) throw new Error(response.error.message);
-      const data = response.data;
-      if (!data.success) throw new Error(data.details || data.error);
-      if (data.output_urls?.[0]) setCurrentImage(data.output_urls[0]);
-      if (data.generation_id) lastGenerationIdRef.current = data.generation_id;
-      invalidateGenerations();
-      setSelectedGeneration({
-        id: data.generation_id || crypto.randomUUID(),
-        generation_type: 'product_recontext',
-        model_used: params.model_id,
-        prompt_text: params.prompt,
-        output_urls: data.output_urls || [],
-        media_ids: data.media_ids || [],
-        status: 'completed',
-        parameters: {},
-        metadata: {},
-        created_at: new Date().toISOString(),
-      });
-      toast.success(`${data.output_urls?.length || 0} image(s) generated!`);
-      setCurrentProgress(100);
-      setTimeout(() => { setCurrentProgress(0); setCurrentOperation('idle'); }, 500);
-    } catch (error: any) {
-      setCurrentError(error.message);
-      setCurrentProgress(0);
-      setCurrentOperation('idle');
-      toast.error(error.message || 'Generation failed');
-    }
-  };
 
   const handleTryOnGenerate = async (params: { generation_type: 'virtual_try_on'; person_image: string; garment_image: string; num_outputs: number; model_id: string }) => {
     if (!user?.id) { toast.error('You must be logged in'); return; }
@@ -1337,10 +1294,7 @@ export default function CreativeStudio() {
                         isGenerating={currentOperation === 'generating'}
                       />
                     ) : generationType === 'recontext' ? (
-                      <ProductRecontextPanel
-                        onGenerate={handleRecontextGenerate}
-                        isGenerating={currentOperation === 'generating'}
-                      />
+                      <ExtensionDownloadPanel />
                     ) : generationType === 'tryon' ? (
                       <VirtualTryOnPanel
                         onGenerate={handleTryOnGenerate}

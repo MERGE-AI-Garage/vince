@@ -26,7 +26,7 @@ A voice-driven AI creative director agent ("Vince") that generates brand-aware c
 
 ### Infrastructure
 - Supabase project provisioned — all tables, RLS, seed data
-- Auth — demo user (`demo@brandlens.dev`) + admin role via `user_roles`
+- Auth — demo user (`demo@vince.ai`) + admin role via `user_roles`
 - Storage buckets: `creative-studio`, `media`, `brand-logos`
 - 2 demo brands seeded, 6 image generation models, brand agent settings, prompt templates, Gemini model configs
 - AI tool registry: `categories`, `vendors`, `products` tables — 13 tools seeded (Google AI, Adobe, Canva, Veo 3 / Imagen 4)

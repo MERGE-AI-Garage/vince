@@ -1,7 +1,7 @@
 // ABOUTME: Sidebar panel showing user's generation history
 // ABOUTME: Thumbnails of recent generations with click to load
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,8 +16,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Image, Video, Clock, ChevronRight, Loader2, ImageOff, Trash2, Info, PanelLeftClose } from 'lucide-react';
-import { useMyGenerations, useInvalidateGenerations } from '@/hooks/useCreativeStudioGenerations';
+import { Image, Video, Clock, Loader2, ImageOff, Trash2, Info, PanelLeftClose } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { useMyGenerations, useAllGenerations, useInvalidateGenerations, useRealtimeGenerations } from '@/hooks/useCreativeStudioGenerations';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { GenerationInfoDialog } from './GenerationInfoDialog';
@@ -30,16 +32,113 @@ interface HistoryPanelProps {
 }
 
 export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: HistoryPanelProps) {
-  const { data: generations, isLoading } = useMyGenerations(100);
+  const { userRole } = useAuth();
+  const isAdmin = userRole === 'admin';
+  const { data: myGenerations, isLoading: myLoading } = useMyGenerations(100);
+  const { data: allGenerations, isLoading: allLoading } = useAllGenerations({ limit: 100 });
+  const generations = isAdmin ? allGenerations : myGenerations;
+  const isLoading = isAdmin ? allLoading : myLoading;
   const invalidateGenerations = useInvalidateGenerations();
+  useRealtimeGenerations();
+
+  // Fetch AI-generated media items as a fallback for generations that never got DB records
+  const { data: aiMediaItems } = useQuery({
+    queryKey: ['history-media-fallback'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('media')
+        .select('id, url, title, filename, created_at, custom_metadata')
+        .is('deleted_at', null)
+        .contains('auto_tags', ['ai-generated'])
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // item.key is `${gen.id}-${idx}` for package expansions, gen.id otherwise
+  interface DisplayItem {
+    key: string;
+    gen: GenerationWithDetails;
+    displayUrl: string | undefined;
+    label: string;
+    isPackageItem: boolean;
+    fromMedia: boolean;
+  }
+
+  const displayItems = useMemo<DisplayItem[]>(() => {
+    const genItems: DisplayItem[] = (generations || []).flatMap(gen => {
+      if (gen.generation_type === 'creative_package' && gen.output_urls && gen.output_urls.length > 1) {
+        const names = gen.metadata?.deliverable_names as string[] | undefined;
+        return gen.output_urls.map((url, idx) => ({
+          key: `${gen.id}-${idx}`,
+          gen,
+          displayUrl: url,
+          label: names?.[idx] || `Deliverable ${idx + 1}`,
+          isPackageItem: true,
+          fromMedia: false,
+        }));
+      }
+      return [{
+        key: gen.id,
+        gen,
+        displayUrl: gen.output_urls?.[0],
+        label: gen.prompt_text || 'No prompt',
+        isPackageItem: false,
+        fromMedia: false,
+      }];
+    });
+
+    // Build a set of all URLs already covered by generation records
+    const coveredUrls = new Set<string>(
+      (generations || []).flatMap(gen => gen.output_urls || [])
+    );
+
+    // Synthesize display items from media entries not already covered
+    const mediaItems: DisplayItem[] = (aiMediaItems || [])
+      .filter(m => !coveredUrls.has(m.url))
+      .map(m => {
+        const meta = m.custom_metadata as Record<string, unknown> | null;
+        const genType = (meta?.generation_type as string) || 'text_to_image';
+        const brandName = (meta?.brand_name as string) || '';
+        const syntheticGen: GenerationWithDetails = {
+          id: `media-${m.id}`,
+          generation_type: genType as GenerationWithDetails['generation_type'],
+          status: 'completed',
+          output_urls: [m.url],
+          media_ids: [],
+          created_at: m.created_at,
+          prompt_text: brandName ? `${brandName} creative package` : undefined,
+          model_used: '',
+          parameters: {},
+          metadata: (meta as Record<string, unknown>) ?? {},
+          completed_at: m.created_at,
+        };
+        return {
+          key: `media-${m.id}`,
+          gen: syntheticGen,
+          displayUrl: m.url,
+          label: m.title || m.filename || 'Generated image',
+          isPackageItem: genType === 'creative_package',
+          fromMedia: true,
+        };
+      });
+
+    // Merge and sort by created_at descending
+    return [...genItems, ...mediaItems].sort(
+      (a, b) => new Date(b.gen.created_at).getTime() - new Date(a.gen.created_at).getTime()
+    );
+  }, [generations, aiMediaItems]);
+
   const [brokenThumbnails, setBrokenThumbnails] = useState<Set<string>>(new Set());
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmClearBroken, setConfirmClearBroken] = useState(false);
   const [infoGeneration, setInfoGeneration] = useState<GenerationWithDetails | null>(null);
 
-  const markThumbnailBroken = useCallback((generationId: string) => {
-    setBrokenThumbnails(prev => new Set(prev).add(generationId));
+  const markThumbnailBroken = useCallback((itemKey: string) => {
+    setBrokenThumbnails(prev => new Set(prev).add(itemKey));
   }, []);
 
   const handleDeleteConfirmed = useCallback(async (generationId: string) => {
@@ -78,12 +177,18 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
   const handleClearBrokenConfirmed = useCallback(async () => {
     if (!generations) return;
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    // Collect gen.ids where any display item for that gen is broken
+    const brokenGenIds = new Set(
+      displayItems
+        .filter(item => brokenThumbnails.has(item.key))
+        .map(item => item.gen.id)
+    );
     const brokenIds = generations
       .filter(g =>
         g.status === 'failed' ||
         (g.status === 'completed' && (!g.output_urls || g.output_urls.length === 0)) ||
         (g.status === 'processing' && new Date(g.created_at) < thirtyMinutesAgo) ||
-        brokenThumbnails.has(g.id)
+        brokenGenIds.has(g.id)
       )
       .map(g => g.id);
     if (brokenIds.length === 0) return;
@@ -135,15 +240,6 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
     return uri;
   };
 
-  const handleDragStart = (e: React.DragEvent, gen: GenerationWithDetails) => {
-    const url = gen.output_urls?.[0];
-    if (!url) return;
-    const publicUrl = convertGcsUri(url);
-    e.dataTransfer.setData('text/uri-list', publicUrl);
-    e.dataTransfer.setData('text/plain', publicUrl);
-    e.dataTransfer.effectAllowed = 'copy';
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -179,7 +275,7 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
             {(brokenThumbnails.size > 0 || generations?.some(g =>
               g.status === 'failed' ||
               (g.status === 'processing' && new Date(Date.now() - 30 * 60 * 1000) > new Date(g.created_at))
-            )) && (
+            ) || displayItems.some(item => brokenThumbnails.has(item.key))) && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -191,7 +287,7 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
               </Button>
             )}
             <Badge variant="secondary" className="text-xs">
-              {generations?.length || 0}
+              {displayItems.length || 0}
             </Badge>
             {onClose && (
               <Button
@@ -210,115 +306,138 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
 
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-2">
-          {generations?.length === 0 ? (
+          {displayItems.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
               <Image className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>No generations yet</p>
               <p className="text-xs mt-1">Start creating!</p>
             </div>
           ) : (
-            generations?.map((gen) => (
-              <button
-                key={gen.id}
-                onClick={() => onSelectGeneration?.(gen)}
-                draggable={!!gen.output_urls?.[0]}
-                onDragStart={(e) => handleDragStart(e, gen)}
-                className={`w-full text-left rounded-lg overflow-hidden border transition-all hover:border-primary cursor-grab active:cursor-grabbing ${
-                  selectedId === gen.id
-                    ? 'border-primary ring-2 ring-primary/20'
-                    : 'border-transparent'
-                }`}
-              >
-                {/* Thumbnail */}
-                <div className="relative aspect-square bg-muted group/thumb">
-                  {gen.output_urls?.[0] && !brokenThumbnails.has(gen.id) ? (
-                    gen.generation_type.includes('video') ? (
-                      <video
-                        src={convertGcsUri(gen.output_urls[0])}
-                        className="w-full h-full object-cover"
-                        muted
-                        preload="metadata"
-                        onLoadedData={(e) => {
-                          // Seek to 0.1s to capture a frame for thumbnail
-                          const video = e.currentTarget;
-                          if (video.duration > 0.1) video.currentTime = 0.1;
-                        }}
-                        onError={() => markThumbnailBroken(gen.id)}
-                      />
-                    ) : (
-                      <img
-                        src={convertGcsUri(gen.output_urls[0])}
-                        alt={gen.prompt_text?.substring(0, 50) || 'Generation'}
-                        className="w-full h-full object-cover"
-                        onError={() => markThumbnailBroken(gen.id)}
-                      />
-                    )
-                  ) : gen.status === 'processing' ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : brokenThumbnails.has(gen.id) ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                      <ImageOff className="h-5 w-5 mb-1 opacity-50" />
-                      <span className="text-[8px] opacity-50">Expired</span>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      {getGenerationTypeIcon(gen.generation_type)}
-                    </div>
-                  )}
-
-                  {/* Status indicator */}
-                  <div
-                    className={`absolute top-1 right-1 w-2 h-2 rounded-full ${getStatusColor(gen.status)}`}
-                  />
-
-                  {/* Action buttons — visible on hover */}
-                  <div className="absolute top-1 left-1 flex gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => handleInfoClick(e, gen)}
-                      className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-primary"
-                      title="View details"
-                    >
-                      <Info className="h-2.5 w-2.5" />
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteClick(e, gen.id)}
-                      disabled={deletingIds.has(gen.id)}
-                      className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-600"
-                      title="Delete generation"
-                    >
-                      {deletingIds.has(gen.id) ? (
-                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            displayItems.map((item) => {
+              const { gen, displayUrl, label, isPackageItem, fromMedia } = item;
+              const isBroken = brokenThumbnails.has(item.key);
+              const isDeleting = deletingIds.has(gen.id);
+              const genToSelect = isPackageItem
+                ? { ...gen, output_urls: [displayUrl!, ...(gen.output_urls || [])] }
+                : gen;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => onSelectGeneration?.(genToSelect)}
+                  draggable={!!displayUrl}
+                  onDragStart={(e) => {
+                    if (!displayUrl) return;
+                    const publicUrl = convertGcsUri(displayUrl);
+                    e.dataTransfer.setData('text/uri-list', publicUrl);
+                    e.dataTransfer.setData('text/plain', publicUrl);
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                  className={`w-full text-left rounded-lg overflow-hidden border transition-all hover:border-primary cursor-grab active:cursor-grabbing ${
+                    selectedId === gen.id
+                      ? 'border-primary ring-2 ring-primary/20'
+                      : 'border-transparent'
+                  }`}
+                >
+                  {/* Thumbnail */}
+                  <div className="relative aspect-square bg-muted group/thumb">
+                    {displayUrl && !isBroken ? (
+                      gen.generation_type.includes('video') ? (
+                        <video
+                          src={convertGcsUri(displayUrl)}
+                          className="w-full h-full object-cover"
+                          muted
+                          preload="metadata"
+                          onLoadedData={(e) => {
+                            const video = e.currentTarget;
+                            if (video.duration > 0.1) video.currentTime = 0.1;
+                          }}
+                          onError={() => markThumbnailBroken(item.key)}
+                        />
                       ) : (
-                        <Trash2 className="h-2.5 w-2.5" />
+                        <img
+                          src={convertGcsUri(displayUrl)}
+                          alt={label.substring(0, 50)}
+                          className="w-full h-full object-cover"
+                          onError={() => markThumbnailBroken(item.key)}
+                        />
+                      )
+                    ) : gen.status === 'processing' ? (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : isBroken ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
+                        <ImageOff className="h-5 w-5 mb-1 opacity-50" />
+                        <span className="text-[8px] opacity-50">Expired</span>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        {getGenerationTypeIcon(gen.generation_type)}
+                      </div>
+                    )}
+
+                    {/* Status indicator */}
+                    <div
+                      className={`absolute top-1 right-1 w-2 h-2 rounded-full ${getStatusColor(gen.status)}`}
+                    />
+
+                    {/* Action buttons — visible on hover */}
+                    <div className="absolute top-1 left-1 flex gap-1 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => handleInfoClick(e, gen)}
+                        className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-primary"
+                        title="View details"
+                      >
+                        <Info className="h-2.5 w-2.5" />
+                      </button>
+                      {!fromMedia && (
+                        <button
+                          onClick={(e) => handleDeleteClick(e, gen.id)}
+                          disabled={isDeleting}
+                          className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-600"
+                          title="Delete generation"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-2.5 w-2.5" />
+                          )}
+                        </button>
                       )}
-                    </button>
+                    </div>
+
+                    {/* Type badge */}
+                    <div className="absolute bottom-1 left-1 flex gap-0.5">
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] px-1 py-0 bg-black/50 text-white"
+                      >
+                        {getGenerationTypeIcon(gen.generation_type)}
+                      </Badge>
+                      {isPackageItem && (
+                        <Badge
+                          variant="secondary"
+                          className="text-[9px] px-1 py-0 bg-primary/70 text-white"
+                        >
+                          PKG
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Type badge */}
-                  <div className="absolute bottom-1 left-1">
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px] px-1 py-0 bg-black/50 text-white"
-                    >
-                      {getGenerationTypeIcon(gen.generation_type)}
-                    </Badge>
+                  {/* Info */}
+                  <div className="p-1.5 bg-background">
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {label.substring(0, 30)}
+                    </p>
+                    <div className="flex items-center gap-1 text-[9px] text-muted-foreground mt-0.5">
+                      <Clock className="h-2.5 w-2.5" />
+                      {formatTime(gen.created_at)}
+                    </div>
                   </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-1.5 bg-background">
-                  <p className="text-[10px] text-muted-foreground truncate">
-                    {gen.prompt_text?.substring(0, 30) || 'No prompt'}
-                  </p>
-                  <div className="flex items-center gap-1 text-[9px] text-muted-foreground mt-0.5">
-                    <Clock className="h-2.5 w-2.5" />
-                    {formatTime(gen.created_at)}
-                  </div>
-                </div>
-              </button>
-            ))
+                </button>
+              );
+            })
           )}
         </div>
       </ScrollArea>

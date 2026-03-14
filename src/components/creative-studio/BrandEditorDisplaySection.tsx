@@ -62,6 +62,15 @@ export function BrandEditorDisplaySection({ form, updateField, brand, onSave }: 
       if (error || !data?.imageUrl) throw error || new Error('No image returned');
 
       updateField('hero_image_url', data.imageUrl);
+
+      // Auto-persist so the URL survives dialog close/reopen and shows on brand pages
+      if (brand?.id) {
+        await supabase
+          .from('creative_studio_brands')
+          .update({ hero_image_url: data.imageUrl })
+          .eq('id', brand.id);
+      }
+
       toast.success('Hero image generated');
     } catch (err: any) {
       toast.error(err.message || 'Failed to generate hero image');

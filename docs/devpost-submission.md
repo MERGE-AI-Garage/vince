@@ -95,7 +95,7 @@ Brand intelligence is the actual product. Any tool can generate images from prom
 ## Try It Out
 
 - **Live Demo:** https://vince-359575203061.us-central1.run.app
-- **Demo credentials:** demo@brandlens.dev / BrandLens2026!
+- **Demo credentials:** demo@vince.ai / BrandLens2026!
 - **GitHub:** (repo URL)
 - **Chrome Extension:** (link to extension directory in repo)
 

@@ -41,6 +41,7 @@
 |------|-------------|
 | `generate_image` | Generate 1–4 images with full camera preset, logo injection, reference collections |
 | `generate_creative_package` | Generate a complete campaign — interleaved copy + images in one call, with invisible brand RAG |
+| `generate_headshot_scene` | Place a specific person's face into a described scene — preserves facial features using Gemini image editing |
 | `generate_video` | Generate a 4/6/8s brand video via Veo 3.1 Fast (~$0.80) or Quality (~$2.00); native audio included |
 
 ---
@@ -101,6 +102,17 @@ list_brand_references → list_camera_options
 **Campaign:**
 ```
 generate_creative_package(brief)  ← auto-retrieves brand rules, generates all copy + images
+```
+
+**Person in scene (still):**
+```
+[upload headshot] → generate_headshot_scene(photo_url, scene_description)
+```
+
+**Person in video:**
+```
+[upload headshot] → generate_headshot_scene(photo_url, scene_description)
+→ generate_video(generation_type="image_to_video", input_image_url=<output>)
 ```
 
 **Competitive counter-campaign:**

@@ -229,12 +229,12 @@ export function CreativePackageDisplay({
         return (
           <div className={`rounded-md border px-3 pt-2 pb-2 space-y-2 ${containerCls}`}>
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${iconCls}`} />
-                <span className="text-xs font-medium text-foreground/80">Brand Alignment</span>
+                <span className="text-xs font-medium text-foreground/80 truncate">Brand Alignment</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-1 flex-nowrap">
                   {[
                     { key: 'visual_identity', label: 'Visual' },
                     { key: 'photography', label: 'Photo' },

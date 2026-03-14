@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/table';
 import {
   Sparkles,
+  LayoutDashboard,
   Settings,
   Image,
   Video,
@@ -124,7 +125,6 @@ import { BrandDNAPrompts } from '@/components/creative-studio/BrandDNAPrompts';
 import { BrandCard } from '@/components/creative-studio/BrandCard';
 
 const HERO_IMAGES = [
-  '/images/admin-hero-1.jpeg',
   '/images/admin-hero-2.jpeg',
 ];
 
@@ -455,9 +455,9 @@ export default function CreativeStudioAdmin() {
     <PageLayout>
       {/* Full-bleed cinematic hero — outside container for edge-to-edge layout */}
       <AdminHeroHeader
-        icon={Sparkles}
+        icon={LayoutDashboard}
         title="Vince Admin"
-        description="Brand-aware AI generation across image and video — multi-model pipelines, creative governance, and real-time cost analytics"
+        description="Manage brands, configure AI models, set user quotas, and monitor generation costs — everything that powers the studio"
         backTo={{ path: '/', label: 'Back to Studio' }}
         backgroundImages={HERO_IMAGES}
         cinematic

@@ -11,8 +11,8 @@ import {
   Upload, ArrowRight, Box,
   Users, Zap, Share, BookOpen,
   MessageSquare, Wand2,
+  Chrome, Download, CheckCircle2,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,7 +26,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-import { MergeLogo } from '@/components/ai-pulse/vendorLogos';
 import { useBrandToolApprovals } from '@/hooks/useBrandToolApprovals';
 import { useBrandGenerationPrompt, parsePromptSections } from '@/hooks/useBrandGenerationPrompt';
 import { GENERATION_PROMPT_SECTIONS } from '@/types/creative-studio';
@@ -259,7 +258,6 @@ function SystemWelcome({
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onDemoClick?: () => void;
 }) {
-  const navigate = useNavigate();
   const { data: welcomeImages } = useStudioWelcomeImages();
   const heroImage = welcomeImages?.hero || SYSTEM_HERO_IMAGE;
   return (
@@ -400,28 +398,42 @@ function SystemWelcome({
           </div>
         </motion.div>
 
-        {/* AI Guidelines — prominent card, navigates to /guidelines */}
+        {/* Chrome Extension CTA */}
         <motion.div
           variants={itemVariants}
-          className="max-w-4xl w-full mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#00856C]/[0.12] to-[#133B34]/[0.12] border border-[#00856C]/20 backdrop-blur-sm cursor-pointer hover:border-[#00856C]/35 hover:bg-[#00856C]/[0.06] transition-all duration-300"
-          onClick={() => navigate('/guidelines')}
+          className="max-w-4xl w-full mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#133B34]/[0.60] to-[#0D1B16]/[0.60] border border-[#00856C]/20 backdrop-blur-sm"
         >
-          <MergeLogo className="absolute -bottom-3 -right-3 w-24 h-24 text-white/[0.03] transform -rotate-12 pointer-events-none" />
-          <div className="relative z-10 flex items-start gap-4 px-6 py-5">
-            <div className="w-12 h-12 rounded-xl bg-[#00856C]/20 flex items-center justify-center shrink-0">
-              <Shield className="w-6 h-6 text-[#00D26A]" />
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 px-6 py-5">
+            <div className="w-12 h-12 rounded-xl bg-[#1ED75F]/10 flex items-center justify-center shrink-0">
+              <Chrome className="w-6 h-6 text-[#1ED75F]" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-fraunces text-base font-semibold text-white mb-1">Brand AI Guidelines</h3>
-              <p className="font-epilogue text-xs text-white/50 leading-relaxed">
-                AI usage policies, tool approvals, and compliance guidance.
-                Select a brand above for brand-specific approvals.
+              <h3 className="font-fraunces text-base font-semibold text-white mb-1">
+                AI Brand Guidelines Chrome Extension
+              </h3>
+              <p className="font-epilogue text-xs text-white/50 leading-relaxed mb-3">
+                Brand intelligence in a sidebar — next to ChatGPT, Gemini, Claude, Midjourney, and more.
               </p>
+              <div className="flex flex-wrap gap-1.5">
+                {['ChatGPT', 'Gemini', 'Claude', 'Midjourney', 'Firefly'].map((p) => (
+                  <span
+                    key={p}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] font-epilogue text-[10px] text-white/50"
+                  >
+                    <CheckCircle2 className="w-2.5 h-2.5 text-[#1ED75F]" />
+                    {p}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0 pt-1">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="font-epilogue text-[11px] text-white/40">Active</span>
-            </div>
+            <a
+              href="/vince-extension.zip"
+              download
+              className="inline-flex items-center gap-2 rounded-xl bg-[#1ED75F] text-[#0D1B16] font-semibold font-epilogue text-xs px-5 py-2.5 hover:bg-[#1ED75F]/90 transition-colors shadow-lg shadow-[#1ED75F]/20 shrink-0"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download Extension
+            </a>
           </div>
         </motion.div>
 
@@ -470,6 +482,7 @@ function SystemWelcome({
             {navigator.platform.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter to generate
           </p>
         </motion.div>
+
       </div>
     </motion.div>
   );

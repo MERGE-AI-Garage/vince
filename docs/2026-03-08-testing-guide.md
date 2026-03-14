@@ -14,7 +14,7 @@ Before running any tests, confirm:
 - [ ] `GEMINI_API_KEY` added to Supabase vault (`foolpmhiedplyftbiocb`)
 - [ ] All edge functions deployed (see Section 1)
 - [ ] App running locally (`npm run dev`) or deployed
-- [ ] Logged in as `demo@brandlens.dev` (admin role)
+- [ ] Logged in as `demo@vince.ai` (admin role)
 - [ ] At least one brand exists in the database (or plan to create one in tests)
 
 ---
@@ -62,7 +62,7 @@ Expected: All functions listed with status `active` or equivalent.
 
 ### 2.1 Login
 1. Open the app
-2. Confirm login page shows pre-filled credentials (`demo@brandlens.dev`)
+2. Confirm login page shows pre-filled credentials (`demo@vince.ai`)
 3. Click Sign In
 
 **Pass:** Redirected to Creative Studio. Welcome screen visible.
