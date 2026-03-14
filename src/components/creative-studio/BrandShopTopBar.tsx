@@ -10,6 +10,7 @@ import {
   Sun,
   Moon,
   HelpCircle,
+  Archive,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +22,7 @@ import {
 import { BrandSelector } from '@/components/creative-studio/BrandSelector';
 import { cn } from '@/lib/utils';
 import type { CreativeStudioBrand } from '@/types/creative-studio';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface BrandShopTopBarProps {
   // Brand state
@@ -68,6 +70,7 @@ export function BrandShopTopBar({
   statusPulse,
 }: BrandShopTopBarProps) {
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
 
   return (
     <header
@@ -108,22 +111,41 @@ export function BrandShopTopBar({
       {/* Right: Actions */}
       <div className="flex items-center gap-1.5 shrink-0">
         <TooltipProvider delayDuration={200}>
-          {/* Admin */}
+          {/* Campaigns */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                onClick={() => navigate('/admin')}
+                onClick={() => navigate('/campaigns')}
               >
-                <Settings className="h-3.5 w-3.5" />
+                <Archive className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p className="text-xs">Admin</p>
+              <p className="text-xs">Campaigns</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* Admin */}
+          {isAdmin && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => navigate('/admin')}
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">Admin</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Library */}
           <Tooltip>

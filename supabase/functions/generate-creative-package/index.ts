@@ -135,6 +135,7 @@ interface PackageRequest {
   deliverables?: DeliverableSpec[];
   system_context?: string;
   user_id?: string;
+  conversation_id?: string;
   reference_image_urls?: string[];
   pre_generated_image_url?: string;
 }
@@ -191,7 +192,7 @@ serve(async (req) => {
     } catch { /* non-critical */ }
 
     const body = await req.json() as PackageRequest;
-    const { brand_id, brief, deliverables, system_context, reference_image_urls, pre_generated_image_url } = body;
+    const { brand_id, brief, deliverables, system_context, reference_image_urls, pre_generated_image_url, conversation_id } = body;
     if (!brand_id || !brief) throw new Error('brand_id and brief are required');
 
     // Fallback: when called via service role (no JWT sub), use user_id from body
@@ -388,7 +389,7 @@ serve(async (req) => {
               filename: `${brand.slug}-package-${Date.now()}.${ext}`,
               mimeType,
               sizeBytes: buffer.length,
-              folderPath: '/AI Generated/Brand Cards',
+              folderPath: '/AI Generated/Campaigns',
               title: `${brand.name} Creative Package`,
               createdBy: userId,
               autoTags: ['creative-studio', 'ai-generated', 'creative-package'],
@@ -459,10 +460,23 @@ serve(async (req) => {
       generation_time_ms: latencyMs,
       estimated_cost_usd: 0,
       parameters: { deliverable_count: resolvedDeliverables.length },
-      metadata: { package: true, deliverable_names: deliverableNames },
+      metadata: { package: true, deliverable_names: deliverableNames, ...(conversation_id ? { conversation_id } : {}) },
       copy_blocks: parts,
     });
     if (insertError) console.error('[generate-creative-package] Generation record insert failed:', insertError.code, insertError.message, { user_id: userId, brand_id });
+
+    // Increment image quota for each newly generated image (skip pre-supplied images).
+    const newlyGeneratedCount = pre_generated_image_url ? 0 : imageUrls.length;
+    if (userId && newlyGeneratedCount > 0) {
+      await Promise.all(
+        Array.from({ length: newlyGeneratedCount }, () =>
+          supabase.rpc('increment_creative_quota', {
+            p_user_id: userId,
+            p_generation_type: 'text_to_image',
+          })
+        )
+      );
+    }
 
     return new Response(
       JSON.stringify({

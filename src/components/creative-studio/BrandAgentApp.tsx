@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, MicOff, PhoneOff, Paperclip, X, Link, Target, History } from 'lucide-react';
+import { Camera, Sparkles, Copy, Check, CheckCircle2, AlertCircle, Mic, MicOff, PhoneOff, Paperclip, X, Link, Target, History, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChatMessage, InputArea, type Message, type Attachment } from '@/components/shared-chat';
@@ -29,11 +29,11 @@ import {
 } from '@/services/brand-agent/brandAgentLiveService';
 import {
   getBrandAgentSettings,
-  DEFAULT_QUICK_PROMPTS,
 } from '@/services/brand-agent/brandAgentSettings';
 import type { CameraPreset } from '@/types/creative-studio';
 import { CreativePackageDisplay, type PackagePart } from './CreativePackageDisplay';
 import { useInvalidateGenerations } from '@/hooks/useCreativeStudioGenerations';
+import type { GenerationWithDetails } from '@/types/creative-studio';
 import {
   fetchRecentConversations,
   loadConversationMessages,
@@ -215,6 +215,9 @@ export function BrandAgentApp({
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
   const [historySummaries, setHistorySummaries] = useState<ConversationSummary[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [showCampaignsPicker, setShowCampaignsPicker] = useState(false);
+  const [campaignHistory, setCampaignHistory] = useState<GenerationWithDetails[]>([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userContext, setUserContext] = useState<UserContext | undefined>(undefined);
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | undefined>(undefined);
@@ -246,7 +249,7 @@ export function BrandAgentApp({
   const voiceToolCallsRef = useRef(0);
 
   // Settings state
-  const [quickPrompts, setQuickPrompts] = useState<string[]>(DEFAULT_QUICK_PROMPTS);
+  const [quickPrompts, setQuickPrompts] = useState<string[]>([]);
   const [promptOffset, setPromptOffset] = useState(0);
   const [enableImageUpload, setEnableImageUpload] = useState(true);
 
@@ -306,7 +309,7 @@ export function BrandAgentApp({
         // Load settings
         try {
           const settings = await getBrandAgentSettings();
-          setQuickPrompts(settings.quick_prompts || DEFAULT_QUICK_PROMPTS);
+          setQuickPrompts(settings.quick_prompts || []);
           setPromptOffset(Math.floor(Math.random() * (settings.quick_prompts?.length || 12)));
           setEnableImageUpload(settings.enable_image_upload);
         } catch {
@@ -965,6 +968,7 @@ export function BrandAgentApp({
 
   const handleOpenHistory = async () => {
     setShowHistoryPicker(true);
+    setShowCampaignsPicker(false);
     setHistoryLoading(true);
     try {
       const summaries = await fetchRecentConversations(25);
@@ -980,6 +984,72 @@ export function BrandAgentApp({
     setMessages(restored);
     setAgentResponses({});
     setShowHistoryPicker(false);
+  };
+
+  const handleOpenCampaigns = async () => {
+    setShowCampaignsPicker(true);
+    setShowHistoryPicker(false);
+    setCampaignsLoading(true);
+    try {
+      let query = supabase
+        .from('creative_studio_generations')
+        .select('*, brand:creative_studio_brands(*), model:creative_studio_models(name)')
+        .eq('generation_type', 'creative_package')
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (brandId) {
+        query = query.eq('brand_id', brandId);
+      }
+      const { data } = await query;
+      setCampaignHistory(
+        (data || []).map(g => ({
+          ...g,
+          parameters: g.parameters as Record<string, unknown>,
+          metadata: g.metadata as Record<string, unknown>,
+          brand: g.brand ? { ...g.brand, quick_prompts: g.brand.quick_prompts as unknown[] } : undefined,
+        })) as GenerationWithDetails[]
+      );
+    } finally {
+      setCampaignsLoading(false);
+    }
+  };
+
+  const handleLoadCampaign = (gen: GenerationWithDetails) => {
+    setShowCampaignsPicker(false);
+    const copyBlocks = gen.copy_blocks as PackagePart[] | null;
+    const deliverableNames = (gen.metadata?.deliverable_names as string[]) || [];
+    const brandAlignment = gen.metadata?.brand_alignment as BrandAlignment | undefined;
+    const diff = Date.now() - new Date(gen.created_at).getTime();
+    const mins = Math.floor(diff / 60000);
+    let relTime: string;
+    if (mins < 60) relTime = mins <= 1 ? 'just now' : `${mins}m ago`;
+    else if (mins < 1440) relTime = `${Math.floor(mins / 60)}h ago`;
+    else if (mins < 2880) relTime = 'yesterday';
+    else relTime = new Date(gen.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    const msgId = uuidv4();
+    const brandLabel = gen.brand?.name || brandName || 'brand';
+    setMessages(prev => [...prev, {
+      id: msgId,
+      role: 'model' as const,
+      content: `Here's your ${brandLabel} campaign from ${relTime}. What would you like to change or explore next?`,
+      timestamp: new Date(),
+    }]);
+    setAgentResponses(prev => ({
+      ...prev,
+      [msgId]: {
+        creative_package: {
+          parts: copyBlocks || gen.output_urls.map(url => ({ type: 'image' as const, content: url })),
+          image_urls: gen.output_urls,
+          latency_ms: (gen.metadata?.generation_time_ms as number) || 0,
+          model: gen.model_used || '',
+          brand_name: brandLabel,
+          brief: gen.prompt_text || '',
+          deliverable_names: deliverableNames,
+          brand_alignment: brandAlignment,
+        },
+      },
+    }));
   };
 
   const handleDirectionSelect = (direction: CampaignDirection, analysis: CompetitorAnalysis) => {
@@ -1010,6 +1080,16 @@ export function BrandAgentApp({
           )}
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-7 w-7 ${showCampaignsPicker ? 'text-purple-500 bg-purple-50' : 'text-muted-foreground hover:text-purple-500 hover:bg-purple-50'}`}
+            onClick={showCampaignsPicker ? () => setShowCampaignsPicker(false) : handleOpenCampaigns}
+            aria-label="Campaign archive"
+            title="Campaign archive"
+          >
+            <Layers className="w-4 h-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -1234,8 +1314,65 @@ export function BrandAgentApp({
         </div>
       )}
 
+      {/* Campaign archive picker */}
+      {showCampaignsPicker && (
+        <div className="flex-1 min-h-0 overflow-y-auto border-t bg-background">
+          <div className="px-3 py-2 border-b bg-muted/20 sticky top-0">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Campaign Archive</span>
+          </div>
+          {campaignsLoading && (
+            <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">Loading…</div>
+          )}
+          {!campaignsLoading && campaignHistory.length === 0 && (
+            <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">No campaigns yet.</div>
+          )}
+          {campaignHistory.map(gen => {
+            const deliverableNames = (gen.metadata?.deliverable_names as string[]) || [];
+            const diff = Date.now() - new Date(gen.created_at).getTime();
+            const mins = Math.floor(diff / 60000);
+            let relTime: string;
+            if (mins < 60) relTime = mins <= 1 ? 'Just now' : `${mins}m ago`;
+            else if (mins < 1440) relTime = `${Math.floor(mins / 60)}h ago`;
+            else if (mins < 2880) relTime = 'Yesterday';
+            else relTime = new Date(gen.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return (
+              <button
+                key={gen.id}
+                onClick={() => handleLoadCampaign(gen)}
+                className="w-full text-left px-3 py-2.5 border-b border-border/30 hover:bg-muted/30 transition-colors flex flex-col gap-1.5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-xs text-foreground leading-snug line-clamp-2 flex-1">
+                    {gen.prompt_text || 'Creative package'}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground shrink-0 pt-0.5">{relTime}</span>
+                </div>
+                {gen.output_urls.length > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    {gen.output_urls.slice(0, 4).map((url, i) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt=""
+                        className="w-9 h-9 rounded object-cover border border-border/50"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ))}
+                    {deliverableNames.length > 0 && (
+                      <span className="text-[9px] font-semibold text-purple-500 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5 ml-1">
+                        {deliverableNames.length} deliverables
+                      </span>
+                    )}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Messages — always visible */}
-      {!showHistoryPicker && <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-1 scroll-smooth">
+      {!showHistoryPicker && !showCampaignsPicker && <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-1 scroll-smooth">
         {messages.map((message, idx) => (
           <React.Fragment key={message.id}>
             {message.content === 'Voice session ended.' ? (
@@ -1750,7 +1887,7 @@ export function BrandAgentApp({
       </div>}
 
       {/* Quick prompts — pinned above input, hidden during voice mode or history picker */}
-      {!showHistoryPicker && !isVoiceMode && !isLoading && quickPrompts.length > 0 && (
+      {!showHistoryPicker && !showCampaignsPicker && !isVoiceMode && !isLoading && quickPrompts.length > 0 && (
         <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-t bg-muted/20 flex-shrink-0">
           {quickPrompts
             .slice(promptOffset, promptOffset + 3)
@@ -1786,7 +1923,7 @@ export function BrandAgentApp({
       )}
 
       {/* Inline voice bar — replaces input area during voice mode, hidden when history picker open */}
-      {!showHistoryPicker && isVoiceMode && (
+      {!showHistoryPicker && !showCampaignsPicker && isVoiceMode && (
         <div className="flex-shrink-0 border-t bg-muted/40 px-3 py-2.5 space-y-2">
           {/* Live transcript — wraps up to 3 lines so Vince's response is readable */}
           {liveTranscriptText && (
@@ -1863,7 +2000,7 @@ export function BrandAgentApp({
       )}
 
       {/* Text input — hidden during voice mode or history picker */}
-      {!showHistoryPicker && !isVoiceMode && (
+      {!showHistoryPicker && !showCampaignsPicker && !isVoiceMode && (
         <InputArea
           onSendMessage={handleSendMessage}
           onStartVoice={handleStartVoice}

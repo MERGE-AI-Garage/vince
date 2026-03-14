@@ -1,22 +1,29 @@
 // ABOUTME: Campaign archive tab — browsable list of all Vince creative packages.
-// ABOUTME: List view with thumbnails + deliverable chips; detail view with full copy+images+metadata panel.
+// ABOUTME: Sort/filter controls, provenance detail view, conversation transcript, Gemini analysis.
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
   ArrowLeft, Download, Layers, Archive, FileText, Loader2,
   FolderOpen, Clock, Cpu, Hash, Sparkles, Calendar, ShieldCheck,
+  Image, LayoutGrid, List, Search, User, MessageSquare, BarChart2,
+  SortAsc, SortDesc, Bot, Link as LinkIcon, Play,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useMyGenerations } from '@/hooks/useCreativeStudioGenerations';
 import { CreativePackageDisplay, PackagePart } from './CreativePackageDisplay';
+import { loadConversationMessages } from '@/services/vinceConversationHistory';
+import { supabase } from '@/integrations/supabase/client';
 import type { GenerationWithDetails } from '@/types/creative-studio';
+import type { Message } from '@/components/shared-chat/types';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -24,11 +31,18 @@ function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
-/** Extract a human name from the copy text e.g. "## Deliverable 2: Full-Page Magazine Ad" */
+/** Extract a human name from copy text — tries multiple heading patterns */
 function extractNameFromContent(text: string, fallback: string): string {
-  const match = text.match(/##\s*Deliverable\s*\d+[:\-–]\s*([^\n]+)/i);
-  if (match) return match[1].trim();
-  // Also try "1. Hero Banner\n" at start
+  // "## Deliverable 2: Full-Page Magazine Ad"
+  const deliverableMatch = text.match(/##\s*Deliverable\s*\d+[:\-–]\s*([^\n]+)/i);
+  if (deliverableMatch) return deliverableMatch[1].trim();
+  // "## LinkedIn Post" or "# Instagram Feed"
+  const headingMatch = text.match(/^#{1,3}\s+([A-Z][^\n]{2,50})\n/m);
+  if (headingMatch) return headingMatch[1].trim();
+  // "**LinkedIn Post**" bold title
+  const boldMatch = text.match(/^\*\*([A-Z][^*]{2,50})\*\*/m);
+  if (boldMatch) return boldMatch[1].trim();
+  // "1. Hero Banner\n" numbered list
   const listMatch = text.match(/^\d+\.\s+([A-Z][^\n]{2,40})\n/m);
   if (listMatch) return listMatch[1].trim();
   return fallback;
@@ -55,7 +69,6 @@ function resolveDeliverableNames(copyBlocks: PackagePart[], storedNames: string[
     }
   }
 
-  // Any trailing text-only block
   if (pendingText !== undefined && names.length < storedNames.length) {
     names.push(storedNames[names.length] || 'Package Notes');
   }
@@ -102,12 +115,12 @@ async function downloadCampaignZip(gen: GenerationWithDetails, resolvedNames: st
   const brief = gen.prompt_text || '';
   const generatedAt = format(new Date(gen.created_at), 'MMMM d, yyyy \'at\' h:mm a');
   const genTimeSec = gen.generation_time_ms ? (gen.generation_time_ms / 1000).toFixed(1) : 'N/A';
+  const userName = gen.user?.full_name || 'Unknown';
 
   const zip = new JSZip();
   const folderName = `${slugify(brandName)}-campaign-${dateStr}`;
   const folder = zip.folder(folderName)!;
 
-  // Comprehensive campaign info file
   const briefLines = [
     '╔══════════════════════════════════════════╗',
     '  VINCE CREATIVE CAMPAIGN ARCHIVE',
@@ -116,6 +129,7 @@ async function downloadCampaignZip(gen: GenerationWithDetails, resolvedNames: st
     'CAMPAIGN DETAILS',
     '────────────────',
     `Brand:               ${brandName}`,
+    `Created By:          ${userName}`,
     `Generated:           ${generatedAt}`,
     `Generation Time:     ${genTimeSec}s`,
     `Model:               ${gen.model_used}`,
@@ -136,7 +150,6 @@ async function downloadCampaignZip(gen: GenerationWithDetails, resolvedNames: st
   ];
   folder.file('_campaign-info.txt', briefLines.join('\n'));
 
-  // Per-deliverable files
   const groups = groupPartsForExport(copyBlocks, resolvedNames);
   for (const [i, group] of groups.entries()) {
     const num = String(i + 1).padStart(2, '0');
@@ -178,6 +191,24 @@ async function downloadCampaignZip(gen: GenerationWithDetails, resolvedNames: st
   URL.revokeObjectURL(a.href);
 }
 
+// ── User Avatar Badge ─────────────────────────────────────────────────────────
+
+function UserBadge({ name, avatarUrl, size = 'sm' }: { name: string; avatarUrl?: string | null; size?: 'sm' | 'xs' }) {
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const dim = size === 'xs' ? 'w-5 h-5 text-[9px]' : 'w-6 h-6 text-[10px]';
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={`${dim} rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center font-bold text-violet-300 shrink-0 overflow-hidden`}>
+        {avatarUrl
+          ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+          : initials
+        }
+      </div>
+      <span className={`${size === 'xs' ? 'text-[10px]' : 'text-xs'} text-muted-foreground/60 truncate max-w-[120px]`}>{name}</span>
+    </div>
+  );
+}
+
 // ── Metadata Panel ───────────────────────────────────────────────────────────
 
 function MetadataRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
@@ -192,9 +223,22 @@ function MetadataRow({ label, value, mono = false }: { label: string; value: str
 function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDetails; resolvedNames: string[] }) {
   const hasCopy = !!(gen.copy_blocks && (gen.copy_blocks as PackagePart[]).some(p => p.type === 'text'));
   const brandAlignment = gen.metadata?.brand_alignment as { score: number } | undefined;
+  const userName = gen.user?.full_name;
 
   return (
     <div className="space-y-4 text-sm">
+      {/* Who created this */}
+      <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <User className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Created By</span>
+        </div>
+        {userName
+          ? <UserBadge name={userName} avatarUrl={gen.user?.avatar_url} />
+          : <span className="text-xs text-muted-foreground/50">Unknown user</span>
+        }
+      </div>
+
       {/* Generation info */}
       <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
         <div className="flex items-center gap-2">
@@ -203,10 +247,7 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
         </div>
         <div className="space-y-3">
           <MetadataRow label="Model" value={gen.model_used} mono />
-          <MetadataRow
-            label="Generated"
-            value={format(new Date(gen.created_at), 'MMM d, yyyy · h:mm a')}
-          />
+          <MetadataRow label="Generated" value={format(new Date(gen.created_at), 'MMM d, yyyy · h:mm a')} />
           {gen.generation_time_ms && (
             <MetadataRow label="Generation Time" value={`${(gen.generation_time_ms / 1000).toFixed(2)}s`} />
           )}
@@ -220,22 +261,17 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
       {gen.brand && (
         <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Brand</span>
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400">Brand</span>
           </div>
           <div className="space-y-3">
             <MetadataRow label="Name" value={gen.brand.name} />
-            {gen.brand.brand_category && (
-              <MetadataRow label="Category" value={gen.brand.brand_category} />
-            )}
+            {gen.brand.brand_category && <MetadataRow label="Category" value={gen.brand.brand_category} />}
             {gen.brand.primary_color && (
               <div className="flex flex-col gap-0.5">
                 <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Primary Color</span>
                 <div className="flex items-center gap-2">
-                  <div
-                    className="w-4 h-4 rounded border border-border/30 shrink-0"
-                    style={{ backgroundColor: gen.brand.primary_color }}
-                  />
+                  <div className="w-4 h-4 rounded border border-border/30 shrink-0" style={{ backgroundColor: gen.brand.primary_color }} />
                   <span className="text-xs font-mono text-foreground/85">{gen.brand.primary_color}</span>
                 </div>
               </div>
@@ -264,17 +300,17 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
       {brandAlignment && (
         <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-2">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Brand Alignment</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400">Brand Alignment</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex-1 h-1.5 bg-muted/30 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full ${brandAlignment.score >= 75 ? 'bg-emerald-400' : brandAlignment.score >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                className={`h-full rounded-full ${brandAlignment.score >= 75 ? 'bg-purple-400' : brandAlignment.score >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
                 style={{ width: `${brandAlignment.score}%` }}
               />
             </div>
-            <span className={`text-sm font-bold tabular-nums ${brandAlignment.score >= 75 ? 'text-emerald-400' : brandAlignment.score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+            <span className={`text-sm font-bold tabular-nums ${brandAlignment.score >= 75 ? 'text-purple-400' : brandAlignment.score >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
               {brandAlignment.score}%
             </span>
           </div>
@@ -291,26 +327,344 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
         {gen.completed_at && (
           <MetadataRow label="Completed" value={format(new Date(gen.completed_at), 'MMM d, yyyy · h:mm:ss a')} />
         )}
+        {gen.metadata?.conversation_id && (
+          <MetadataRow label="Conversation ID" value={gen.metadata.conversation_id as string} mono />
+        )}
       </div>
     </div>
   );
 }
 
-// ── Campaign Card (list view) ────────────────────────────────────────────────
+// ── Conversation Transcript ───────────────────────────────────────────────────
 
-function CampaignCard({ gen, resolvedNames, onOpen }: {
+function ConversationTranscript({ conversationId }: { conversationId: string }) {
+  const [messages, setMessages] = useState<Message[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadConversationMessages(conversationId).then(msgs => {
+      setMessages(msgs);
+      setLoading(false);
+    });
+  }, [conversationId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/40" />
+      </div>
+    );
+  }
+
+  if (!messages || messages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+        <MessageSquare className="w-8 h-8 text-muted-foreground/20" />
+        <p className="text-sm text-muted-foreground/50">No conversation transcript found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {messages.map(msg => (
+        <div
+          key={msg.id}
+          className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+        >
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 ${
+            msg.role === 'user'
+              ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
+              : 'bg-muted/30 text-muted-foreground border border-border/40'
+          }`}>
+            {msg.role === 'user' ? 'U' : <Bot className="w-3 h-3" />}
+          </div>
+          <div className={`flex-1 max-w-[80%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
+            msg.role === 'user'
+              ? 'bg-violet-500/10 text-foreground/90 border border-violet-500/20'
+              : 'bg-muted/20 text-foreground/80 border border-border/30'
+          }`}>
+            <p className="whitespace-pre-wrap">{msg.content}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Gemini Analysis Panel ─────────────────────────────────────────────────────
+
+function AnalysisPanel({ gen, resolvedNames }: { gen: GenerationWithDetails; resolvedNames: string[] }) {
+  const [brandAnalysis, setBrandAnalysis] = useState<string | null>(null);
+  const [brandAnalysisLoading, setBrandAnalysisLoading] = useState(false);
+  const [competitorUrl, setCompetitorUrl] = useState('');
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<string | null>(null);
+  const [competitorLoading, setCompetitorLoading] = useState(false);
+
+  const runBrandAnalysis = async () => {
+    if (!gen.brand_id) {
+      toast.error('No brand associated with this campaign');
+      return;
+    }
+    setBrandAnalysisLoading(true);
+    try {
+      const imageList = (gen.output_urls || [])
+        .map((url, i) => `  ${i + 1}. ${resolvedNames[i] || `Deliverable ${i + 1}`}: ${url}`)
+        .join('\n');
+      const { data, error } = await supabase.functions.invoke('brand-prompt-agent', {
+        body: {
+          brand_id: gen.brand_id,
+          user_message: `Please analyze these campaign deliverables for brand standards compliance. For each image, evaluate: brand color usage, visual consistency, messaging alignment, and overall brand fit. Provide a score out of 100 and specific actionable feedback for each deliverable.\n\nDeliverables:\n${imageList}\n\nBrief: ${gen.prompt_text || '(no brief)'}`,
+        },
+      });
+      if (error) throw error;
+      setBrandAnalysis(data?.message || data?.reasoning || 'Analysis complete. No detailed response returned.');
+    } catch (err) {
+      toast.error('Analysis failed — check console');
+      console.error('[CampaignsTab] Brand analysis error:', err);
+    } finally {
+      setBrandAnalysisLoading(false);
+    }
+  };
+
+  const runCompetitorAnalysis = async () => {
+    if (!competitorUrl.trim()) {
+      toast.error('Enter a competitor URL to analyze');
+      return;
+    }
+    if (!gen.brand_id) {
+      toast.error('No brand associated with this campaign');
+      return;
+    }
+    setCompetitorLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('brand-prompt-agent', {
+        body: {
+          brand_id: gen.brand_id,
+          user_message: `Analyze this competitor content and compare it against our brand's campaign. Competitor URL: ${competitorUrl.trim()}\n\nOur campaign brief: ${gen.prompt_text || '(none)'}\n\nProvide: competitor strengths/weaknesses, what our campaign does better, what we could improve, and 2-3 strategic opportunities.`,
+        },
+      });
+      if (error) throw error;
+      setCompetitorAnalysis(data?.message || data?.reasoning || 'Analysis complete.');
+    } catch (err) {
+      toast.error('Competitor analysis failed — check console');
+      console.error('[CampaignsTab] Competitor analysis error:', err);
+    } finally {
+      setCompetitorLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Brand Standards Analysis */}
+      <div className="rounded-xl border border-border/40 bg-muted/5 p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-violet-400 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold">Brand Standards Analysis</p>
+            <p className="text-xs text-muted-foreground/60 mt-0.5">Run Gemini to evaluate each deliverable against your brand guidelines</p>
+          </div>
+        </div>
+        {brandAnalysis ? (
+          <div className="space-y-3">
+            <div className="bg-muted/10 rounded-lg border border-border/30 p-4 max-h-[400px] overflow-y-auto">
+              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">{brandAnalysis}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setBrandAnalysis(null)} className="text-xs h-7">
+              Re-run Analysis
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={runBrandAnalysis}
+            disabled={brandAnalysisLoading || !gen.brand_id}
+            className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+            size="sm"
+          >
+            {brandAnalysisLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Bot className="w-3.5 h-3.5" />}
+            {brandAnalysisLoading ? 'Analyzing…' : 'Analyze Brand Fit'}
+          </Button>
+        )}
+      </div>
+
+      {/* Competitor Comparison */}
+      <div className="rounded-xl border border-border/40 bg-muted/5 p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <BarChart2 className="w-4 h-4 text-blue-400 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold">Competitor Comparison</p>
+            <p className="text-xs text-muted-foreground/60 mt-0.5">Paste a competitor ad URL or YouTube video to run a head-to-head analysis</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/40 pointer-events-none" />
+            <Input
+              placeholder="https://youtube.com/watch?v=... or ad URL"
+              value={competitorUrl}
+              onChange={(e) => setCompetitorUrl(e.target.value)}
+              className="pl-9 h-9 text-sm"
+              onKeyDown={(e) => { if (e.key === 'Enter') runCompetitorAnalysis(); }}
+            />
+          </div>
+          <Button
+            onClick={runCompetitorAnalysis}
+            disabled={competitorLoading || !competitorUrl.trim() || !gen.brand_id}
+            size="sm"
+            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {competitorLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+            {competitorLoading ? 'Analyzing…' : 'Compare'}
+          </Button>
+        </div>
+        {competitorAnalysis && (
+          <div className="space-y-3">
+            <div className="bg-muted/10 rounded-lg border border-border/30 p-4 max-h-[400px] overflow-y-auto">
+              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">{competitorAnalysis}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => { setCompetitorAnalysis(null); setCompetitorUrl(''); }} className="text-xs h-7">
+              New Comparison
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Campaign Grid Card ────────────────────────────────────────────────────────
+
+function CampaignGridCard({ gen, resolvedNames, onOpen }: {
   gen: GenerationWithDetails;
   resolvedNames: string[];
   onOpen: () => void;
 }) {
   const [zipping, setZipping] = useState(false);
-  const hasCopy = !!(gen.copy_blocks && (gen.copy_blocks as PackagePart[]).some(p => p.type === 'text'));
-  const thumbnails = (gen.output_urls || []).slice(0, 3);
+  const images = gen.output_urls || [];
+  const mosaicImages = images.slice(0, 4);
+  const extraCount = images.length - 4;
   const brandName = gen.brand?.name || 'Unknown Brand';
   const brief = gen.prompt_text || '';
+  const accentColor = gen.brand?.primary_color || '#7c3aed';
+  const MAX_CHIPS = 4;
+  const userName = gen.user?.full_name;
 
-  // Campaign subtitle: first ~80 chars of brief
-  const subtitle = brief.length > 80 ? brief.slice(0, 80).replace(/\s+\S*$/, '') + '…' : brief;
+  const handleZip = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setZipping(true);
+    try {
+      await downloadCampaignZip(gen, resolvedNames);
+      toast.success('Campaign downloaded');
+    } catch {
+      toast.error('ZIP download failed');
+    } finally {
+      setZipping(false);
+    }
+  };
+
+  const renderMosaic = () => {
+    const count = mosaicImages.length;
+    if (count === 0) return <div className="w-full h-full flex items-center justify-center bg-muted/20"><Layers className="w-10 h-10 text-muted-foreground/20" /></div>;
+    if (count === 1) return <img src={mosaicImages[0]} alt="" className="object-cover w-full h-full" loading="lazy" />;
+    if (count === 2) return <div className="grid grid-cols-2 w-full h-full">{mosaicImages.map((url, i) => <img key={i} src={url} alt="" className="object-cover w-full h-full" loading="lazy" />)}</div>;
+    if (count === 3) return (
+      <div className="grid w-full h-full" style={{ gridTemplateColumns: '2fr 1fr' }}>
+        <img src={mosaicImages[0]} alt="" className="object-cover w-full h-full" loading="lazy" />
+        <div className="grid grid-rows-2 h-full">
+          <img src={mosaicImages[1]} alt="" className="object-cover w-full h-full" loading="lazy" />
+          <img src={mosaicImages[2]} alt="" className="object-cover w-full h-full" loading="lazy" />
+        </div>
+      </div>
+    );
+    return (
+      <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
+        {mosaicImages.map((url, i) => (
+          <div key={i} className="relative overflow-hidden">
+            <img src={url} alt="" className="object-cover w-full h-full" loading="lazy" />
+            {i === 3 && extraCount > 0 && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <span className="text-white text-sm font-semibold">+{extraCount} more</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="group bg-card border border-border/40 rounded-2xl overflow-hidden hover:border-violet-500/50 hover:shadow-lg hover:shadow-violet-500/5 transition-all duration-200 cursor-pointer flex flex-col"
+      onClick={onOpen}
+    >
+      <div className="aspect-video relative overflow-hidden">
+        {renderMosaic()}
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+          <Button size="sm" className="gap-1.5 bg-white text-gray-900 hover:bg-white/90 font-semibold shadow-lg" onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+            <FolderOpen className="w-4 h-4" />Open Campaign
+          </Button>
+        </div>
+      </div>
+
+      <div className="h-[3px] shrink-0" style={{ backgroundColor: accentColor }} />
+
+      <div className="p-4 flex flex-col flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-semibold text-sm text-foreground truncate">{brandName}</span>
+          <span className="text-xs text-muted-foreground shrink-0">{formatDistanceToNow(new Date(gen.created_at), { addSuffix: true })}</span>
+        </div>
+
+        {brief && <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{brief}</p>}
+
+        {resolvedNames.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-3">
+            {resolvedNames.slice(0, MAX_CHIPS).map((name, i) => (
+              <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">{name}</span>
+            ))}
+            {resolvedNames.length > MAX_CHIPS && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted/30 text-muted-foreground/60 border border-border/30">+{resolvedNames.length - MAX_CHIPS} more</span>
+            )}
+          </div>
+        )}
+
+        <div className="mt-2 flex gap-3 text-[10px] text-muted-foreground/50">
+          <span className="flex items-center gap-1"><Image className="w-2.5 h-2.5" />{images.length} image{images.length !== 1 ? 's' : ''}</span>
+          <span className="flex items-center gap-1"><Cpu className="w-2.5 h-2.5" />{gen.model_used}</span>
+          {gen.generation_time_ms && <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" />{(gen.generation_time_ms / 1000).toFixed(1)}s</span>}
+        </div>
+
+        {/* User badge + actions */}
+        <div className="mt-3 pt-3 border-t border-border/30 flex items-center justify-between gap-2">
+          {userName ? <UserBadge name={userName} avatarUrl={gen.user?.avatar_url} size="xs" /> : <div />}
+          <div className="flex gap-1.5">
+            <Button size="sm" className="gap-1.5 h-7 text-xs bg-violet-600 hover:bg-violet-700 text-white px-2.5" onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+              <FolderOpen className="w-3 h-3" />Open
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={handleZip} disabled={zipping} title="Download ZIP">
+              {zipping ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Campaign List Row ─────────────────────────────────────────────────────────
+
+function CampaignListRow({ gen, resolvedNames, onOpen }: {
+  gen: GenerationWithDetails;
+  resolvedNames: string[];
+  onOpen: () => void;
+}) {
+  const [zipping, setZipping] = useState(false);
+  const images = gen.output_urls || [];
+  const stripImages = images.slice(0, 4);
+  const brandName = gen.brand?.name || 'Unknown Brand';
+  const brief = gen.prompt_text || '';
+  const accentColor = gen.brand?.primary_color || '#7c3aed';
+  const MAX_CHIPS = 5;
+  const userName = gen.user?.full_name;
 
   const handleZip = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -326,89 +680,44 @@ function CampaignCard({ gen, resolvedNames, onOpen }: {
   };
 
   return (
-    <div
-      className="group bg-card border border-border/50 rounded-xl p-4 hover:border-purple-500/40 hover:bg-card/80 transition-all cursor-pointer"
-      onClick={onOpen}
-    >
-      <div className="flex gap-4">
-        {/* Thumbnail strip */}
-        <div className="flex flex-col gap-1.5 shrink-0">
-          {thumbnails.length > 0 ? thumbnails.map((url, i) => (
-            <div key={i} className="w-16 h-16 rounded-lg overflow-hidden border border-border/30 bg-muted/20">
-              <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
-            </div>
-          )) : (
-            <div className="w-16 h-16 rounded-lg border border-border/30 bg-muted/20 flex items-center justify-center">
-              <Layers className="w-5 h-5 text-muted-foreground/30" />
-            </div>
-          )}
-          {(gen.output_urls || []).length > 3 && (
-            <div className="w-16 h-5 rounded bg-muted/20 flex items-center justify-center">
-              <span className="text-[10px] text-muted-foreground/50">+{gen.output_urls.length - 3} more</span>
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0 space-y-2">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-foreground">{brandName}</p>
-                {!hasCopy && (
-                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-muted-foreground/50 border-border/30">
-                    Images only
-                  </Badge>
-                )}
+    <div className="group bg-card border border-border/40 rounded-xl p-4 hover:border-violet-500/40 hover:bg-card/50 transition-all cursor-pointer" onClick={onOpen}>
+      <div className="flex items-center gap-3">
+        <div className="w-1 rounded-full self-stretch shrink-0" style={{ backgroundColor: accentColor }} />
+        {stripImages.length > 0 && (
+          <div className="flex gap-1.5 shrink-0 w-[200px]">
+            {stripImages.map((url, i) => (
+              <div key={i} className="flex-1 h-14 rounded-md overflow-hidden border border-border/20 bg-muted/10">
+                <img src={url} alt="" className="w-full h-full object-cover" loading="lazy" />
               </div>
-              {subtitle && (
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{subtitle}</p>
-              )}
-            </div>
-            <div className="shrink-0 text-right space-y-1">
-              <p className="text-[11px] text-muted-foreground/60">
-                {formatDistanceToNow(new Date(gen.created_at), { addSuffix: true })}
-              </p>
-              {gen.generation_time_ms && (
-                <p className="text-[10px] text-muted-foreground/40 flex items-center justify-end gap-1">
-                  <Clock className="w-2.5 h-2.5" />
-                  {(gen.generation_time_ms / 1000).toFixed(1)}s
-                </p>
-              )}
-            </div>
+            ))}
           </div>
-
-          {/* Deliverable chips */}
+        )}
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <p className="text-sm font-semibold text-foreground">{brandName}</p>
+          {brief && <p className="text-xs text-muted-foreground line-clamp-1 leading-relaxed">{brief}</p>}
           {resolvedNames.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {resolvedNames.map((name, i) => (
-                <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                  {name}
-                </span>
+            <div className="flex flex-wrap gap-1">
+              {resolvedNames.slice(0, MAX_CHIPS).map((name, i) => (
+                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20">{name}</span>
               ))}
+              {resolvedNames.length > MAX_CHIPS && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted/30 text-muted-foreground/60 border border-border/30">+{resolvedNames.length - MAX_CHIPS} more</span>
+              )}
             </div>
           )}
-
-          {/* Meta row */}
-          <div className="flex items-center gap-3 text-[10px] text-muted-foreground/40">
-            <span className="flex items-center gap-1"><Cpu className="w-2.5 h-2.5" />{gen.model_used}</span>
-            <span className="flex items-center gap-1"><Calendar className="w-2.5 h-2.5" />{format(new Date(gen.created_at), 'MMM d, yyyy')}</span>
+          {userName && <UserBadge name={userName} avatarUrl={gen.user?.avatar_url} size="xs" />}
+        </div>
+        <div className="shrink-0 flex items-center gap-3">
+          <div className="text-right space-y-1 hidden sm:block">
+            <p className="text-xs text-muted-foreground/60">{formatDistanceToNow(new Date(gen.created_at), { addSuffix: true })}</p>
+            <p className="text-[10px] text-muted-foreground/40 flex items-center justify-end gap-1"><Image className="w-2.5 h-2.5" />{images.length} image{images.length !== 1 ? 's' : ''}</p>
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 pt-1">
-            <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={(e) => { e.stopPropagation(); onOpen(); }}>
-              <FolderOpen className="w-3 h-3" />
-              Open Campaign
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" className="h-8 gap-1.5 text-xs bg-violet-600 hover:bg-violet-700 text-white" onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+              <FolderOpen className="w-3.5 h-3.5" />Open
             </Button>
-            <Button
-              size="sm" variant="ghost" className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-              onClick={handleZip}
-              disabled={zipping}
-              title="Download campaign as ZIP (copy + images)"
-            >
-              {zipping ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
-              Download ZIP
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleZip} disabled={zipping} title="Download ZIP">
+              {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             </Button>
           </div>
         </div>
@@ -417,7 +726,7 @@ function CampaignCard({ gen, resolvedNames, onOpen }: {
   );
 }
 
-// ── Campaign Detail ──────────────────────────────────────────────────────────
+// ── Campaign Detail ───────────────────────────────────────────────────────────
 
 interface ImageInfoState {
   index: number;
@@ -434,16 +743,15 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
   const resolvedNames = hasCopy ? resolveDeliverableNames(copyBlocks, storedNames) : storedNames;
   const brandName = gen.brand?.name || 'Campaign';
   const brief = gen.prompt_text || '';
-  const subtitle = brief.length > 100 ? brief.slice(0, 100).replace(/\s+\S*$/, '') + '…' : brief;
+  const conversationId = gen.metadata?.conversation_id as string | undefined;
+  const userName = gen.user?.full_name;
 
-  // Extract copy text for a specific image index
   const getCopyForIndex = (idx: number): string | undefined => {
     let imageCount = 0;
     let pendingText: string | undefined;
     for (const part of copyBlocks) {
-      if (part.type === 'text' && part.content) {
-        pendingText = part.content;
-      } else if (part.type === 'image') {
+      if (part.type === 'text' && part.content) pendingText = part.content;
+      else if (part.type === 'image') {
         if (imageCount === idx) return pendingText;
         pendingText = undefined;
         imageCount++;
@@ -471,90 +779,120 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
       <div className="flex items-start justify-between gap-4 pb-5 border-b border-border/30">
         <div className="flex items-start gap-3 min-w-0">
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 shrink-0 mt-0.5">
-            <ArrowLeft className="w-4 h-4" />
-            Campaigns
+            <ArrowLeft className="w-4 h-4" />Campaigns
           </Button>
           <div className="h-8 w-px bg-border/40 mt-0.5" />
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base font-semibold text-foreground">{brandName}</h2>
               <Badge variant="outline" className="gap-1 text-[10px]">
-                <Layers className="w-2.5 h-2.5" />
-                {resolvedNames.length} deliverables
+                <Layers className="w-2.5 h-2.5" />{resolvedNames.length} deliverables
               </Badge>
               {gen.generation_time_ms && (
                 <Badge variant="outline" className="gap-1 text-[10px]">
-                  <Clock className="w-2.5 h-2.5" />
-                  {(gen.generation_time_ms / 1000).toFixed(1)}s
+                  <Clock className="w-2.5 h-2.5" />{(gen.generation_time_ms / 1000).toFixed(1)}s
+                </Badge>
+              )}
+              {userName && (
+                <Badge variant="outline" className="gap-1 text-[10px]">
+                  <User className="w-2.5 h-2.5" />{userName}
                 </Badge>
               )}
             </div>
-            {subtitle && (
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-2xl">{subtitle}</p>
+            {brief && (
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-2xl">{brief}</p>
             )}
           </div>
         </div>
-        <Button
-          size="sm" variant="outline" className="gap-1.5 shrink-0"
-          onClick={handleZip}
-          disabled={zipping}
-          title="Download entire campaign as ZIP — copy text + images"
-        >
+        <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={handleZip} disabled={zipping}>
           {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
           Download ZIP
         </Button>
       </div>
 
-      {/* Body: two-column layout */}
+      {/* Body: main content + metadata sidebar */}
       <div className="pt-6 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
-        {/* Left: Package display */}
+        {/* Left: tabbed content */}
         <div className="min-w-0">
-          {hasCopy ? (
-            <CreativePackageDisplay
-              parts={copyBlocks}
-              imageUrls={gen.output_urls || []}
-              latencyMs={gen.generation_time_ms || 0}
-              brandName={brandName}
-              model={gen.model_used}
-              brief={gen.prompt_text || undefined}
-              deliverableNames={resolvedNames}
-              onImageInfo={(index, name, imageUrl) => setImageInfo({ index, name, imageUrl })}
-            />
-          ) : (
-            <div className="space-y-6">
-              <div className="rounded-md border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-amber-400 shrink-0" />
-                  <p className="text-sm text-amber-300/80">
-                    Copy is stored for campaigns generated after March 14, 2026. Images are available below.
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-5">
-                {(gen.output_urls || []).map((url, i) => (
-                  <div key={i} className="space-y-2">
+          <Tabs defaultValue="campaign">
+            <TabsList className="mb-4">
+              <TabsTrigger value="campaign" className="gap-1.5 text-xs">
+                <Layers className="w-3.5 h-3.5" />Campaign
+              </TabsTrigger>
+              <TabsTrigger value="conversation" className="gap-1.5 text-xs">
+                <MessageSquare className="w-3.5 h-3.5" />Conversation
+                {!conversationId && <span className="ml-1 text-[9px] text-muted-foreground/40">(no link)</span>}
+              </TabsTrigger>
+              <TabsTrigger value="analysis" className="gap-1.5 text-xs">
+                <BarChart2 className="w-3.5 h-3.5" />Analysis
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="campaign">
+              {hasCopy ? (
+                <CreativePackageDisplay
+                  parts={copyBlocks}
+                  imageUrls={gen.output_urls || []}
+                  latencyMs={gen.generation_time_ms || 0}
+                  brandName={brandName}
+                  model={gen.model_used}
+                  brief={gen.prompt_text || undefined}
+                  deliverableNames={resolvedNames}
+                  onImageInfo={(index, name, imageUrl) => setImageInfo({ index, name, imageUrl })}
+                />
+              ) : (
+                <div className="space-y-6">
+                  <div className="rounded-md border border-amber-500/20 bg-amber-500/5 px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400 shrink-0">
-                        {storedNames[i] || `Deliverable ${i + 1}`}
-                      </span>
-                      <div className="flex-1 h-px bg-purple-500/20" />
-                    </div>
-                    <div className="relative group/img rounded-lg overflow-hidden border border-border/30">
-                      <img src={url} alt={storedNames[i]} className="w-full h-auto block" loading="lazy" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity">
-                        <div className="absolute bottom-3 right-3">
-                          <Button size="sm" variant="secondary" className="h-7 gap-1.5 text-xs"
-                            onClick={() => { const a = document.createElement('a'); a.href = url; a.download = `${slugify(brandName)}-${slugify(storedNames[i] || `deliverable-${i+1}`)}.jpg`; a.click(); }}>
-                            <Download className="w-3 h-3" /> Save
-                          </Button>
-                        </div>
-                      </div>
+                      <FileText className="w-4 h-4 text-amber-400 shrink-0" />
+                      <p className="text-sm text-amber-300/80">Copy is stored for campaigns generated after March 14, 2026. Images are available below.</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  <div className="space-y-5">
+                    {(gen.output_urls || []).map((url, i) => (
+                      <div key={i} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400 shrink-0">{storedNames[i] || `Deliverable ${i + 1}`}</span>
+                          <div className="flex-1 h-px bg-purple-500/20" />
+                        </div>
+                        <div className="relative group/img rounded-lg overflow-hidden border border-border/30">
+                          <img src={url} alt={storedNames[i]} className="w-full h-auto block" loading="lazy" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity">
+                            <div className="absolute bottom-3 right-3">
+                              <Button size="sm" variant="secondary" className="h-7 gap-1.5 text-xs"
+                                onClick={() => { const a = document.createElement('a'); a.href = url; a.download = `${slugify(brandName)}-${slugify(storedNames[i] || `deliverable-${i+1}`)}.jpg`; a.click(); }}>
+                                <Download className="w-3 h-3" />Save
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="conversation">
+              {conversationId ? (
+                <ConversationTranscript conversationId={conversationId} />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                  <MessageSquare className="w-10 h-10 text-muted-foreground/20" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground/60">No conversation linked</p>
+                    <p className="text-xs text-muted-foreground/40 max-w-xs">
+                      Campaigns generated after this update will have their conversation transcript linked here automatically.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="analysis">
+              <AnalysisPanel gen={gen} resolvedNames={resolvedNames} />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Right: Metadata panel */}
@@ -578,53 +916,23 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
         </DialogHeader>
         {imageInfo && (() => {
           const copyText = getCopyForIndex(imageInfo.index);
-          const imageUrl = imageInfo.imageUrl;
           return (
             <div className="space-y-4">
-              {/* Image preview */}
               <div className="rounded-lg overflow-hidden border border-border/30 bg-muted/10">
-                <img src={imageUrl} alt={imageInfo.name} className="w-full h-auto block max-h-64 object-contain" />
+                <img src={imageInfo.imageUrl} alt={imageInfo.name} className="w-full h-auto block max-h-64 object-contain" />
               </div>
-
-              {/* Metadata grid */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Deliverable</p>
-                  <p className="text-xs text-foreground/85">{resolvedNames[imageInfo.index] || `Deliverable ${imageInfo.index + 1}`}</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Index</p>
-                  <p className="text-xs font-mono text-foreground/85">{String(imageInfo.index + 1).padStart(2, '0')} of {resolvedNames.length}</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Model</p>
-                  <p className="text-xs font-mono text-foreground/85">{gen.model_used}</p>
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Generated</p>
-                  <p className="text-xs text-foreground/85">{format(new Date(gen.created_at), 'MMM d, yyyy · h:mm a')}</p>
-                </div>
-                {gen.generation_time_ms && (
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Generation Time</p>
-                    <p className="text-xs text-foreground/85">{(gen.generation_time_ms / 1000).toFixed(2)}s</p>
-                  </div>
-                )}
-                {gen.brand && (
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Brand</p>
-                    <p className="text-xs text-foreground/85">{gen.brand.name}</p>
-                  </div>
-                )}
+                <div className="space-y-0.5"><p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Deliverable</p><p className="text-xs text-foreground/85">{resolvedNames[imageInfo.index] || `Deliverable ${imageInfo.index + 1}`}</p></div>
+                <div className="space-y-0.5"><p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Index</p><p className="text-xs font-mono text-foreground/85">{String(imageInfo.index + 1).padStart(2, '0')} of {resolvedNames.length}</p></div>
+                <div className="space-y-0.5"><p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Model</p><p className="text-xs font-mono text-foreground/85">{gen.model_used}</p></div>
+                <div className="space-y-0.5"><p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Generated</p><p className="text-xs text-foreground/85">{format(new Date(gen.created_at), 'MMM d, yyyy · h:mm a')}</p></div>
+                {gen.generation_time_ms && <div className="space-y-0.5"><p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Generation Time</p><p className="text-xs text-foreground/85">{(gen.generation_time_ms / 1000).toFixed(2)}s</p></div>}
+                {gen.brand && <div className="space-y-0.5"><p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Brand</p><p className="text-xs text-foreground/85">{gen.brand.name}</p></div>}
               </div>
-
-              {/* Image URL */}
               <div className="space-y-1">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Image URL</p>
-                <p className="text-[10px] font-mono text-muted-foreground/60 break-all leading-relaxed bg-muted/20 rounded p-2">{imageUrl}</p>
+                <p className="text-[10px] font-mono text-muted-foreground/60 break-all leading-relaxed bg-muted/20 rounded p-2">{imageInfo.imageUrl}</p>
               </div>
-
-              {/* Copy text */}
               {copyText && (
                 <div className="space-y-1">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Copy</p>
@@ -633,15 +941,10 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
                   </div>
                 </div>
               )}
-
-              {/* Actions */}
               <div className="flex gap-2 pt-1">
-                <Button
-                  size="sm" variant="outline" className="gap-1.5 text-xs"
-                  onClick={() => { const a = document.createElement('a'); a.href = imageUrl; a.download = `${slugify(brandName)}-${slugify(resolvedNames[imageInfo.index] || `deliverable-${imageInfo.index + 1}`)}.jpg`; a.click(); }}
-                >
-                  <Download className="w-3 h-3" />
-                  Download Image
+                <Button size="sm" variant="outline" className="gap-1.5 text-xs"
+                  onClick={() => { const a = document.createElement('a'); a.href = imageInfo.imageUrl; a.download = `${slugify(brandName)}-${slugify(resolvedNames[imageInfo.index] || `deliverable-${imageInfo.index + 1}`)}.jpg`; a.click(); }}>
+                  <Download className="w-3 h-3" />Download Image
                 </Button>
               </div>
             </div>
@@ -655,34 +958,41 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
 
 // ── Main Tab ─────────────────────────────────────────────────────────────────
 
+type SortDir = 'desc' | 'asc';
+
 export function CampaignsTab() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [brandFilter, setBrandFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   const { data: allGenerations = [], isLoading } = useMyGenerations(200);
 
   const campaigns = allGenerations.filter(g => g.generation_type === 'creative_package');
 
   const brands = Array.from(
-    new Map(
-      campaigns.filter(g => g.brand).map(g => [g.brand!.id, g.brand!] as const)
-    ).values()
+    new Map(campaigns.filter(g => g.brand).map(g => [g.brand!.id, g.brand!] as const)).values()
   );
 
-  const filtered = brandFilter === 'all' ? campaigns : campaigns.filter(g => g.brand?.id === brandFilter);
+  const filtered = campaigns
+    .filter(g => {
+      if (brandFilter !== 'all' && g.brand?.id !== brandFilter) return false;
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const matchesBrief = (g.prompt_text || '').toLowerCase().includes(term);
+        const matchesBrand = (g.brand?.name || '').toLowerCase().includes(term);
+        const matchesDeliverables = ((g.metadata?.deliverable_names as string[] | undefined) || []).some(n => n.toLowerCase().includes(term));
+        if (!matchesBrief && !matchesBrand && !matchesDeliverables) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortDir === 'desc' ? -diff : diff;
+    });
 
   const selectedCampaign = selectedId ? campaigns.find(g => g.id === selectedId) : null;
-
-  // Resolve deliverable names for selected campaign
-  const selectedCopyBlocks = selectedCampaign
-    ? (selectedCampaign.copy_blocks as PackagePart[] | undefined) || []
-    : [];
-  const selectedStoredNames = selectedCampaign
-    ? (selectedCampaign.metadata?.deliverable_names as string[] | undefined) || []
-    : [];
-  const selectedResolvedNames = selectedCopyBlocks.some(p => p.type === 'text')
-    ? resolveDeliverableNames(selectedCopyBlocks, selectedStoredNames)
-    : selectedStoredNames;
 
   if (selectedCampaign) {
     return (
@@ -692,32 +1002,94 @@ export function CampaignsTab() {
     );
   }
 
+  // Date range summary
+  const oldestDate = campaigns.length > 0
+    ? format(new Date(campaigns[campaigns.length - 1].created_at), 'MMM d, yyyy')
+    : null;
+  const newestDate = campaigns.length > 0
+    ? format(new Date(campaigns[0].created_at), 'MMM d, yyyy')
+    : null;
+
   return (
     <div className="p-6 space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-0.5">
-            <Layers className="w-4 h-4 text-purple-400" />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-purple-400">Campaigns</h2>
+      {/* Hero header */}
+      <div className="rounded-2xl bg-gradient-to-br from-violet-500/5 via-purple-500/5 to-indigo-500/5 border border-violet-500/10 p-6 mb-2">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
+            <Archive className="w-5 h-5 text-violet-400" />
           </div>
-          <p className="text-sm text-muted-foreground">
-            {campaigns.length} creative package{campaigns.length !== 1 ? 's' : ''} · full copy and images
-          </p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-semibold">Campaign Archive</h1>
+            <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+              Every creative package Vince has built — with full copy, images, briefs, and conversation provenance. Open any campaign to review deliverables, see who created it, read the chat that led to it, or run a brand standards analysis.
+            </p>
+            <div className="flex items-center gap-4 mt-3 flex-wrap">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                <Sparkles className="w-3 h-3 text-violet-400" />
+                <span className="font-semibold text-foreground/80">{campaigns.length}</span> campaigns
+              </span>
+              {brands.length > 0 && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                  <Layers className="w-3 h-3 text-blue-400" />
+                  <span className="font-semibold text-foreground/80">{brands.length}</span> brand{brands.length !== 1 ? 's' : ''}
+                </span>
+              )}
+              {oldestDate && newestDate && oldestDate !== newestDate && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                  <Calendar className="w-3 h-3 text-muted-foreground/40" />
+                  {oldestDate} – {newestDate}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Controls row */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none" />
+          <Input
+            placeholder="Search by brand, brief, or deliverable…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+
         {brands.length > 1 && (
           <Select value={brandFilter} onValueChange={setBrandFilter}>
-            <SelectTrigger className="w-44 h-8 text-xs">
+            <SelectTrigger className="w-44 h-9 text-xs">
               <SelectValue placeholder="All brands" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All brands</SelectItem>
-              {brands.map(b => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
+              {brands.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
         )}
+
+        {/* Sort */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-1.5 text-xs"
+          onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
+          title={sortDir === 'desc' ? 'Newest first' : 'Oldest first'}
+        >
+          {sortDir === 'desc' ? <SortDesc className="w-3.5 h-3.5" /> : <SortAsc className="w-3.5 h-3.5" />}
+          {sortDir === 'desc' ? 'Newest' : 'Oldest'}
+        </Button>
+
+        {/* View toggle */}
+        <div className="flex items-center border border-border/40 rounded-lg overflow-hidden">
+          <button onClick={() => setViewMode('card')} className={`p-2 transition-colors ${viewMode === 'card' ? 'bg-violet-500/15 text-violet-400' : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted/30'}`} title="Grid view">
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+          <button onClick={() => setViewMode('list')} className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-violet-500/15 text-violet-400' : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted/30'}`} title="List view">
+            <List className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <Separator />
@@ -727,29 +1099,33 @@ export function CampaignsTab() {
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground/50" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
-          <Layers className="w-10 h-10 text-muted-foreground/20" />
-          <p className="text-sm font-medium text-muted-foreground/60">No campaigns yet</p>
-          <p className="text-xs text-muted-foreground/40 max-w-xs">
-            Ask Vince to create a campaign and it will appear here with full copy and images.
-          </p>
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-violet-500/5 border border-violet-500/10 flex items-center justify-center">
+            <Sparkles className="w-7 h-7 text-violet-400/30" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground/60">{searchTerm || brandFilter !== 'all' ? 'No campaigns match your filters' : 'No campaigns yet'}</p>
+            <p className="text-xs text-muted-foreground/40 max-w-xs">
+              {searchTerm || brandFilter !== 'all' ? 'Try adjusting your search or filter.' : 'Ask Vince to create a campaign and it will appear here with full copy and images.'}
+            </p>
+          </div>
         </div>
-      ) : (
-        <div className="space-y-3">
+      ) : viewMode === 'card' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map(gen => {
             const copyBlocks = (gen.copy_blocks as PackagePart[] | undefined) || [];
             const storedNames = (gen.metadata?.deliverable_names as string[] | undefined) || [];
-            const resolvedNames = copyBlocks.some(p => p.type === 'text')
-              ? resolveDeliverableNames(copyBlocks, storedNames)
-              : storedNames;
-            return (
-              <CampaignCard
-                key={gen.id}
-                gen={gen}
-                resolvedNames={resolvedNames}
-                onOpen={() => setSelectedId(gen.id)}
-              />
-            );
+            const resolvedNames = copyBlocks.some(p => p.type === 'text') ? resolveDeliverableNames(copyBlocks, storedNames) : storedNames;
+            return <CampaignGridCard key={gen.id} gen={gen} resolvedNames={resolvedNames} onOpen={() => setSelectedId(gen.id)} />;
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filtered.map(gen => {
+            const copyBlocks = (gen.copy_blocks as PackagePart[] | undefined) || [];
+            const storedNames = (gen.metadata?.deliverable_names as string[] | undefined) || [];
+            const resolvedNames = copyBlocks.some(p => p.type === 'text') ? resolveDeliverableNames(copyBlocks, storedNames) : storedNames;
+            return <CampaignListRow key={gen.id} gen={gen} resolvedNames={resolvedNames} onOpen={() => setSelectedId(gen.id)} />;
           })}
         </div>
       )}

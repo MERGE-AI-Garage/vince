@@ -4,10 +4,12 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, Palette, Settings, Mic } from "lucide-react";
+import { LogOut, Palette, Settings, FolderOpen } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Navigation = () => {
   const { signOut, user } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -27,11 +29,13 @@ const Navigation = () => {
               <Link to="/studio"><Palette className="w-4 h-4 mr-1.5" />Studio</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/admin"><Settings className="w-4 h-4 mr-1.5" />Admin</Link>
+              <Link to="/campaigns"><FolderOpen className="w-4 h-4 mr-1.5" />Campaigns</Link>
             </Button>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/vince"><Mic className="w-4 h-4 mr-1.5" />Vince</Link>
-            </Button>
+            {isAdmin && (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/admin"><Settings className="w-4 h-4 mr-1.5" />Admin</Link>
+              </Button>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">

@@ -83,7 +83,8 @@ export function useMyGenerations(limit = 50) {
         .select(`
           *,
           model:creative_studio_models(*),
-          brand:creative_studio_brands(*)
+          brand:creative_studio_brands(*),
+          user:profiles!user_id(full_name, avatar_url)
         `)
         .or(`user_id.eq.${profile.id},user_id.is.null`)
         .order('created_at', { ascending: false })

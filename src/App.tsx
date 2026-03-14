@@ -12,6 +12,7 @@ import React, { Suspense, lazy } from 'react';
 const CreativeStudio = lazy(() => import('@/pages/CreativeStudio'));
 const CreativeStudioAdmin = lazy(() => import('@/pages/CreativeStudioAdmin'));
 const VinceControlPanel = lazy(() => import('@/pages/VinceControlPanel'));
+const MyCampaigns = lazy(() => import('@/pages/MyCampaigns'));
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
@@ -54,6 +55,7 @@ function AppRoutes() {
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/" element={<ProtectedRoute><CreativeStudio /></ProtectedRoute>} />
         <Route path="/studio" element={<ProtectedRoute><CreativeStudio /></ProtectedRoute>} />
+        <Route path="/campaigns" element={<ProtectedRoute><MyCampaigns /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><CreativeStudioAdmin /></ProtectedRoute>} />
         <Route path="/vince" element={<ProtectedRoute><VinceControlPanel /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
