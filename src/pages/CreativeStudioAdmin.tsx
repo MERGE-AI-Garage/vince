@@ -76,7 +76,16 @@ import {
   FileImage,
   Package,
   Layers,
+  Bot,
+  Volume2,
+  Settings2,
+  MessagesSquare,
 } from 'lucide-react';
+import { VoiceTab } from '@/components/vince-control-panel/VoiceTab';
+import { ChatTab } from '@/components/vince-control-panel/ChatTab';
+import { PromptsTab } from '@/components/vince-control-panel/PromptsTab';
+import { BrandIntelTab } from '@/components/vince-control-panel/BrandIntelTab';
+import { ConversationsTab } from '@/components/agent-conversations/ConversationsTab';
 import { toast } from 'sonner';
 import { GoogleLogo, MergeLogo } from '@/components/ai-pulse/vendorLogos';
 import { TabHeroHeader } from '@/components/creative-studio/TabHeroHeader';
@@ -123,18 +132,23 @@ import { BrandEditorDialog } from '@/components/creative-studio/BrandEditorDialo
 import { BrandDNABuilder } from '@/components/creative-studio/BrandDNABuilder';
 import { MediaLibraryTab } from '@/components/creative-studio/MediaLibraryTab';
 import { CampaignsTab } from '@/components/creative-studio/CampaignsTab';
-import { CameraPresetAdmin } from '@/components/creative-studio/CameraPresetAdmin';
+import { CameraIntelligenceAdmin } from '@/components/creative-studio/CameraIntelligenceAdmin';
 import { BrandDNAPrompts } from '@/components/creative-studio/BrandDNAPrompts';
 import { BrandCard } from '@/components/creative-studio/BrandCard';
 
-const HERO_IMAGES = [
-  '/images/admin-hero-2.jpeg',
+const VINCE_SECTIONS = [
+  { value: 'voice', label: 'Voice', icon: Volume2 },
+  { value: 'chat', label: 'Chat', icon: Settings2 },
+  { value: 'prompts', label: 'Prompts', icon: MessageSquare },
+  { value: 'brand-intel', label: 'Brand Intel', icon: Brain },
+  { value: 'conversations', label: 'Conversations', icon: MessagesSquare },
 ];
 
 export default function CreativeStudioAdmin() {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('brands');
   const [settingsSection, setSettingsSection] = useState('general');
+  const [vinceSection, setVinceSection] = useState('voice');
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const { startAdminTour } = useVinceAdminTour();
 
@@ -457,14 +471,11 @@ export default function CreativeStudioAdmin() {
 
   return (
     <PageLayout>
-      {/* Full-bleed cinematic hero — outside container for edge-to-edge layout */}
       <AdminHeroHeader
         icon={LayoutDashboard}
-        title="Vince Admin"
-        description="Manage brands, configure AI models, set user quotas, and monitor generation costs — everything that powers the studio"
+        title="Intelligence Console"
+        description="Manage brands, AI models, user quotas, and generation costs"
         backTo={{ path: '/', label: 'Back to Studio' }}
-        backgroundImages={HERO_IMAGES}
-        cinematic
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -520,7 +531,7 @@ export default function CreativeStudioAdmin() {
         ]}
       />
 
-      <div className="container mx-auto px-6 pb-6 space-y-6">
+      <div className="container mx-auto px-6 py-6 space-y-6">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-center">
@@ -556,6 +567,10 @@ export default function CreativeStudioAdmin() {
               <TabsTrigger value="settings">
                 <Settings className="h-3.5 w-3.5" />
                 Settings
+              </TabsTrigger>
+              <TabsTrigger value="vince">
+                <Bot className="h-3.5 w-3.5" />
+                Vince
               </TabsTrigger>
             </TabsList>
 
@@ -657,7 +672,7 @@ export default function CreativeStudioAdmin() {
                         className={cn(
                           'flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150',
                           isSelected
-                            ? 'bg-emerald-600 text-white shadow-sm'
+                            ? 'bg-purple-600 text-white shadow-sm'
                             : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
                         )}
                       >
@@ -1184,7 +1199,7 @@ export default function CreativeStudioAdmin() {
                 </TabsContent>
 
                 <TabsContent value="camera">
-                  <CameraPresetAdmin />
+                  <CameraIntelligenceAdmin />
                 </TabsContent>
 
                 <TabsContent value="analytics">
@@ -1192,7 +1207,7 @@ export default function CreativeStudioAdmin() {
                 </TabsContent>
 
                 <TabsContent value="quotas">
-                  <QuotasTab />
+                  <QuotasTab onNavigateToMedia={() => setActiveTab('media')} />
                 </TabsContent>
 
                 <TabsContent value="audit">
@@ -1203,6 +1218,38 @@ export default function CreativeStudioAdmin() {
                   <PromptHistoryTab />
                 </TabsContent>
               </Tabs>
+            </div>
+          </TabsContent>
+
+          {/* Vince Agent Tab */}
+          <TabsContent value="vince">
+            <div className="flex gap-6 mt-2">
+              {/* Sidebar nav */}
+              <div className="w-44 shrink-0 space-y-1">
+                {VINCE_SECTIONS.map(section => (
+                  <button
+                    key={section.value}
+                    onClick={() => setVinceSection(section.value)}
+                    className={cn(
+                      'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-left transition-colors font-epilogue',
+                      vinceSection === section.value
+                        ? 'bg-[#00856C]/15 text-[#1ED75F] border border-[#00856C]/20'
+                        : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80 border border-transparent'
+                    )}
+                  >
+                    <section.icon className="h-3.5 w-3.5 shrink-0" />
+                    {section.label}
+                  </button>
+                ))}
+              </div>
+              {/* Content */}
+              <div className="flex-1 min-w-0 space-y-6">
+                {vinceSection === 'voice' && <VoiceTab />}
+                {vinceSection === 'chat' && <ChatTab />}
+                {vinceSection === 'prompts' && <PromptsTab />}
+                {vinceSection === 'brand-intel' && <BrandIntelTab />}
+                {vinceSection === 'conversations' && <ConversationsTab agent="vince" agentLabel="Vince" />}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
