@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import {
   Palette, Type, ImageIcon, Globe, Pencil, Share2, Target, BookOpen,
-  X, BarChart3, FileText, ChevronDown,
+  X, BarChart3, FileText, ChevronDown, Download, Link2,
 } from 'lucide-react';
 import { useBrandProfile } from '@/hooks/useCreativeStudioBrandIntelligence';
 import { supabase } from '@/integrations/supabase/client';
@@ -387,6 +387,25 @@ function TypographySystemCard({ data }: { data: TypographySystem }) {
   );
 }
 
+async function downloadLogo(url: string, variant: string) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const ext = blob.type.includes('svg') ? 'svg' : blob.type.includes('png') ? 'png' : 'jpg';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `logo-${variant}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch {
+    toast.error('Download failed');
+  }
+}
+
+function copyLogoUrl(url: string) {
+  navigator.clipboard.writeText(url).then(() => toast.success('Logo URL copied'));
+}
+
 const VARIANT_LABELS: Record<string, string> = {
   full_color: 'Full Color',
   reversed: 'Reversed',
@@ -451,6 +470,14 @@ function LogoSystemCard({ data, brandId }: { data: LogoSystem; brandId: string }
                   {logo.is_default && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-pink-500 border border-background" title="Default" />
                   )}
+                  <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-1 pb-1 bg-black/50">
+                    <button onClick={() => copyLogoUrl(logo.url)} title="Copy URL" className="w-5 h-5 rounded bg-white/20 hover:bg-white/50 flex items-center justify-center transition-colors">
+                      <Link2 className="w-2.5 h-2.5 text-white" />
+                    </button>
+                    <button onClick={() => downloadLogo(logo.url, logo.variant)} title="Download" className="w-5 h-5 rounded bg-white/20 hover:bg-white/50 flex items-center justify-center transition-colors">
+                      <Download className="w-2.5 h-2.5 text-white" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -470,7 +497,7 @@ function LogoSystemCard({ data, brandId }: { data: LogoSystem; brandId: string }
                     {remainingLogos.map((logo) => (
                       <div
                         key={logo.id}
-                        className="relative"
+                        className="relative group"
                         title={`${VARIANT_LABELS[logo.variant] || logo.variant} · ${LOCKUP_LABELS[logo.lockup] || logo.lockup}`}
                       >
                         <div
@@ -481,6 +508,14 @@ function LogoSystemCard({ data, brandId }: { data: LogoSystem; brandId: string }
                           }}
                         >
                           <img src={logo.url} alt="" className="max-w-full max-h-full object-contain p-1" />
+                        </div>
+                        <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-1 pb-1 bg-black/50">
+                          <button onClick={() => copyLogoUrl(logo.url)} title="Copy URL" className="w-5 h-5 rounded bg-white/20 hover:bg-white/50 flex items-center justify-center transition-colors">
+                            <Link2 className="w-2.5 h-2.5 text-white" />
+                          </button>
+                          <button onClick={() => downloadLogo(logo.url, logo.variant)} title="Download" className="w-5 h-5 rounded bg-white/20 hover:bg-white/50 flex items-center justify-center transition-colors">
+                            <Download className="w-2.5 h-2.5 text-white" />
+                          </button>
                         </div>
                       </div>
                     ))}

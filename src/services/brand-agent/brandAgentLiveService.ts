@@ -207,7 +207,8 @@ async function executeRemoteTool(
   toolName: string,
   parameters: Record<string, unknown>,
   brandId: string | null,
-  userId?: string
+  userId?: string,
+  conversationId?: string
 ): Promise<Record<string, unknown>> {
   console.log(`[Vince Live] Calling edge function for tool: ${toolName}`);
 
@@ -218,6 +219,7 @@ async function executeRemoteTool(
       parameters,
       brand_id: brandId,
       user_id: userId,
+      ...(conversationId ? { conversation_id: conversationId } : {}),
     }
   });
 
@@ -423,6 +425,11 @@ export const connectVinceLiveSession = async (
     let currentInputText = "";
     let currentOutputText = "";
     let latestResumeHandle: string | null = null;
+
+    // Conversation ID for this live session — used to link generated campaigns to the transcript
+    const liveConversationId = crypto.randomUUID();
+    // Accumulates finalized transcript turns for saving to chatbot_conversations
+    const sessionMessages: Array<{ role: 'user' | 'model'; content: string }> = [];
 
     // Track uploaded reference images for injection into generate_image tool calls
     const sessionReferenceImages: Array<{ base64: string; mimeType: string }> = [];
@@ -735,7 +742,22 @@ export const connectVinceLiveSession = async (
                 });
                 callbacks.onToolStart?.('generate_creative_package');
 
-                executeRemoteTool('generate_creative_package', fc.args || {}, activeBrandId || null, userContext?.id)
+                // Save current transcript so the conversation_id resolves to real messages
+                if (sessionMessages.length > 0) {
+                  try {
+                    await supabase.from('chatbot_conversations').upsert({
+                      id: liveConversationId,
+                      user_id: userContext?.id || null,
+                      messages: [...sessionMessages],
+                      metadata: { assistant: 'vince', source: 'live_session' },
+                      title: 'Voice Session',
+                    }, { onConflict: 'id' });
+                  } catch (saveErr) {
+                    console.warn('[Vince Live] Failed to save session transcript:', saveErr);
+                  }
+                }
+
+                executeRemoteTool('generate_creative_package', fc.args || {}, activeBrandId || null, userContext?.id, liveConversationId)
                   .then(result => {
                     if (sessionCancelled) return;
                     callbacks.onToolResult?.('generate_creative_package', result);
@@ -878,13 +900,16 @@ export const connectVinceLiveSession = async (
           // Turn completion
           if (msg.serverContent?.turnComplete) {
             if (currentInputText) {
+              const text = cleanText(currentInputText);
+              sessionMessages.push({ role: 'user', content: text });
               callbacks.onTranscriptUpdate({
-                id: `user-${Date.now()}`, role: 'user', text: cleanText(currentInputText), isFinal: true
+                id: `user-${Date.now()}`, role: 'user', text, isFinal: true
               });
               currentInputText = "";
               callbacks.onTranscriptUpdate({ id: 'current-user', role: 'user', text: '', isFinal: false });
             }
             if (currentOutputText) {
+              sessionMessages.push({ role: 'model', content: currentOutputText });
               callbacks.onTranscriptUpdate({
                 id: `model-${Date.now()}`, role: 'model', text: currentOutputText, isFinal: true
               });

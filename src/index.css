@@ -102,9 +102,9 @@
   }
 
   .dark {
-    --background: 165 35% 7%;
+    --background: 165 35% 10%;
     --foreground: 140 10% 92%;
-    --card: 165 30% 10%;
+    --card: 165 28% 14%;
     --card-foreground: 140 10% 92%;
     --muted: 165 14% 14%;
     --muted-foreground: 150 10% 65%;
@@ -133,28 +133,28 @@
     --sidebar-border: 165 30% 20%;
     --sidebar-ring: 165 100% 26%;
 
-    --cs-surface-0: 165 35% 7%;
-    --cs-surface-1: 165 30% 10%;
-    --cs-surface-2: 165 25% 13%;
-    --cs-surface-3: 165 35% 5%;
-    --cs-border-subtle: 165 20% 18%;
-    --cs-border-mid: 165 18% 25%;
+    --cs-surface-0: 165 35% 10%;
+    --cs-surface-1: 165 28% 14%;
+    --cs-surface-2: 165 25% 17%;
+    --cs-surface-3: 165 35% 8%;
+    --cs-border-subtle: 165 20% 21%;
+    --cs-border-mid: 165 18% 28%;
     --cs-text-primary: 0 0% 90%;
   }
 
   /* Studio dark mode: higher specificity than .creative-studio alone — re-applies dark
      emerald vars to body when html has .dark and body has .creative-studio */
   .dark .creative-studio {
-    --background: 165 35% 7%;
+    --background: 165 35% 10%;
     --foreground: 140 10% 92%;
-    --card: 165 30% 10%;
+    --card: 165 28% 14%;
     --card-foreground: 140 10% 92%;
     --muted: 165 14% 14%;
     --muted-foreground: 150 10% 65%;
     --border: 165 16% 20%;
     --input: 165 18% 22%;
     --input-bg: 165 18% 22%;
-    --popover: 165 30% 10%;
+    --popover: 165 28% 14%;
     --popover-foreground: 140 10% 92%;
     --secondary: 165 14% 16%;
     --secondary-foreground: 140 10% 92%;
@@ -163,12 +163,12 @@
     --accent: 142 100% 50%;
     --accent-foreground: 140 10% 92%;
 
-    --cs-surface-0: 165 35% 7%;
-    --cs-surface-1: 165 30% 10%;
-    --cs-surface-2: 165 25% 13%;
-    --cs-surface-3: 165 35% 5%;
-    --cs-border-subtle: 165 20% 18%;
-    --cs-border-mid: 165 18% 25%;
+    --cs-surface-0: 165 35% 10%;
+    --cs-surface-1: 165 28% 14%;
+    --cs-surface-2: 165 25% 17%;
+    --cs-surface-3: 165 35% 8%;
+    --cs-border-subtle: 165 20% 21%;
+    --cs-border-mid: 165 18% 28%;
     --cs-text-primary: 0 0% 90%;
   }
 

@@ -426,7 +426,7 @@ function ConversationTranscript({ conversationId }: { conversationId: string }) 
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
         <MessageSquare className="w-8 h-8 text-muted-foreground/20" />
-        <p className="text-sm text-muted-foreground/50">No conversation transcript found.</p>
+        <p className="text-sm text-muted-foreground/50">Conversation was not recorded for this session.</p>
       </div>
     );
   }
@@ -882,38 +882,48 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
     <>
     <div className="space-y-0">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 pb-5 border-b border-border/30">
-        <div className="flex items-start gap-3 min-w-0">
-          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 shrink-0 mt-0.5">
-            <ArrowLeft className="w-4 h-4" />Campaigns
+      <div className="pb-5 border-b border-emerald-500/20">
+        {/* Breadcrumb row */}
+        <div className="flex items-center gap-1.5 mb-4">
+          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 h-7 px-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-3.5 h-3.5" />Campaigns
           </Button>
-          <div className="h-8 w-px bg-border/40 mt-0.5" />
+          <span className="text-muted-foreground/40 text-xs">/</span>
+          <span className="text-xs text-muted-foreground truncate max-w-[200px]">{brandName}</span>
+          <span className="text-muted-foreground/40 text-xs">/</span>
+          <span className="text-xs text-foreground/60">Campaign</span>
+        </div>
+        {/* Hero block */}
+        <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base font-semibold text-foreground">{brandName}</h2>
-              <Badge variant="outline" className="gap-1 text-[10px]">
-                <Layers className="w-2.5 h-2.5" />{resolvedNames.length} deliverables
+            <h2 className="text-xl font-bold text-foreground leading-tight">{brandName} Campaign</h2>
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              <span className="text-sm text-muted-foreground">
+                {format(new Date(gen.created_at), 'MMMM d, yyyy')}
+              </span>
+              {userName && (
+                <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <User className="w-3 h-3" />{userName}
+                </span>
+              )}
+              <Badge variant="outline" className="gap-1 text-[10px] border-emerald-500/30 text-emerald-400/80">
+                <Layers className="w-2.5 h-2.5" />{resolvedNames.length} deliverable{resolvedNames.length !== 1 ? 's' : ''}
               </Badge>
               {gen.generation_time_ms && (
                 <Badge variant="outline" className="gap-1 text-[10px]">
                   <Clock className="w-2.5 h-2.5" />{(gen.generation_time_ms / 1000).toFixed(1)}s
                 </Badge>
               )}
-              {userName && (
-                <Badge variant="outline" className="gap-1 text-[10px]">
-                  <User className="w-2.5 h-2.5" />{userName}
-                </Badge>
-              )}
             </div>
             {brief && (
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-2xl">{brief}</p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed max-w-2xl">{brief}</p>
             )}
           </div>
+          <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={handleZip} disabled={zipping}>
+            {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+            Download ZIP
+          </Button>
         </div>
-        <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={handleZip} disabled={zipping}>
-          {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
-          Download ZIP
-        </Button>
       </div>
 
       {/* Body: main content + metadata sidebar */}

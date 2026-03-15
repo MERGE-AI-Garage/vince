@@ -415,7 +415,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'generate_brand_cards',
-    description: 'Generate the brand card images — the 5 stylized 3D icons (Brand DNA, AI Guidelines, Generation Prompt, Templates, Brand Agent) using the brand\'s primary and secondary colors. This is a brand-building tool — use it as the final step of brand setup after DNA is loaded, or when the user asks to generate/regenerate card images. Card keys: brand_dna, ai_guidelines, generation_prompt, templates, brand_agent.',
+    description: 'Generate the brand card images — the 5 stylized 3D icons (Brand DNA, AI Guidelines, Generation Prompt, Templates, Brand Agent) using the brand\'s primary and secondary colors. This is a brand-building tool — use it as the final step of brand setup after DNA is loaded, or when the user explicitly asks to generate/regenerate the brand card images themselves. Card keys: brand_dna, ai_guidelines, generation_prompt, templates, brand_agent. ONLY call when the user explicitly asks to create or regenerate brand card images. DO NOT call in response to requests about creative templates, sample layouts, training materials, or content examples — those are creative requests handled by generate_creative_package, not brand setup actions.',
     parameters: {
       type: 'object',
       properties: {
@@ -2342,7 +2342,7 @@ serve(async (req) => {
         const result = await executeTool(
           body.tool_name,
           body.parameters || {},
-          { brand_id: body.brand_id, user_id: user.id },
+          { brand_id: body.brand_id, user_id: user.id, conversation_id: body.conversation_id },
           supabase,
           geminiApiKey,
         );
