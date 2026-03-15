@@ -1,104 +1,194 @@
 # Vince — Architecture Diagram
 
-## Two-Model Architecture + RAG + Async
+## System Architecture
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#00856C',
+  'primaryTextColor':'#ffffff',
+  'primaryBorderColor':'#1ED75F',
+  'lineColor':'#00856C',
+  'secondaryColor':'#0D4A3A',
+  'tertiaryColor':'#0D1B16',
+  'clusterBkg':'#0D2B22',
+  'clusterBorder':'#00856C',
+  'titleColor':'#1ED75F',
+  'edgeLabelBackground':'#0D2B22',
+  'textColor':'#e0e0e0'
+}}}%%
 graph TB
-    subgraph Clients["User Interfaces"]
-        WEB["🌐 Web App\nReact + Vite\nCloud Run"]
-        EXT["🔌 Chrome Extension\nManifest V3\nSide Panel"]
-        MOB["📱 iOS Mobile App"]
+    classDef client fill:#0D3B2E,stroke:#00856C,color:#e0e0e0,stroke-width:2px
+    classDef orchestration fill:#00856C,stroke:#1ED75F,color:#ffffff,stroke-width:2px
+    classDef gemini fill:#1a3a5c,stroke:#4285F4,color:#e0e0e0,stroke-width:1px
+    classDef infra fill:#1a2a1a,stroke:#3ECF8E,color:#e0e0e0,stroke-width:1px
+    classDef data fill:#1a2a2a,stroke:#3ECF8E,color:#e0e0e0,stroke-width:1px
+
+    subgraph Clients["📱 Clients"]
+        WEB["🌐 Web App<br/>React + Vite<br/>Cloud Run"]
+        EXT["🔌 Chrome Extension<br/>Manifest V3<br/>Side Panel"]
+        IOS["📱 iOS App"]
+        AND["🤖 Android App"]
     end
 
-    subgraph Google["Google Cloud / Gemini"]
-        LIVE["🎙️ Gemini Live API\ngem.-2.5-flash-native-audio\nVoice · Tool Calling · Orchestration"]
-        FLASH["🎬 Gemini 2.0 Flash\nMultimodal Video Analysis\nCompetitive Intelligence"]
-        IMG["🖼️ Gemini 3.1 Flash Image Preview\nresponseModalities: TEXT + IMAGE\nInterleaved Creative Packages"]
-        VEO["🎥 Veo 3\nVideo Generation"]
-        EMBED["🔢 text-embedding-004\nBrand Memory Vectorization"]
+    subgraph GCP["☁️ Google Cloud + Gemini"]
+        LIVE["🎙️ Gemini Live API<br/>gemini-2.5-flash-native-audio<br/>Voice · 26 Tools · Orchestration"]
+        FLASH["🎬 Gemini 2.0 Flash<br/>Multimodal Video Analysis<br/>Beat This Ad"]
+        IMG["🖼️ Gemini 3.1 Flash Image Preview<br/>responseModalities: TEXT + IMAGE<br/>Interleaved Creative Packages"]
+        VEO["🎥 Veo 3<br/>Campaign Video<br/>image-to-video"]
+        EMB["🔢 text-embedding-004<br/>Brand Rule Vectorization"]
     end
 
-    subgraph Supabase["Supabase (Data Layer)"]
-        EDGE["⚡ 21 Edge Functions\nDeno · brand-prompt-agent\ngenerate-creative-package\n+ 19 more"]
-        PG["🗄️ PostgreSQL + RLS\nBrand DNA · Campaigns\nGenerations · Media"]
-        VEC["🧠 pgvector\nBrand Memory RAG\nrecall_brand_guidelines"]
-        RT["📡 Realtime\nAsync Job Completion\nHistory Panel Push"]
-        STG["📦 Storage\nImages · Documents\nBrand Assets"]
+    subgraph Supabase["⚡ Supabase Edge + Data"]
+        EDGE["⚙️ 21 Edge Functions<br/>brand-prompt-agent<br/>generate-creative-package<br/>+ 19 more · Deno"]
+        PG["🗄️ PostgreSQL + pgvector<br/>Brand DNA · Campaigns<br/>copy_blocks · Generations"]
+        RT["📡 Supabase Realtime<br/>Async Job Push<br/>History Panel"]
+        STG["📦 Storage<br/>Images · Documents<br/>Brand Assets · Headshots"]
     end
 
-    WEB -->|"WebSocket\n16kHz PCM audio"| LIVE
-    EXT -->|"WebSocket\n16kHz PCM audio"| LIVE
-    MOB -->|"WebSocket\n16kHz PCM audio"| LIVE
+    WEB -->|"WSS · 16kHz PCM audio"| LIVE
+    EXT -->|"WSS · 16kHz PCM audio"| LIVE
+    IOS -->|"WSS · 16kHz PCM audio"| LIVE
+    AND -->|"WSS · 16kHz PCM audio"| LIVE
 
-    LIVE -->|"26 tool calls\nmid-conversation"| EDGE
+    LIVE -->|"tool_call · fire-and-forget"| EDGE
 
-    EDGE -->|"Competitor video URL\nMP4 analysis"| FLASH
-    EDGE -->|"Brand brief + DNA\ngenerative package"| IMG
-    EDGE -->|"Image-to-video\ntext-to-video"| VEO
-    EDGE -->|"Chunk + vectorize\nbrand rules"| EMBED
+    EDGE -->|"Competitor video URL<br/>MP4 multimodal analysis"| FLASH
+    EDGE -->|"Brand brief + injected DNA<br/>responseModalities: TEXT+IMAGE"| IMG
+    EDGE -->|"text-to-video<br/>image-to-video"| VEO
+    EDGE -->|"Chunk + vectorize<br/>brand rules"| EMB
 
-    EMBED -->|"Store vectors"| VEC
-    VEC -->|"Semantic search\nrelevant brand rules"| EDGE
+    EMB -.->|"store vectors"| PG
+    PG -.->|"recall_brand_guidelines<br/>cosine similarity"| EDGE
 
-    EDGE -->|"Read/write\nbrand intelligence"| PG
-    EDGE -->|"Store generated\nimages + docs"| STG
-    RT -->|"Job complete\npush to UI"| WEB
+    EDGE <-->|"read · write · RLS"| PG
+    EDGE -->|"upload assets"| STG
+    RT -->|"job complete<br/>push to History"| WEB
+
+    class WEB,EXT,IOS,AND client
+    class LIVE orchestration
+    class FLASH,IMG,VEO,EMB gemini
+    class EDGE infra
+    class PG,RT,STG data
+
+    %% Generated 2026-03-15
+    %% Source: brand-prompt-agent/index.ts, generate-creative-package/index.ts
+    %% brandAgentLiveService.ts, brandAgentGeminiService.ts
 ```
 
-## The Key Flows
+---
 
-### Flow 1: Beat This Ad
-```
-User (voice) → Gemini Live → tool: analyze_competitor_video
-  → Edge Function → Gemini 2.0 Flash (multimodal video)
-  → Competitive Intel card appears in UI
-  → User says "counter-campaign" → Flow 2
+## Key Flow: Beat This Ad
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#00856C',
+  'primaryTextColor':'#ffffff',
+  'primaryBorderColor':'#1ED75F',
+  'lineColor':'#00856C',
+  'clusterBkg':'#0D2B22',
+  'edgeLabelBackground':'#0D2B22',
+  'textColor':'#e0e0e0'
+}}}%%
+sequenceDiagram
+    participant U as 👤 You
+    participant L as 🎙️ Gemini Live API
+    participant E as ⚙️ brand-prompt-agent
+    participant F as 🎬 Gemini 2.0 Flash
+    participant UI as 🌐 UI
+
+    U->>L: "Analyze this competitor ad" + YouTube URL
+    L->>E: tool_call: analyze_competitor_video(url)
+    Note over L,E: Stub returned immediately — session stays alive
+    E->>F: MP4 multimodal analysis request
+    F-->>E: Hooks · messaging · weaknesses · openings
+    E-->>UI: Competitive Intel card via Supabase Realtime
+    L-->>U: "Analysis complete. Three counter-directions ready."
+    U->>L: "Take direction two. Build me a full campaign."
+    Note over U,L: → triggers Creative Package flow
+
+    %% Generated 2026-03-15
 ```
 
-### Flow 2: Creative Package (Interleaved Output)
-```
-User (voice) → Gemini Live → tool: generate_creative_package
-  → Edge Function fires async (stub result returned immediately)
-  → recall_brand_guidelines → pgvector semantic search
-  → Gemini 3.1 Flash Image Preview
-    responseModalities: ['TEXT', 'IMAGE']
-  → [text: LinkedIn copy] [image: LinkedIn visual]
-    [text: Email body]    [image: Email header]
-    [text: Banner copy]   [image: Display banner]
-  → Supabase Realtime → History panel
-  → Campaigns archive (copy_blocks JSONB + image URLs)
+---
+
+## Key Flow: Interleaved Creative Package
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#00856C',
+  'primaryTextColor':'#ffffff',
+  'primaryBorderColor':'#1ED75F',
+  'lineColor':'#00856C',
+  'clusterBkg':'#0D2B22',
+  'edgeLabelBackground':'#0D2B22',
+  'textColor':'#e0e0e0'
+}}}%%
+sequenceDiagram
+    participant L as 🎙️ Gemini Live API
+    participant E as ⚙️ generate-creative-package
+    participant V as 🧠 pgvector RAG
+    participant I as 🖼️ Gemini 3.1 Flash Image
+    participant RT as 📡 Realtime
+    participant UI as 🌐 Campaigns Tab
+
+    L->>E: tool_call: generate_creative_package(brief, deliverables)
+    Note over L,E: Stub returned immediately — voice session stays open
+    E->>V: recall_brand_guidelines(brief, brand_id)
+    V-->>E: Visual DNA · Photography · Tone · Compliance rules
+    E->>I: generateContent(brand_brief + DNA)<br/>responseModalities: ['TEXT', 'IMAGE']
+    Note over I: Single API call →
+    I-->>E: [text: strategy] [image: visual]<br/>[text: LinkedIn copy] [image: LinkedIn]<br/>[text: email body] [image: email header]
+    E->>E: Store copy_blocks JSONB + upload images
+    E-->>RT: job complete · generation_id
+    RT-->>UI: Campaign arrives in History + Campaigns tab
+
+    %% Generated 2026-03-15
 ```
 
-### Flow 3: Person-in-Scene → Campaign
-```
-User uploads headshot → voice: "put me in this as a Google Partner promo"
-  → Gemini Live → tool: generate_headshot_scene
-    → Gemini 3.1 Flash Image Preview (IMAGE only)
-    → Face-preserved scene image → Storage
-  → tool: generate_creative_package (pre_generated_image_url set)
-    → gemini-2.0-flash TEXT only (copy wraps the face image)
-    → Campaign with real face + on-brand copy
+---
+
+## Key Flow: Person-in-Scene → Campaign
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {
+  'primaryColor':'#00856C',
+  'primaryTextColor':'#ffffff',
+  'primaryBorderColor':'#1ED75F',
+  'lineColor':'#00856C',
+  'clusterBkg':'#0D2B22',
+  'edgeLabelBackground':'#0D2B22',
+  'textColor':'#e0e0e0'
+}}}%%
+sequenceDiagram
+    participant U as 👤 You + headshot
+    participant L as 🎙️ Gemini Live API
+    participant E as ⚙️ brand-prompt-agent
+    participant H as 🖼️ Gemini 3.1 Flash Image
+    participant P as ⚙️ generate-creative-package
+    participant UI as 🌐 Campaign
+
+    U->>L: "Put me in this as a Google Partner promo"
+    L->>E: tool_call: generate_headshot_scene(photo_url, scene)
+    E->>H: IMAGE-only · face-preservation prompt
+    Note over H: IMAGE modality only<br/>TEXT+IMAGE drops generation with inline images
+    H-->>E: Scene image with preserved face
+    E->>P: generate_creative_package(brief,<br/>pre_generated_image_url=scene_url)
+    Note over P: Copy-only path — gemini-2.0-flash TEXT<br/>Image skipped — face preserved exactly
+    P-->>UI: Campaign · your face · on-brand copy
+
+    %% Generated 2026-03-15
 ```
 
-### Flow 4: Brand Memory RAG
-```
-Any generation request
-  → recall_brand_guidelines(query, brand_id)
-  → text-embedding-004 embeds the query
-  → pgvector cosine similarity search
-  → Top K brand rules for this generation type injected
-  → Never a 10,000-token system prompt dump
-```
+---
 
 ## Why Two Models
 
-| Model | Role | Why |
-|-------|------|-----|
-| `gemini-2.5-flash-native-audio` (Live) | Voice + orchestration | Real-time bidirectional audio, tool calling, conversation management |
-| `gemini-2.0-flash` | Video analysis, copy-only generation | Multimodal input (video), fast text generation |
-| `gemini-3.1-flash-image-preview` | Interleaved TEXT+IMAGE | Only model supporting `responseModalities: ['TEXT', 'IMAGE']` |
-| `text-embedding-004` | Brand memory | Semantic search, brand rule retrieval |
-| `Veo 3` | Video | Campaign video generation |
+| Model | Role | Why Separate |
+|-------|------|-------------|
+| `gemini-2.5-flash-native-audio` | Voice + tool orchestration | Real-time bidirectional audio, session lifecycle, 26 tool calls mid-conversation |
+| `gemini-2.0-flash` | Video analysis + copy-only generation | Multimodal input (video), fast text; used when image already exists |
+| `gemini-3.1-flash-image-preview` | Interleaved TEXT+IMAGE output | Only model supporting `responseModalities: ['TEXT', 'IMAGE']` |
+| `text-embedding-004` | Brand memory vectors | Semantic retrieval — relevant rules for each generation type, not a full profile dump |
+| `Veo 3` | Campaign video | Dedicated video generation; async job, fire-and-forget |
 
-Image models don't support function calling. This isn't a limitation — it's a clean separation of concerns. The Live session orchestrates; the image model executes. Each at its ceiling.
-```
+> Image generation models don't support function calling. This isn't a workaround — it forced a clean separation: Live API as pure orchestration, image model as pure creative execution. Each at its ceiling.
