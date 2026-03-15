@@ -352,7 +352,11 @@ const VINCE_TOOLS = [
         },
         reference_image_url: {
           type: 'string',
-          description: 'URL or base64 data URI of a reference image to guide the video output (e.g., brand logo, product, character). Quality model only. Good for brand consistency — if the brand has a logo or hero product, include it.',
+          description: 'URL or base64 data URI of a single reference image to guide the video output. Use reference_collection instead when the user has a named character or product collection — it passes all images for better consistency.',
+        },
+        reference_collection: {
+          type: 'string',
+          description: 'Name of a brand reference collection to use (e.g., "kurt miller", "hero product"). Resolves all images in the collection and passes them as reference images — better face/subject consistency than a single image. Quality model only. Use this when the user wants to appear in a video or use a specific character/product collection.',
         },
         resolution: {
           type: 'string',
@@ -1448,13 +1452,29 @@ async function analyzeSelfDemo(
 async function generateVideo(
   params: Record<string, unknown>,
   context: { brand_id: string; user_id: string; conversation_id?: string },
-  _supabase: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
   const referenceImages: string[] = [];
-  if (params.reference_image_url) {
+
+  // Resolve named collection to image URLs (up to 3, primary first)
+  if (params.reference_collection) {
+    const { data: collectionRefs } = await supabase
+      .from('creative_studio_brand_references')
+      .select('url')
+      .eq('brand_id', context.brand_id)
+      .eq('collection', params.reference_collection as string)
+      .order('is_primary', { ascending: false })
+      .order('sort_order', { ascending: true })
+      .limit(3);
+    if (collectionRefs) {
+      referenceImages.push(...collectionRefs.map((r: { url: string }) => r.url));
+    }
+  }
+
+  if (params.reference_image_url && referenceImages.length < 3) {
     referenceImages.push(params.reference_image_url as string);
   }
 
@@ -2072,7 +2092,7 @@ BEHAVIORAL RULES:
 3. When the user asks to save something, use the save_prompt_template tool — don't just say you'll save it.
 4. Respond conversationally. Don't wrap everything in JSON. Include prompts naturally in your response.
 5. When you use a tool, briefly explain what you did and the result.
-6. NEVER include brand names, product model names, or any text you want rendered onto the image in generation prompts. Describe products by their visual characteristics instead: "brushed chrome commercial flushometer" rather than "SLOAN ROYAL flushometer". Image generation models will hallucinate text onto images if you mention brand/product names.
+6. NEVER include brand names, product model names, or any text you want rendered onto the image in generation prompts. Describe products by their visual characteristics instead: "brushed chrome commercial flushometer" rather than "[Brand] product name". Image generation models will hallucinate text onto images if you mention brand/product names.
 7. ALWAYS call list_camera_options before every image generation. Never invent camera equipment — only use equipment names and prompt_fragments that exist in the inventory.
 
 BRAND COACHING MODE:
@@ -2219,13 +2239,15 @@ Use generate_video when the user asks for a video, motion concept, or moving cam
 - Video renders in 1-3 minutes and appears in the History panel automatically.
 - NEVER narrate generating a video without calling generate_video — text descriptions do nothing.
 
-VIDEO WITH HEADSHOT — USE REFERENCE IMAGE DIRECTLY:
-When the user wants to appear in a video (has uploaded a headshot), call generate_video directly with reference_image_url=<headshot URL>. Veo's native subject preservation handles face consistency — no intermediate step needed.
-- Always use model: "quality" when a reference image is provided (required for referenceImages support).
+VIDEO WITH A PERSON — USE REFERENCE COLLECTION OR HEADSHOT:
+When the user wants to appear in a video, check if they have a character reference collection first (call list_brand_references if unsure). Pass the collection name via reference_collection — this sends multiple angles of the same person for better face consistency than a single image.
+- Always use model: "quality" when reference_collection or reference_image_url is provided (required for referenceImages support).
 - Set generation_type="text_to_video" and write a vivid prompt describing the scene, action, camera motion, and environment.
-- NEVER use text_to_video without reference_image_url when the user wants to appear — that generates a fictional person.
-Example: user says "put me on stage at Google Next" →
-  generate_video(generation_type="text_to_video", reference_image_url=<headshot>, model="quality", prompt="the person from the reference image on stage at Google Next, blazer, dramatic stage lighting, large audience, slow cinematic push-in, Google branding on backdrop, applause")
+- In the prompt, refer to the person as "the person from the reference images" to connect the references to the scene.
+- NEVER use text_to_video without reference_collection or reference_image_url when the user wants to appear — that generates a fictional person.
+- If no collection exists and the user has uploaded a headshot, fall back to reference_image_url.
+Example: user says "put me on stage at Google Next" (and has a "kurt miller" collection) →
+  generate_video(generation_type="text_to_video", reference_collection="kurt miller", model="quality", prompt="the person from the reference images on stage at Google Next, blazer, dramatic stage lighting, large audience, slow cinematic push-in, Google branding on backdrop, applause")
 
 USE generate_headshot_scene ONLY when the user specifically wants a still image of themselves in a new scene (not a video), or when they ask to "put me in this scene" for a photo/creative package.
 
@@ -2506,7 +2528,7 @@ serve(async (req) => {
       // Auto-inject uploaded reference image into video/headshot tools when Gemini omits it.
       // Gemini frequently ignores the system prompt rule about passing reference_image_url.
       // Scan current message and conversation history for the uploaded image marker.
-      if ((toolName === 'generate_video' || toolName === 'generate_headshot_scene') && !parameters.input_image_url && !parameters.reference_image_url && !parameters.photo_url) {
+      if ((toolName === 'generate_video' || toolName === 'generate_headshot_scene') && !parameters.input_image_url && !parameters.reference_image_url && !parameters.reference_collection && !parameters.photo_url) {
         const allContent = [user_message || '', ...messages.slice(0, -1).map(m => m.content)];
         for (const content of allContent) {
           const match = content.match(/\[Reference images uploaded by user: ([^\]]+)\]/);

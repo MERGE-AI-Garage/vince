@@ -15,6 +15,7 @@ interface ChatMessageProps {
   compact?: boolean;
   onRetry?: () => void;
   markdownComponents?: Record<string, React.ComponentType<any>>;
+  userBubbleColor?: string;
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -25,6 +26,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   compact = false,
   onRetry,
   markdownComponents,
+  userBubbleColor,
 }) => {
   const isUser = message.role === 'user';
 
@@ -48,13 +50,16 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
         {/* Message Bubble */}
         <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} min-w-0`}>
-          <div className={`rounded-xl shadow-sm leading-relaxed overflow-hidden ${
+          <div
+            className={`rounded-xl shadow-sm leading-relaxed overflow-hidden ${
               compact ? 'px-3 py-2 text-xs' : 'px-4 py-3 text-sm'
             } ${
               isUser
-                ? 'bg-merge-viridian-green text-white rounded-tr-sm'
+                ? `${userBubbleColor ? '' : 'bg-merge-viridian-green'} text-white rounded-tr-sm`
                 : 'bg-card border border-border text-foreground rounded-tl-sm'
-            }`}>
+            }`}
+            style={isUser && userBubbleColor ? { backgroundColor: userBubbleColor } : undefined}
+          >
 
             {/* Attachments Display */}
             {message.attachments && message.attachments.length > 0 && (

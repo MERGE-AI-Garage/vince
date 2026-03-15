@@ -2,19 +2,21 @@
 // ABOUTME: Brand-adaptive header with 2-tab layout, auth gate, and error boundary
 
 import React, { useState, useMemo } from 'react';
+import { Toaster } from 'sonner';
 import { AuthGate } from './AuthGate';
 import { PromptBuilderTab } from './tabs/PromptBuilderTab';
 import { BrandKitTab } from './tabs/BrandKitTab';
 import { LogosTab } from './tabs/LogosTab';
 import { CreationsTab } from './tabs/CreationsTab';
 import { ChatTab } from './chat/ChatTab';
+import { CompactMediaGrid } from '@/components/creative-studio/CompactMediaGrid';
 import { useSiteDetection } from './hooks/useSiteDetection';
 import { useBrands, type Brand } from './hooks/useBrands';
-import { Wand2, BookOpen, MessageSquare, ChevronDown, Mic, MicOff, ArrowLeft, Image, Sparkles } from 'lucide-react';
+import { Wand2, BookOpen, MessageSquare, ChevronDown, Mic, MicOff, PhoneOff, Image, Sparkles, Library } from 'lucide-react';
 import { useVinceVoice } from './hooks/useVinceVoice';
 import { VoiceStrip } from './voice/VoiceStrip';
 
-type TabId = 'prompt-builder' | 'brand-kit' | 'logos' | 'creations' | 'chat';
+type TabId = 'prompt-builder' | 'brand-kit' | 'logos' | 'creations' | 'chat' | 'media';
 
 /** Derive header background (dark) and accent color from brand colors */
 function deriveBrandTheme(brand: Brand | undefined) {
@@ -37,7 +39,7 @@ function deriveBrandTheme(brand: Brand | undefined) {
     headerBg = primary;
     accent = secondaryLum > 0.3 ? secondary : lighten(primary, 80);
   } else if (secondaryLum < 0.15) {
-    // Secondary is dark (Sloan's #002742)
+    // Secondary is dark enough to use as header background
     headerBg = secondary;
     accent = primary;
   } else {
@@ -136,8 +138,9 @@ function TabLayout() {
     { id: 'prompt-builder', label: 'Prompts', icon: Wand2 },
     { id: 'brand-kit', label: 'Brand', icon: BookOpen },
     { id: 'logos', label: 'Logos', icon: Image },
-    { id: 'creations', label: 'Create', icon: Sparkles },
+    { id: 'creations', label: 'Gallery', icon: Sparkles },
     { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'media', label: 'Media', icon: Library },
   ];
 
   // Accent as rgba for transparent overlays
@@ -146,7 +149,7 @@ function TabLayout() {
 
   return (
     <div style={{ fontFamily: 'Epilogue, system-ui, sans-serif', height: '100vh', display: 'flex', flexDirection: 'column', background: '#fafafa', color: '#111111' }}>
-      {/* Header bar — two modes: full nav (tools) vs minimal chat header */}
+      {/* Header bar — brand picker + tabs, always visible */}
       <div style={{
         position: 'sticky',
         top: 0,
@@ -155,205 +158,186 @@ function TabLayout() {
         borderBottom: `1px solid ${accentAlpha(0.15)}`,
         transition: 'background 0.3s ease',
       }}>
-        {activeTab === 'chat' ? (
-          /* ── Chat mode: minimal header with back button ── */
-          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 10px', gap: '8px' }}>
-            <button
-              onClick={() => setActiveTab('prompt-builder')}
-              title="Back to tools"
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: '28px', height: '28px', borderRadius: '6px',
-                border: `1px solid ${accentAlpha(0.2)}`, background: accentAlpha(0.07),
-                cursor: 'pointer', flexShrink: 0,
-              }}
-            >
-              <ArrowLeft size={13} style={{ color: 'rgba(234,232,227,0.6)' }} />
-            </button>
-            {/* Brand dot + name */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flex: 1, minWidth: 0 }}>
-              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: selectedBrand?.primary_color || theme.accent, border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#EAE8E3', letterSpacing: '0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {/* Brand picker row (shown when multiple brands or always for platform badge + mic) */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '5px 10px',
+          borderBottom: `1px solid ${accentAlpha(0.08)}`,
+          gap: '8px',
+        }}>
+          {/* Brand selector */}
+          {brands.length > 1 ? (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setBrandDropdownOpen(!brandDropdownOpen)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  border: `1px solid ${accentAlpha(0.15)}`,
+                  background: accentAlpha(0.06),
+                  cursor: 'pointer',
+                  fontFamily: 'Epilogue, system-ui, sans-serif',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#EAE8E3', letterSpacing: '0.01em' }}>
+                  {selectedBrand?.name || 'Select brand'}
+                </span>
+                <ChevronDown size={10} style={{
+                  color: 'rgba(234, 232, 227, 0.5)',
+                  transform: brandDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.15s ease',
+                }} />
+              </button>
+
+              {brandDropdownOpen && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0,
+                  minWidth: '180px', borderRadius: '8px',
+                  border: `1px solid ${accentAlpha(0.15)}`,
+                  background: theme.dropdownBg,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                  overflow: 'hidden', zIndex: 50,
+                }}>
+                  {brands.map((brand) => (
+                    <button
+                      key={brand.id}
+                      onClick={() => { setSelectedBrandId(brand.id); setBrandDropdownOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        width: '100%', padding: '8px 12px',
+                        background: brand.id === selectedBrandId ? accentAlpha(0.1) : 'transparent',
+                        border: 'none', borderBottom: `1px solid ${accentAlpha(0.06)}`,
+                        cursor: 'pointer', fontFamily: 'Epilogue, system-ui, sans-serif',
+                        transition: 'background 0.1s ease', textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => { if (brand.id !== selectedBrandId) e.currentTarget.style.background = accentAlpha(0.06); }}
+                      onMouseLeave={(e) => { if (brand.id !== selectedBrandId) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontSize: '11px', fontWeight: brand.id === selectedBrandId ? 700 : 500, color: brand.id === selectedBrandId ? theme.accent : '#EAE8E3' }}>
+                        {brand.name}
+                      </span>
+                      {brand.is_default && (
+                        <span style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(234,232,227,0.4)', background: 'rgba(234,232,227,0.08)', padding: '1px 5px', borderRadius: '4px', marginLeft: 'auto' }}>
+                          Default
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: selectedBrand?.primary_color || theme.accent, border: '1px solid rgba(255,255,255,0.2)' }} />
+              <span style={{ fontSize: '10px', fontWeight: 600, color: '#EAE8E3', letterSpacing: '0.01em' }}>
                 {selectedBrand?.name || 'Vince'}
               </span>
             </div>
-            {/* Mic control in chat header */}
+          )}
+
+          {/* Right side: platform badge + voice controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: 'auto' }}>
+            {detectedPlatform && (() => {
+              const isGoogle = ['Gemini', 'AI Studio', 'NotebookLM'].includes(detectedPlatform);
+              const badgeColor = isGoogle ? '#4285F4' : theme.accent;
+              return (
+                <span style={{ fontSize: '9px', fontWeight: 700, color: badgeColor, background: `${badgeColor}18`, border: `1px solid ${badgeColor}30`, padding: '2px 7px', borderRadius: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+                  {detectedPlatform}
+                </span>
+              );
+            })()}
             {vince.isReady && vince.voiceState !== 'idle' && (
-              <button
-                onClick={vince.toggleMute}
-                title={vince.isMuted ? 'Unmute microphone' : 'Mute microphone'}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '28px', height: '28px', borderRadius: '50%',
-                  border: vince.isMuted ? '1.5px solid rgba(239,68,68,0.5)' : `1.5px solid ${accentAlpha(0.4)}`,
-                  background: vince.isMuted ? 'rgba(239,68,68,0.12)' : accentAlpha(0.15),
-                  cursor: 'pointer',
-                }}
-              >
-                {vince.isMuted
-                  ? <MicOff size={12} style={{ color: '#fca5a5' }} />
-                  : <Mic size={12} style={{ color: theme.accent }} />
-                }
-              </button>
+              /* Active voice: mute toggle + hangup */
+              <>
+                <button
+                  onClick={vince.toggleMute}
+                  title={vince.isMuted ? 'Unmute microphone' : 'Mute microphone'}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '24px', height: '24px', borderRadius: '50%',
+                    border: vince.isMuted ? '1.5px solid rgba(239,68,68,0.5)' : `1.5px solid ${accentAlpha(0.4)}`,
+                    background: vince.isMuted ? 'rgba(239,68,68,0.15)' : accentAlpha(0.15),
+                    cursor: 'pointer', transition: 'all 0.15s ease',
+                  }}
+                >
+                  {vince.isMuted
+                    ? <MicOff size={11} style={{ color: '#fca5a5' }} />
+                    : <Mic size={11} style={{ color: theme.accent, animation: 'vinceMicPulse 2s ease-in-out infinite' }} />
+                  }
+                </button>
+                <button
+                  onClick={vince.stopVoice}
+                  title="End voice session"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '24px', height: '24px', borderRadius: '50%',
+                    border: '1.5px solid rgba(239,68,68,0.4)',
+                    background: 'rgba(239,68,68,0.12)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <PhoneOff size={11} style={{ color: '#fca5a5' }} />
+                </button>
+              </>
             )}
             {vince.isReady && vince.voiceState === 'idle' && (
+              /* Idle: start voice button */
               <button
                 onClick={vince.startVoice}
                 title="Talk to Vince"
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: '28px', height: '28px', borderRadius: '50%',
-                  border: '1.5px solid rgba(234,232,227,0.2)',
-                  background: 'rgba(234,232,227,0.06)',
-                  cursor: 'pointer',
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  border: '1.5px solid rgba(234, 232, 227, 0.2)',
+                  background: 'rgba(234, 232, 227, 0.06)',
+                  cursor: 'pointer', transition: 'all 0.2s ease',
                 }}
               >
-                <Mic size={12} style={{ color: 'rgba(234,232,227,0.45)' }} />
+                <Mic size={12} strokeWidth={2} style={{ color: 'rgba(234, 232, 227, 0.5)' }} />
               </button>
             )}
           </div>
-        ) : (
-          /* ── Tools mode: full brand picker + tabs ── */
-          <>
-            {/* Brand picker row */}
-            {brands.length > 1 && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '6px 12px',
-                borderBottom: `1px solid ${accentAlpha(0.08)}`,
-                position: 'relative',
-              }}>
-                <button
-                  onClick={() => setBrandDropdownOpen(!brandDropdownOpen)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    border: `1px solid ${accentAlpha(0.15)}`,
-                    background: accentAlpha(0.06),
-                    cursor: 'pointer',
-                    fontFamily: 'Epilogue, system-ui, sans-serif',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#EAE8E3', letterSpacing: '0.01em' }}>
-                    {selectedBrand?.name || 'Select brand'}
-                  </span>
-                  <ChevronDown size={10} style={{
-                    color: 'rgba(234, 232, 227, 0.5)',
-                    transform: brandDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.15s ease',
-                  }} />
-                </button>
+        </div>
 
-                {brandDropdownOpen && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-                    minWidth: '180px', borderRadius: '8px',
-                    border: `1px solid ${accentAlpha(0.15)}`,
-                    background: theme.dropdownBg,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-                    overflow: 'hidden', zIndex: 50,
-                  }}>
-                    {brands.map((brand) => (
-                      <button
-                        key={brand.id}
-                        onClick={() => { setSelectedBrandId(brand.id); setBrandDropdownOpen(false); }}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '8px',
-                          width: '100%', padding: '8px 12px',
-                          background: brand.id === selectedBrandId ? accentAlpha(0.1) : 'transparent',
-                          border: 'none', borderBottom: `1px solid ${accentAlpha(0.06)}`,
-                          cursor: 'pointer', fontFamily: 'Epilogue, system-ui, sans-serif',
-                          transition: 'background 0.1s ease', textAlign: 'left',
-                        }}
-                        onMouseEnter={(e) => { if (brand.id !== selectedBrandId) e.currentTarget.style.background = accentAlpha(0.06); }}
-                        onMouseLeave={(e) => { if (brand.id !== selectedBrandId) e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <span style={{ fontSize: '11px', fontWeight: brand.id === selectedBrandId ? 700 : 500, color: brand.id === selectedBrandId ? theme.accent : '#EAE8E3' }}>
-                          {brand.name}
-                        </span>
-                        {brand.is_default && (
-                          <span style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(234,232,227,0.4)', background: 'rgba(234,232,227,0.08)', padding: '1px 5px', borderRadius: '4px', marginLeft: 'auto' }}>
-                            Default
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {/* Tabs — icon + label, compact for 5 tabs */}
-              <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-                {tabs.map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      title={tab.label}
-                      style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        padding: '10px 0', background: 'none', border: 'none',
-                        borderBottom: isActive ? `2px solid ${theme.accent}` : '2px solid transparent',
-                        color: isActive ? theme.accent : 'rgba(234, 232, 227, 0.4)',
-                        cursor: 'pointer', fontSize: '10px', fontWeight: isActive ? 700 : 500,
-                        fontFamily: 'Epilogue, system-ui, sans-serif', transition: 'all 0.15s ease', letterSpacing: '0.01em',
-                        minWidth: 0,
-                      }}
-                    >
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {tab.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Right side: platform badge + Vince mic */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 8px 0 4px' }}>
-                {detectedPlatform && (() => {
-                  const isGoogle = ['Gemini', 'AI Studio', 'NotebookLM'].includes(detectedPlatform);
-                  const badgeColor = isGoogle ? '#4285F4' : theme.accent;
-                  return (
-                    <span style={{ fontSize: '9px', fontWeight: 700, color: badgeColor, background: `${badgeColor}18`, border: `1px solid ${badgeColor}30`, padding: '2px 7px', borderRadius: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
-                      {detectedPlatform}
-                    </span>
-                  );
-                })()}
-                {vince.isReady && (
-                  <button
-                    onClick={() => vince.voiceState === 'idle' ? vince.startVoice() : vince.stopVoice()}
-                    title={vince.voiceState === 'idle' ? 'Talk to Vince' : 'End voice session'}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      width: '26px', height: '26px', borderRadius: '50%',
-                      border: vince.voiceState !== 'idle' ? `1.5px solid ${theme.accent}` : '1.5px solid rgba(234, 232, 227, 0.2)',
-                      background: vince.voiceState !== 'idle' ? accentAlpha(0.2) : 'rgba(234, 232, 227, 0.06)',
-                      cursor: 'pointer', transition: 'all 0.2s ease',
-                      animation: vince.voiceState === 'active' ? 'vinceMicPulse 2s ease-in-out infinite' : undefined,
-                    }}
-                  >
-                    <Mic size={13} strokeWidth={2} style={{ color: vince.voiceState !== 'idle' ? theme.accent : 'rgba(234, 232, 227, 0.5)', transition: 'color 0.2s ease' }} />
-                  </button>
-                )}
-              </div>
-            </div>
-          </>
-        )}
+        {/* Tab row — always visible across all tabs */}
+        <div style={{ display: 'flex' }}>
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                title={tab.label}
+                style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '9px 0', background: 'none', border: 'none',
+                  borderBottom: isActive ? `2px solid ${theme.accent}` : '2px solid transparent',
+                  color: isActive ? theme.accent : 'rgba(234, 232, 227, 0.4)',
+                  cursor: 'pointer', fontSize: '10px', fontWeight: isActive ? 700 : 500,
+                  fontFamily: 'Epilogue, system-ui, sans-serif', transition: 'all 0.15s ease', letterSpacing: '0.01em',
+                  minWidth: 0,
+                }}
+              >
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tab content — ChatTab is always mounted to preserve history */}
-      <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0, background: '#0d0d0d' }}>
+      <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0, background: theme.headerBg }}>
         <ChatTab
           brandId={selectedBrandId}
+          brandColor={theme.accent}
           voiceState={vince.voiceState}
           isMuted={vince.isMuted}
           voiceTranscript={vince.transcript}
@@ -364,7 +348,7 @@ function TabLayout() {
           onToggleMute={vince.toggleMute}
         />
       </div>
-      <div style={{ display: activeTab !== 'chat' ? 'flex' : 'none', flex: 1, overflowY: activeTab === 'logos' || activeTab === 'creations' ? 'hidden' : 'auto', flexDirection: 'column', background: '#eef0f3', color: '#111111', paddingBottom: vince.voiceState !== 'idle' ? '180px' : 0 }}>
+      <div style={{ display: activeTab !== 'chat' ? 'flex' : 'none', flex: 1, overflowY: activeTab === 'logos' || activeTab === 'creations' || activeTab === 'media' ? 'hidden' : 'auto', flexDirection: 'column', background: '#eef0f3', color: '#111111', paddingBottom: vince.voiceState !== 'idle' ? '180px' : 0 }}>
         {activeTab === 'prompt-builder' && (
           <PromptBuilderTab
             detectedPlatform={detectedPlatform}
@@ -378,6 +362,7 @@ function TabLayout() {
         {activeTab === 'brand-kit' && <BrandKitTab brandId={selectedBrandId} isDefaultBrand={!!selectedBrand?.is_default} brandName={selectedBrand?.name} />}
         {activeTab === 'logos' && <LogosTab brandId={selectedBrandId} brandColor={selectedBrand?.primary_color || undefined} />}
         {activeTab === 'creations' && <CreationsTab brandId={selectedBrandId} brandColor={selectedBrand?.primary_color || undefined} />}
+        {activeTab === 'media' && <CompactMediaGrid />}
       </div>
 
       {/* Vince voice strip — hidden on chat tab (voice is inline there) */}
@@ -415,6 +400,7 @@ export function BrandApp() {
       <AuthGate>
         <TabLayout />
       </AuthGate>
+      <Toaster />
     </ExtensionErrorBoundary>
   );
 }

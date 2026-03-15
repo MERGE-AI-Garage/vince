@@ -102,14 +102,7 @@ export function AuthGate({ children }: AuthGateProps) {
     );
   }
 
-  return (
-    <>
-      <div style={styles.signOutBar}>
-        <button onClick={handleSignOut} style={styles.signOutButton}>Sign out</button>
-      </div>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 const styles: Record<string, React.CSSProperties> = {

@@ -2,10 +2,11 @@
 // ABOUTME: Merges text and voice interactions into a single message stream; renders rich payloads inline.
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Mic, MicOff, Link, History, Paperclip, X as XIcon } from 'lucide-react';
+import { Send, Mic, MicOff, Link, History, Paperclip, X as XIcon, Layers } from 'lucide-react';
 import { ChatMessage, type Message } from './ChatMessage';
 import { sendChatMessage } from '../services/chatService';
 import { ConversationHistoryPanel } from './ConversationHistoryPanel';
+import { CampaignHistoryPanel } from './CampaignHistoryPanel';
 import { createBrandAgentConversation } from '@/services/brand-agent/brandAgentGeminiService';
 import { supabase } from '@/integrations/supabase/client';
 import type { ToolResult, VoiceState } from '../hooks/useVinceVoice';
@@ -17,6 +18,7 @@ const PURPLE_RGB = '124, 110, 245';
 
 interface Props {
   brandId: string | null;
+  brandColor?: string;
   voiceState: VoiceState;
   isMuted: boolean;
   voiceTranscript: TranscriptItem[];
@@ -73,7 +75,7 @@ function AudioBars({ volumeRef }: { volumeRef: React.MutableRefObject<number> })
 
 // ─── Chat Tab ────────────────────────────────────────────────────────────────
 
-export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceToolResults, volumeRef, onStartVoice, onStopVoice, onToggleMute }: Props) {
+export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscript, voiceToolResults, volumeRef, onStartVoice, onStopVoice, onToggleMute }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -82,6 +84,7 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
   const [isUploading, setIsUploading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showCampaigns, setShowCampaigns] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -256,16 +259,38 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '0', fontFamily: 'Epilogue, system-ui, sans-serif' }}>
 
-      {/* History toggle bar */}
+      {/* Toggle bar — history and campaigns */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
+        gap: '4px',
         padding: '4px 8px 0',
         flexShrink: 0,
       }}>
         <button
-          onClick={() => setShowHistory(h => !h)}
+          onClick={() => { setShowCampaigns(c => !c); setShowHistory(false); }}
+          title={showCampaigns ? 'Back to chat' : 'Campaign archive'}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: showCampaigns ? `rgba(${PURPLE_RGB}, 0.12)` : 'none',
+            border: showCampaigns ? `1px solid rgba(${PURPLE_RGB}, 0.3)` : '1px solid transparent',
+            borderRadius: '5px',
+            padding: '3px 7px',
+            cursor: 'pointer',
+            color: showCampaigns ? PURPLE : 'rgba(224,222,217,0.3)',
+            fontSize: '10px',
+            fontFamily: 'Epilogue, system-ui, sans-serif',
+            transition: 'all 0.15s',
+          }}
+        >
+          <Layers size={11} />
+          Campaigns
+        </button>
+        <button
+          onClick={() => { setShowHistory(h => !h); setShowCampaigns(false); }}
           title={showHistory ? 'Back to chat' : 'Chat history'}
           style={{
             display: 'flex',
@@ -287,8 +312,15 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
         </button>
       </div>
 
-      {/* History panel or message list */}
-      {showHistory ? (
+      {/* History panel or campaigns panel or message list */}
+      {showCampaigns ? (
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <CampaignHistoryPanel
+            brandId={brandId}
+            onSelectPrompt={p => { setInput(p); setShowCampaigns(false); setTimeout(() => inputRef.current?.focus(), 50); }}
+          />
+        </div>
+      ) : showHistory ? (
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <ConversationHistoryPanel
             onRestoreConversation={handleRestoreConversation}
@@ -321,13 +353,14 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
             key={msg.id}
             message={msg}
             onSelectCampaignDirection={handleCampaignDirection}
+            brandColor={brandColor}
           />
         ))}
       </div>
       )}
 
-      {/* Voice + input controls — hidden when browsing history */}
-      {!showHistory && isVoiceActive && (
+      {/* Voice + input controls — hidden when browsing history or campaigns */}
+      {!showHistory && !showCampaigns && isVoiceActive && (
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -380,8 +413,8 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
         </div>
       )}
 
-      {/* Attachment row — hidden when browsing history */}
-      {!showHistory && <>
+      {/* Attachment row — hidden when browsing history or campaigns */}
+      {!showHistory && !showCampaigns && <>
       <div style={{
         padding: '5px 10px',
         borderTop: '1px solid rgba(255,255,255,0.05)',

@@ -43,6 +43,7 @@ interface CreativePackageDisplayProps {
   brandAlignment?: BrandAlignment;
   onLoadToCanvas?: (imageUrl: string) => void;
   onImageInfo?: (index: number, name: string, imageUrl: string) => void;
+  onIterate?: (deliverableName: string, imageUrl: string) => void;
 }
 
 function cleanCopyText(text: string): string {
@@ -163,6 +164,7 @@ export function CreativePackageDisplay({
   brandAlignment,
   onLoadToCanvas,
   onImageInfo,
+  onIterate,
 }: CreativePackageDisplayProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const imageCount = parts.filter(p => p.type === 'image').length;
@@ -175,7 +177,16 @@ export function CreativePackageDisplay({
     toast.success('Copied to clipboard');
   };
 
-  const handleDownloadImage = (url: string, name: string, index: number) => {
+  const handleDownloadImage = async (url: string, name: string, index: number) => {
+    // On iOS/Capacitor, link.click() navigates the WebView away — use share sheet instead
+    if ('Capacitor' in window && navigator.share) {
+      try {
+        await navigator.share({ url, title: `${brandName} — ${name}` });
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return; // user cancelled
+      }
+    }
     const link = document.createElement('a');
     link.href = url;
     link.download = `${brandName.toLowerCase().replace(/\s+/g, '-')}-${name.toLowerCase().replace(/\s+/g, '-')}-${index + 1}.png`;
@@ -349,6 +360,16 @@ export function CreativePackageDisplay({
                             onClick={() => onImageInfo(group.index, group.name, imageUrls[group.index] || group.imageUrl!)}
                           >
                             <Info className="w-3 h-3" />
+                          </Button>
+                        )}
+                        {onIterate && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 gap-1.5 text-xs"
+                            onClick={() => onIterate(group.name, imageUrls[group.index] || group.imageUrl!)}
+                          >
+                            Iterate
                           </Button>
                         )}
                         <Button

@@ -87,7 +87,7 @@ const DELIVERABLE_TEMPLATES: Record<DeliverableType, DeliverableTemplate> = {
   print_ooh_billboard: {
     name: 'OOH — Billboard',
     default_aspect_ratio: '16:9',
-    image_instructions: `Outdoor billboard advertisement designed to be read at 60mph from 300 feet. Bold, high-contrast composition with a single dominant visual — no clutter. Maximum three words of text rendered in the design, extremely large and legible. High-brightness colors, strong silhouettes, and deep contrast. Accurate brand colors. Ultra-high detail, massive-scale clarity. The composition must work at enormous scale: nothing small, nothing subtle.`,
+    image_instructions: `HORIZONTAL LANDSCAPE format — wider than it is tall (16:9). Outdoor billboard advertisement designed to be read at 60mph from 300 feet. Bold, high-contrast composition with a single dominant visual — no clutter. Maximum three words of text rendered in the design, extremely large and legible. High-brightness colors, strong silhouettes, and deep contrast. Accurate brand colors. Ultra-high detail, massive-scale clarity. The composition must work at enormous scale: nothing small, nothing subtle.`,
     copy_instructions: `Write billboard copy:\n- **Primary Headline**: 3–5 words maximum (must be read and understood in under 3 seconds at highway speed)\n- **Tagline/CTA**: 2–3 words\n- **Campaign Rationale**: 2–3 sentences explaining why this specific message and this level of brevity is the right creative choice for outdoor — what makes it land at scale\nReturn this as the text block BEFORE the image.`,
   },
   print_ooh_transit: {
@@ -278,6 +278,11 @@ UNIVERSAL OUTPUT RULES — ALWAYS ENFORCE:
       return { key: null as string | null, name: d.name as string, description: d.description as string, aspect_ratio: d.aspect_ratio as string };
     });
 
+    // Determine if all deliverables share one aspect ratio — used to set imageGenerationConfig
+    const aspectRatios = resolvedDeliverables.map(d => d.aspect_ratio).filter(Boolean);
+    const uniqueRatios = [...new Set(aspectRatios)];
+    const sharedAspectRatio = uniqueRatios.length === 1 ? uniqueRatios[0] : null;
+
     // Build the deliverables prompt
     let deliverablePrompt = brief;
     if (resolvedDeliverables.length > 0) {
@@ -353,6 +358,7 @@ UNIVERSAL OUTPUT RULES — ALWAYS ENFORCE:
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
         systemInstruction: fullSystemInstruction,
+        ...(sharedAspectRatio ? { imageGenerationConfig: { aspectRatio: sharedAspectRatio } } : {}),
       },
     });
 

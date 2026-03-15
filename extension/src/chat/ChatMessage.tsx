@@ -8,6 +8,12 @@ import { ToolResultRenderer } from './ToolResultRenderer';
 const PURPLE = '#8b5cf6';
 const PURPLE_RGB = '139, 92, 246';
 
+function hexToRgb(hex: string): string {
+  const c = hex.replace('#', '');
+  const n = parseInt(c.length === 3 ? c.split('').map(x => x + x).join('') : c, 16);
+  return `${(n >> 16) & 0xff}, ${(n >> 8) & 0xff}, ${n & 0xff}`;
+}
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'voice-user' | 'voice-assistant';
@@ -20,11 +26,13 @@ export interface Message {
 interface Props {
   message: Message;
   onSelectCampaignDirection?: (text: string) => void;
+  brandColor?: string;
 }
 
-export function ChatMessage({ message, onSelectCampaignDirection }: Props) {
+export function ChatMessage({ message, onSelectCampaignDirection, brandColor }: Props) {
   const isUser = message.role === 'user' || message.role === 'voice-user';
   const isVoice = message.role === 'voice-user' || message.role === 'voice-assistant';
+  const accentRgb = brandColor ? hexToRgb(brandColor) : PURPLE_RGB;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '4px' }}>
@@ -35,11 +43,11 @@ export function ChatMessage({ message, onSelectCampaignDirection }: Props) {
           padding: '8px 11px',
           borderRadius: isUser ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
           background: isUser
-            ? `rgba(${PURPLE_RGB}, 0.14)`
+            ? `rgba(${accentRgb}, 0.18)`
             : isVoice
             ? 'rgba(255,255,255,0.03)'
             : 'rgba(255,255,255,0.05)',
-          border: `1px solid ${isUser ? `rgba(${PURPLE_RGB}, 0.3)` : 'rgba(255,255,255,0.07)'}`,
+          border: `1px solid ${isUser ? `rgba(${accentRgb}, 0.4)` : 'rgba(255,255,255,0.07)'}`,
           fontSize: '12px',
           color: isUser ? '#e0ded9' : 'rgba(224,222,217,0.88)',
           lineHeight: 1.5,

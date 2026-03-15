@@ -12,6 +12,9 @@ import { AuthGate } from './AuthGate';
 import { MobileSplash } from './MobileSplash';
 import { supabase } from '@/integrations/supabase/client';
 import { BrandAgentApp } from '@/components/creative-studio/BrandAgentApp';
+import { CompactMediaGrid } from '@/components/creative-studio/CompactMediaGrid';
+import { CreationsTab } from '@/components/creative-studio/CreationsTab';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,10 +70,55 @@ interface Brand {
   logo_url: string | null;
 }
 
+/** Convert hex color to HSL components [h, s, l] */
+function hexToHsl(hex: string): [number, number, number] {
+  const c = hex.replace('#', '');
+  const n = parseInt(c.length === 3 ? c.split('').map(x => x + x).join('') : c, 16);
+  const r = ((n >> 16) & 0xff) / 255;
+  const g = ((n >> 8) & 0xff) / 255;
+  const b = (n & 0xff) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, Math.round(l * 100)];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+}
+
+/** Derive a very dark background and a readable accent from a brand hex color */
+function deriveMobileBrandTheme(primaryColor: string | null | undefined) {
+  const DEFAULT = { bg: '#0f0a1e', bgHsl: '260 45% 8%', accent: '#a855f7', border: 'rgba(168,85,247,0.2)', accentAlpha: 'rgba(168,85,247,0.15)' };
+  if (!primaryColor) return DEFAULT;
+  try {
+    const [h, s] = hexToHsl(primaryColor);
+    // Very dark bg: keep brand hue, reduce saturation slightly, very low lightness
+    const bgHsl = `${h} ${Math.max(20, Math.round(s * 0.6))}% 9%`;
+    // Accent: keep brand hue but brighten for contrast
+    const accentHsl = `hsl(${h}, ${Math.min(90, s + 10)}%, 65%)`;
+    const borderAlpha = `hsla(${h}, ${s}%, 65%, 0.22)`;
+    const accentAlpha = `hsla(${h}, ${s}%, 65%, 0.15)`;
+    return { bg: `hsl(${bgHsl})`, bgHsl, accent: accentHsl, border: borderAlpha, accentAlpha };
+  } catch {
+    return DEFAULT;
+  }
+}
+
 function VinceHome() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loadingBrands, setLoadingBrands] = useState(true);
+  const [activeView, setActiveView] = useState<'chat' | 'gallery' | 'media'>('chat');
+  const [visitedViews, setVisitedViews] = useState<Set<string>>(new Set(['chat']));
+  const [chatKey, setChatKey] = useState(0);
+
+  function navigateTo(view: 'chat' | 'gallery' | 'media') {
+    setVisitedViews(prev => new Set([...prev, view]));
+    setActiveView(view);
+  }
 
   useEffect(() => {
     async function fetchBrands() {
@@ -96,6 +144,11 @@ function VinceHome() {
   const selectedBrand = useMemo(
     () => brands.find(b => b.id === selectedBrandId),
     [brands, selectedBrandId]
+  );
+
+  const theme = useMemo(
+    () => deriveMobileBrandTheme(selectedBrand?.primary_color),
+    [selectedBrand?.primary_color]
   );
 
   const handleBrandCreated = useCallback((brandId: string) => {
@@ -142,22 +195,23 @@ function VinceHome() {
       left: 0,
       display: 'flex',
       flexDirection: 'column',
-      background: '#ffffff',
+      background: theme.bg,
+      // Override Tailwind's --background so BrandAgentApp inherits the brand color
+      ['--background' as string]: theme.bgHsl,
     }}>
-      {/* Brand picker header */}
-      {brands.length > 1 && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '8px 16px',
-          paddingTop: 'max(env(safe-area-inset-top, 8px), 8px)',
-          background: '#0f0a1e',
-          borderBottom: '1px solid rgba(168, 85, 247, 0.2)',
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          flexShrink: 0,
-        }}>
+      {/* Top bar — brand picker + new chat button, always visible */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '8px 12px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 6px)',
+        background: theme.bg,
+        borderBottom: `1px solid ${theme.border}`,
+        flexShrink: 0,
+      }}>
+        {/* Brand pills — scrollable */}
+        <div style={{ flex: 1, display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any }}>
           {brands.map(b => (
             <button
               key={b.id}
@@ -165,41 +219,140 @@ function VinceHome() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
+                gap: 5,
+                padding: '5px 10px',
                 borderRadius: 20,
                 border: b.id === selectedBrandId
-                  ? '1.5px solid #a855f7'
+                  ? `1.5px solid ${theme.accent}`
                   : '1px solid rgba(255,255,255,0.1)',
-                background: b.id === selectedBrandId ? 'rgba(168, 85, 247, 0.15)' : 'transparent',
+                background: b.id === selectedBrandId ? theme.accentAlpha : 'transparent',
                 color: b.id === selectedBrandId ? '#e0e0e0' : '#9ca3af',
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: b.id === selectedBrandId ? 600 : 400,
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
                 flexShrink: 0,
               }}
             >
-              <div style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: b.primary_color || '#a855f7',
-              }} />
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: b.primary_color || '#a855f7' }} />
               {b.name}
             </button>
           ))}
         </div>
-      )}
+        {/* Sign out */}
+        <button
+          onClick={() => supabase.auth.signOut()}
+          title="Sign out"
+          style={{
+            flexShrink: 0,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 11,
+            color: 'rgba(255,255,255,0.3)',
+            padding: '4px 2px',
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          Sign out
+        </button>
+        {/* New chat button */}
+        {activeView === 'chat' && (
+          <button
+            onClick={() => { setChatKey(k => k + 1); }}
+            title="New chat"
+            style={{
+              flexShrink: 0,
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+        )}
+      </div>
 
-      {/* Vince agent — full screen */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        <BrandAgentApp
-          brandId={selectedBrandId}
-          brandName={selectedBrand?.name || 'Vince'}
-          source="mobile"
-          onBrandCreated={handleBrandCreated}
-        />
+      {/* Main content — tabs lazy-mount on first visit */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'hidden', display: activeView === 'chat' ? 'flex' : 'none', flexDirection: 'column' }}>
+          <BrandAgentApp
+            key={chatKey}
+            brandId={selectedBrandId}
+            brandName={selectedBrand?.name || 'Vince'}
+            brandColor={theme.accent}
+            source="mobile"
+            onBrandCreated={handleBrandCreated}
+          />
+        </div>
+        {visitedViews.has('gallery') && (
+          <div style={{ flex: 1, overflow: 'hidden', display: activeView === 'gallery' ? 'flex' : 'none', flexDirection: 'column' }}>
+            <CreationsTab brandId={selectedBrandId} brandColor={selectedBrand?.primary_color || undefined} />
+          </div>
+        )}
+        {visitedViews.has('media') && (
+          <div style={{ flex: 1, overflow: 'hidden', display: activeView === 'media' ? 'flex' : 'none', flexDirection: 'column' }}>
+            <CompactMediaGrid />
+          </div>
+        )}
+      </div>
+
+      {/* Bottom tab bar */}
+      <div style={{
+        display: 'flex',
+        borderTop: `1px solid ${theme.border}`,
+        background: theme.bg,
+        flexShrink: 0,
+        minHeight: 49,
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
+        {(['chat', 'gallery', 'media'] as const).map(view => (
+          <button
+            key={view}
+            onClick={() => navigateTo(view)}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px 0',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: activeView === view ? theme.accent : 'rgba(255,255,255,0.35)',
+              fontSize: 10,
+              fontWeight: activeView === view ? 600 : 400,
+              fontFamily: 'system-ui, sans-serif',
+              gap: 3,
+            }}
+          >
+            {view === 'chat' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            ) : view === 'gallery' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            )}
+            {view === 'chat' ? 'Chat' : view === 'gallery' ? 'Gallery' : 'Media'}
+          </button>
+        ))}
       </div>
     </div>
   );

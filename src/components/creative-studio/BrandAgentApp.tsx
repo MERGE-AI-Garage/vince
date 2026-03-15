@@ -92,7 +92,8 @@ function formatToolAction(action: ToolAction): string {
 interface BrandAgentAppProps {
   brandId: string | null;
   brandName: string;
-  source?: 'web' | 'ios';
+  brandColor?: string;
+  source?: 'web' | 'ios' | 'mobile';
   onApplyPrompt?: (prompt: string) => void;
   onApplyCameraPreset?: (preset: CameraPreset) => void;
   onApplyModel?: (modelId: string) => void;
@@ -200,6 +201,7 @@ interface AgentResponse {
 export function BrandAgentApp({
   brandId,
   brandName,
+  brandColor,
   source = 'web',
   onApplyPrompt,
   onApplyCameraPreset,
@@ -213,6 +215,7 @@ export function BrandAgentApp({
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [pendingTextUrl, setPendingTextUrl] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
   const [historySummaries, setHistorySummaries] = useState<ConversationSummary[]>([]);
@@ -412,16 +415,19 @@ export function BrandAgentApp({
   const handleSendMessage = async (text: string, attachments: Attachment[]) => {
     if (!text.trim()) return;
 
+    const fullText = pendingTextUrl ? `${text}\n\n[Reference: ${pendingTextUrl}]` : text;
+    setPendingTextUrl('');
+
     const userMsg: Message = {
       id: uuidv4(),
       role: 'user',
-      content: text,
+      content: fullText,
       attachments: attachments.length > 0 ? attachments : undefined,
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
-    if (/youtu\.?be|youtube\.com|\.mp4|\.mov/.test(text)) {
+    if (/youtu\.?be|youtube\.com|\.mp4|\.mov/.test(fullText)) {
       setAnalyzingVideoAt(new Date());
     }
 
@@ -451,7 +457,7 @@ export function BrandAgentApp({
       }
 
       const response = await sendMessageToBrandAgent(
-        text,
+        fullText,
         activeConversationId,
         userId,
         brandId,
@@ -1398,6 +1404,7 @@ export function BrandAgentApp({
               agentIcon={Camera}
               userAvatarUrl={userAvatarUrl}
               compact
+              userBubbleColor={brandColor}
               onRetry={message.isError ? () => {
                 const failedText = lastFailedMessageRef.current;
                 if (failedText) {
@@ -1667,6 +1674,9 @@ export function BrandAgentApp({
                       deliverableNames={agentResponses[message.id].creative_package!.deliverable_names}
                       brandAlignment={agentResponses[message.id].creative_package!.brand_alignment}
                       onLoadToCanvas={onSetImage}
+                      onIterate={(deliverableName, imageUrl) =>
+                        handleSendMessage(`Create a variation of the ${deliverableName} — reference: ${imageUrl}`, [])
+                      }
                     />
                   </div>
                 )}
@@ -1895,9 +1905,9 @@ export function BrandAgentApp({
         <div ref={messagesEndRef} />
       </div>}
 
-      {/* Quick prompts — pinned above input, hidden during voice mode or history picker */}
-      {!showHistoryPicker && !showCampaignsPicker && !isVoiceMode && !isLoading && quickPrompts.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-t bg-muted/20 flex-shrink-0">
+      {/* Quick prompts — pinned above input, hidden on mobile and during voice mode or history picker */}
+      {source !== 'mobile' && !showHistoryPicker && !showCampaignsPicker && !isVoiceMode && !isLoading && quickPrompts.length > 0 && (
+        <div className="flex items-center gap-1 px-2 py-1.5 border-t bg-muted/20 flex-shrink-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {quickPrompts
             .slice(promptOffset, promptOffset + 3)
             .concat(
@@ -1911,7 +1921,7 @@ export function BrandAgentApp({
                 key={`${promptOffset}-${idx}`}
                 variant="outline"
                 size="sm"
-                className="text-[11px] h-auto py-1 px-2.5 bg-[#00856C]/10 border-[#00856C]/30 text-[#1ED75F]/60 hover:bg-[#007A60]/20 hover:text-[#1ED75F] hover:border-[#00856C]/50 rounded-full"
+                className="text-[11px] h-auto py-1 px-2.5 bg-[#00856C]/10 border-[#00856C]/30 text-[#1ED75F]/60 hover:bg-[#007A60]/20 hover:text-[#1ED75F] hover:border-[#00856C]/50 rounded-full shrink-0 whitespace-nowrap"
                 onClick={() => handleSendMessage(prompt, [])}
                 disabled={isLoading}
               >
@@ -1927,6 +1937,34 @@ export function BrandAgentApp({
             >
               More
             </Button>
+          )}
+        </div>
+      )}
+
+      {/* URL reference row — visible in text chat mode on non-mobile, hidden during voice mode or pickers */}
+      {source !== 'mobile' && !showHistoryPicker && !showCampaignsPicker && !isVoiceMode && (
+        <div className="flex items-center gap-2 px-3 py-1.5 border-t bg-muted/10 flex-shrink-0">
+          <Link className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+          <input
+            type="url"
+            value={pendingTextUrl}
+            onChange={e => setPendingTextUrl(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && pendingTextUrl.trim()) {
+                e.preventDefault();
+                handleSendMessage(pendingTextUrl.trim(), []);
+              }
+            }}
+            placeholder="Paste a reference image or video URL…"
+            className="flex-1 bg-transparent text-[11px] outline-none text-foreground/70 placeholder:text-muted-foreground/30"
+          />
+          {pendingTextUrl && (
+            <button
+              onClick={() => setPendingTextUrl('')}
+              className="text-muted-foreground/50 hover:text-muted-foreground text-xs leading-none"
+            >
+              ×
+            </button>
           )}
         </div>
       )}
