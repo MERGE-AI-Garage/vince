@@ -46,6 +46,7 @@ import { fetchImageAsBase64 } from '@/lib/image-utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { Sparkles, Camera, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import type { GenerationWithDetails } from '@/types/creative-studio';
 import type { EditTool } from '@/store/creative-studio-edit-store';
 import { toast } from 'sonner';
@@ -101,6 +102,7 @@ export default function CreativeStudio() {
   // Panel state
   type RightSidebarMode = 'settings' | 'vince';
   const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>('vince');
+  const [isVinceVoiceLive, setIsVinceVoiceLive] = useState(false);
   const [promptLibraryOpen, setPromptLibraryOpen] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [brandDialogView, setBrandDialogView] = useState<BrandDialogView | null>(null);
@@ -1195,6 +1197,12 @@ export default function CreativeStudio() {
                       </div>
                       <span className="text-sm font-medium">Vince</span>
                       <span className="text-xs text-muted-foreground">Creative Director</span>
+                      {isVinceVoiceLive && (
+                        <Badge variant="outline" className="text-[9px] gap-1.5 border-red-500/40 text-red-400 animate-pulse">
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                          LIVE
+                        </Badge>
+                      )}
                     </div>
                     <Button
                       variant="ghost"
@@ -1230,6 +1238,7 @@ export default function CreativeStudio() {
                         toast.success('Brand created — switched to new brand');
                       }}
                       onSetImage={setCurrentImage}
+                      onVoiceModeChange={setIsVinceVoiceLive}
                     />
                   </div>
                 </div>

@@ -101,6 +101,7 @@ interface BrandAgentAppProps {
   onClose?: () => void;
   onBrandCreated?: (brandId: string) => void;
   onSetImage?: (imageUrl: string) => void;
+  onVoiceModeChange?: (isLive: boolean) => void;
 }
 
 interface BrandAlignment {
@@ -210,11 +211,13 @@ export function BrandAgentApp({
   onClose,
   onBrandCreated,
   onSetImage,
+  onVoiceModeChange,
 }: BrandAgentAppProps) {
   const invalidateGenerations = useInvalidateGenerations();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceMode, setIsVoiceMode] = useState(false);
+  useEffect(() => { onVoiceModeChange?.(isVoiceMode); }, [isVoiceMode, onVoiceModeChange]);
   const [pendingTextUrl, setPendingTextUrl] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showHistoryPicker, setShowHistoryPicker] = useState(false);
@@ -1091,11 +1094,6 @@ export function BrandAgentApp({
             <Camera className="w-2.5 h-2.5" />
             {brandName || 'No Brand'}
           </Badge>
-          {brandCtx && brandCtx.sourcesAnalyzed > 0 && (
-            <Badge variant="secondary" className="text-[9px]">
-              {brandCtx.sourcesAnalyzed} sources
-            </Badge>
-          )}
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -1142,10 +1140,6 @@ export function BrandAgentApp({
           )}
           {isVoiceMode && (
             <>
-              <Badge variant="outline" className="text-[9px] gap-1.5 border-red-500/40 text-red-400 animate-pulse">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                LIVE
-              </Badge>
               <Button
                 variant="ghost"
                 size="icon"
