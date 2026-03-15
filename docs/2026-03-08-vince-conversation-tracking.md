@@ -12,9 +12,10 @@ Added persistent conversation tracking for Vince (Brand Agent) — both text and
 ## Architecture
 
 ### Text Sessions
-1. `BrandAgentApp` creates a conversation row on mount via `createBrandAgentConversation(userId)`
-2. Every message send passes `conversationId` to `sendMessageToBrandAgent()`
-3. The `brand-prompt-agent` edge function loads history, appends user + assistant messages, and upserts the full messages array back after each turn
+1. `BrandAgentApp` creates a conversation row lazily — on the first actual message sent, not on mount
+2. `createBrandAgentConversation(userId, source)` is called inside `handleSendMessage()` if no `conversationId` exists yet; the resulting ID is stored to state and ref before the message is dispatched
+3. Every message send passes `conversationId` to `sendMessageToBrandAgent()`
+4. The `brand-prompt-agent` edge function loads history, appends user + assistant messages, and upserts the full messages array back after each turn
 
 ### Voice Sessions
 1. Same conversation row created on mount
@@ -23,7 +24,7 @@ Added persistent conversation tracking for Vince (Brand Agent) — both text and
 4. `saveVoiceConversation()` updates the conversation row with the full transcript and sets `metadata.mode = 'voice'`
 
 ### Metadata
-All conversations are tagged with `metadata: { assistant: 'vince' }` for filtering. Voice sessions also include:
+All conversations are tagged with `metadata: { assistant: 'vince', source: 'web' | 'extension' | 'ios' }`. The `source` field is set at creation and preserved through all subsequent edge function upserts. Voice sessions also include:
 - `mode: 'voice'`
 - `brand_id`
 - `brand_name`
