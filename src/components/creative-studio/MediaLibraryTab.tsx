@@ -34,6 +34,9 @@ import {
   Eye,
   Tag,
   FolderPlus,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -82,7 +85,7 @@ export function MediaLibraryTab() {
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [fileTypeFilter, setFileTypeFilter] = useState<FileType | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name-asc' | 'name-desc' | 'size-desc' | 'size-asc'>('newest');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name-asc' | 'name-desc' | 'size-desc' | 'size-asc' | 'type-asc' | 'type-desc'>('newest');
   const [uploaderFilter, setUploaderFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [stats, setStats] = useState<MediaStats | null>(null);
@@ -464,6 +467,8 @@ export function MediaLibraryTab() {
       case 'name-desc': filtered.sort((a, b) => b.filename.localeCompare(a.filename)); break;
       case 'size-desc': filtered.sort((a, b) => b.size_bytes - a.size_bytes); break;
       case 'size-asc': filtered.sort((a, b) => a.size_bytes - b.size_bytes); break;
+      case 'type-asc': filtered.sort((a, b) => a.file_type.localeCompare(b.file_type)); break;
+      case 'type-desc': filtered.sort((a, b) => b.file_type.localeCompare(a.file_type)); break;
     }
 
     return filtered;
@@ -496,7 +501,10 @@ export function MediaLibraryTab() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Card className="border-l-4 border-l-blue-500">
+          <Card
+            className={`border-l-4 border-l-blue-500 cursor-pointer transition-colors hover:bg-accent ${fileTypeFilter === 'all' ? 'ring-2 ring-blue-500/40' : ''}`}
+            onClick={() => setFileTypeFilter('all')}
+          >
             <CardContent className="p-3 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Total Files</p>
@@ -514,7 +522,10 @@ export function MediaLibraryTab() {
               <HardDrive className="h-5 w-5 text-purple-500" />
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-green-500">
+          <Card
+            className={`border-l-4 border-l-green-500 cursor-pointer transition-colors hover:bg-accent ${fileTypeFilter === 'image' ? 'ring-2 ring-green-500/40' : ''}`}
+            onClick={() => setFileTypeFilter(fileTypeFilter === 'image' ? 'all' : 'image')}
+          >
             <CardContent className="p-3 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Images</p>
@@ -523,7 +534,10 @@ export function MediaLibraryTab() {
               <FileImage className="h-5 w-5 text-green-500" />
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-orange-500">
+          <Card
+            className={`border-l-4 border-l-orange-500 cursor-pointer transition-colors hover:bg-accent ${fileTypeFilter === 'video' ? 'ring-2 ring-orange-500/40' : ''}`}
+            onClick={() => setFileTypeFilter(fileTypeFilter === 'video' ? 'all' : 'video')}
+          >
             <CardContent className="p-3 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Videos</p>
@@ -584,6 +598,8 @@ export function MediaLibraryTab() {
               <SelectItem value="name-desc">Name (Z-A)</SelectItem>
               <SelectItem value="size-desc">Largest First</SelectItem>
               <SelectItem value="size-asc">Smallest First</SelectItem>
+              <SelectItem value="type-asc">Type (A-Z)</SelectItem>
+              <SelectItem value="type-desc">Type (Z-A)</SelectItem>
             </SelectContent>
           </Select>
 
@@ -784,6 +800,40 @@ export function MediaLibraryTab() {
               {(provided) => (
                 <Card>
                   <CardContent className="p-0">
+                    {/* Sortable column headers */}
+                    <div className="flex items-center gap-4 px-4 py-2 border-b bg-muted/50 text-xs font-medium text-muted-foreground sticky top-0 z-10">
+                      <div className="w-4 shrink-0" />
+                      <div className="w-12 shrink-0" />
+                      <button
+                        className="flex-1 flex items-center gap-1 hover:text-foreground transition-colors text-left"
+                        onClick={() => setSortBy(sortBy === 'name-asc' ? 'name-desc' : 'name-asc')}
+                      >
+                        Name
+                        {sortBy === 'name-asc' ? <ChevronUp className="h-3 w-3" /> : sortBy === 'name-desc' ? <ChevronDown className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+                      </button>
+                      <button
+                        className="w-20 shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
+                        onClick={() => setSortBy(sortBy === 'type-asc' ? 'type-desc' : 'type-asc')}
+                      >
+                        Type
+                        {sortBy === 'type-asc' ? <ChevronUp className="h-3 w-3" /> : sortBy === 'type-desc' ? <ChevronDown className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+                      </button>
+                      <button
+                        className="w-20 shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
+                        onClick={() => setSortBy(sortBy === 'size-desc' ? 'size-asc' : 'size-desc')}
+                      >
+                        Size
+                        {sortBy === 'size-desc' ? <ChevronDown className="h-3 w-3" /> : sortBy === 'size-asc' ? <ChevronUp className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+                      </button>
+                      <button
+                        className="w-28 shrink-0 flex items-center gap-1 hover:text-foreground transition-colors"
+                        onClick={() => setSortBy(sortBy === 'newest' ? 'oldest' : 'newest')}
+                      >
+                        Date
+                        {sortBy === 'newest' ? <ChevronDown className="h-3 w-3" /> : sortBy === 'oldest' ? <ChevronUp className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3 opacity-40" />}
+                      </button>
+                      <div className="w-24 shrink-0" />
+                    </div>
                     <div ref={provided.innerRef} {...provided.droppableProps} className="divide-y">
                       {filteredMedia.map((file, index) => (
                         <Draggable key={file.id} draggableId={`file-${file.id}`} index={index}>
@@ -809,18 +859,16 @@ export function MediaLibraryTab() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium truncate">{file.filename}</p>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <span>{formatFileSize(file.size_bytes)}</span>
-                                  <span className="capitalize">{file.file_type}</span>
-                                  <span>{new Date(file.created_at).toLocaleDateString()}</span>
-                                  {file.created_by && (
-                                    <span className="truncate max-w-[150px]">
-                                      By: <MediaUserLink userId={file.created_by} userName={file.creator_profile?.full_name} className="text-sm" />
-                                    </span>
-                                  )}
-                                </div>
+                                {file.created_by && (
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    <MediaUserLink userId={file.created_by} userName={file.creator_profile?.full_name} className="text-xs" />
+                                  </p>
+                                )}
                               </div>
-                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                              <span className="w-20 shrink-0 text-sm text-muted-foreground capitalize">{file.file_type}</span>
+                              <span className="w-20 shrink-0 text-sm text-muted-foreground">{formatFileSize(file.size_bytes)}</span>
+                              <span className="w-28 shrink-0 text-sm text-muted-foreground">{new Date(file.created_at).toLocaleDateString()}</span>
+                              <div className="w-24 shrink-0 flex gap-1" onClick={(e) => e.stopPropagation()}>
                                 <Button variant="ghost" size="sm" onClick={() => setPreviewFile(file)}>
                                   <Eye className="h-4 w-4" />
                                 </Button>
