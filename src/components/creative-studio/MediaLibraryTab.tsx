@@ -114,51 +114,79 @@ export function MediaLibraryTab() {
   }, [showTagDialog]);
 
   const fetchData = async () => {
+    const FIRST_PAGE = 50;
+    const mediaSelect = 'id, filename, title, url, thumbnail_url, mime_type, file_type, folder_id, created_at, size_bytes, created_by';
+
+    const baseMediaQuery = () => {
+      let q = supabase.from('media').select(mediaSelect).is('deleted_at', null).order('created_at', { ascending: false });
+      if (currentFolderId) q = q.eq('folder_id', currentFolderId);
+      if (fileTypeFilter !== 'all') q = q.eq('file_type', fileTypeFilter);
+      return q;
+    };
+
+    let foldersQuery = supabase.from('media_folders').select('id, name, parent_id, icon, color, path').order('name');
+    if (currentFolderId) {
+      foldersQuery = foldersQuery.eq('parent_id', currentFolderId);
+    } else {
+      foldersQuery = foldersQuery.is('parent_id', null);
+    }
+
     try {
       setLoading(true);
 
-      // Select only columns needed for display — avoids fetching heavy jsonb fields
-      let mediaQuery = supabase
-        .from('media')
-        .select('id, filename, title, url, thumbnail_url, mime_type, file_type, folder_id, created_at, size_bytes, created_by', { count: 'exact' })
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false });
-
-      if (currentFolderId) {
-        mediaQuery = mediaQuery.eq('folder_id', currentFolderId);
-      }
-
-      if (fileTypeFilter !== 'all') {
-        mediaQuery = mediaQuery.eq('file_type', fileTypeFilter);
-      }
-
-      let foldersQuery = supabase
-        .from('media_folders')
-        .select('id, name, parent_id, icon, color, path')
-        .order('name');
-
-      if (currentFolderId) {
-        foldersQuery = foldersQuery.eq('parent_id', currentFolderId);
-      } else {
-        foldersQuery = foldersQuery.is('parent_id', null);
-      }
-
+      // Phase 1 — parallel: first page + folder tree + total count + lightweight stats data
       const [
-        { data: mediaData, error: mediaError, count: totalCount },
+        { data: firstPage, error: mediaError },
         { data: foldersData, error: foldersError },
         { data: allFoldersData, error: allFoldersError },
+        { data: statsRows, count: totalCount },
       ] = await Promise.all([
-        mediaQuery,
+        baseMediaQuery().limit(FIRST_PAGE),
         foldersQuery,
         supabase.from('media_folders').select('id, name, parent_id, icon, color, path').order('path'),
+        supabase.from('media').select('file_type, size_bytes', { count: 'exact' }).is('deleted_at', null),
       ]);
 
       if (mediaError) throw mediaError;
       if (foldersError) throw foldersError;
       if (allFoldersError) throw allFoldersError;
 
-      // Fetch creator profiles separately (media.created_by has no FK constraint to profiles)
-      const creatorIds = [...new Set((mediaData || []).map((f) => f.created_by).filter(Boolean))];
+      // Render first page immediately — don't wait for profiles or remaining pages
+      setMedia((firstPage || []) as unknown as MediaFile[]);
+      setFolders((foldersData || []) as unknown as MediaFolder[]);
+      setAllFolders((allFoldersData || []) as unknown as MediaFolder[]);
+
+      // Stats from the lightweight all-rows query
+      const allRows = statsRows || [];
+      const filesByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
+      const sizeByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
+      let totalSize = 0;
+      allRows.forEach((row) => {
+        const type = row.file_type as FileType;
+        filesByType[type] = (filesByType[type] || 0) + 1;
+        sizeByType[type] = (sizeByType[type] || 0) + (row.size_bytes || 0);
+        totalSize += row.size_bytes || 0;
+      });
+      setStats({ totalFiles: totalCount ?? allRows.length, totalSize, filesByType, sizeByType, recentUploads: 0, largestFiles: [] });
+
+      setLoading(false);
+
+      // Phase 2 (background) — remaining records + profiles, no loading spinner
+      const remainingPages: typeof firstPage[] = [];
+      const total = totalCount ?? 0;
+      if (total > FIRST_PAGE) {
+        const pagePromises = [];
+        for (let offset = FIRST_PAGE; offset < total; offset += FIRST_PAGE) {
+          pagePromises.push(baseMediaQuery().range(offset, offset + FIRST_PAGE - 1));
+        }
+        const results = await Promise.all(pagePromises);
+        results.forEach(({ data }) => { if (data) remainingPages.push(...data); });
+      }
+
+      const allMedia = [...(firstPage || []), ...remainingPages];
+
+      // Fetch profiles for all unique creator IDs
+      const creatorIds = [...new Set(allMedia.map((f) => f.created_by).filter(Boolean))];
       const profileMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
       if (creatorIds.length > 0) {
         const { data: profilesData } = await supabase
@@ -167,30 +195,13 @@ export function MediaLibraryTab() {
           .in('id', creatorIds);
         (profilesData || []).forEach((p) => { profileMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });
       }
-      const mediaWithProfiles = (mediaData || []).map((f) => ({
+
+      setMedia(allMedia.map((f) => ({
         ...f,
         creator_profile: f.created_by ? (profileMap[f.created_by] ?? null) : null,
-      }));
-
-      setMedia(mediaWithProfiles as unknown as MediaFile[]);
-      setFolders((foldersData || []) as unknown as MediaFolder[]);
-      setAllFolders((allFoldersData || []) as unknown as MediaFolder[]);
-
-      // Compute stats from fetched data — no extra query needed
-      const files = mediaData || [];
-      const filesByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
-      const sizeByType: Record<FileType, number> = { image: 0, video: 0, audio: 0, document: 0, other: 0 };
-      let totalSize = 0;
-      files.forEach((file) => {
-        const type = file.file_type as FileType;
-        filesByType[type] = (filesByType[type] || 0) + 1;
-        sizeByType[type] = (sizeByType[type] || 0) + (file.size_bytes || 0);
-        totalSize += file.size_bytes || 0;
-      });
-      setStats({ totalFiles: totalCount ?? files.length, totalSize, filesByType, sizeByType, recentUploads: 0, largestFiles: [] });
+      })) as unknown as MediaFile[]);
     } catch (error: any) {
       toast.error(`Failed to load media: ${error.message}`);
-    } finally {
       setLoading(false);
     }
   };

@@ -213,7 +213,8 @@ export function MediaPreview({
       onUpdate?.();
     } catch (error: unknown) {
       console.error('AI analysis error:', error);
-      toast.error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const msg = error instanceof Error ? error.message : (error as any)?.message || JSON.stringify(error);
+      toast.error(`AI analysis failed: ${msg}`);
     } finally {
       setAnalyzing(false);
     }
