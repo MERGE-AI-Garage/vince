@@ -437,6 +437,29 @@ serve(async (req) => {
         })
       : [];
 
+    // Override generic names with the real format names the LLM wrote into the copy text.
+    // Pattern: "## Deliverable 2: Outdoor Billboard" → "Outdoor Billboard"
+    function extractNameFromPart(text: string, fallback: string): string {
+      const deliverableMatch = text.match(/##\s*Deliverable\s*\d+[:\-–]\s*([^\n]+)/i);
+      if (deliverableMatch) return deliverableMatch[1].trim();
+      const headingMatch = text.match(/^#{1,3}\s+([A-Z][^\n]{2,50})\n/m);
+      if (headingMatch) return headingMatch[1].trim();
+      return fallback;
+    }
+    const extractedNames: string[] = [];
+    let pendingPartText: string | undefined;
+    let extractIdx = 0;
+    for (const part of parts) {
+      if (part.type === 'text') { pendingPartText = part.content; }
+      else if (part.type === 'image') {
+        const fallback = deliverableNames[extractIdx] ?? `Deliverable ${extractIdx + 1}`;
+        extractedNames.push(pendingPartText ? extractNameFromPart(pendingPartText, fallback) : fallback);
+        pendingPartText = undefined;
+        extractIdx++;
+      }
+    }
+    const finalDeliverableNames = extractedNames.length > 0 ? extractedNames : deliverableNames;
+
     const brandAlignment = computeBrandAlignment(brand, profile);
 
     // Look up model_id for generation record (model_id may be NOT NULL in schema)
@@ -460,7 +483,7 @@ serve(async (req) => {
       generation_time_ms: latencyMs,
       estimated_cost_usd: 0,
       parameters: { deliverable_count: resolvedDeliverables.length },
-      metadata: { package: true, deliverable_names: deliverableNames, ...(conversation_id ? { conversation_id } : {}) },
+      metadata: { package: true, deliverable_names: finalDeliverableNames, ...(conversation_id ? { conversation_id } : {}) },
       copy_blocks: parts,
     });
     if (insertError) console.error('[generate-creative-package] Generation record insert failed:', insertError.code, insertError.message, { user_id: userId, brand_id });
@@ -483,7 +506,7 @@ serve(async (req) => {
         success: true,
         brand_name: brand.name,
         brief,
-        deliverable_names: deliverableNames,
+        deliverable_names: finalDeliverableNames,
         brand_alignment: brandAlignment,
         parts,
         image_urls: imageUrls,
