@@ -31,10 +31,13 @@ import {
   Palette,
   Shield,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import type { MediaFile } from '@/types/media';
 import { toast } from 'sonner';
 import { MediaUserLink } from '@/components/media/MediaUserLink';
+import { supabase } from '@/integrations/supabase/client';
+import { initializeGeminiVision, isGeminiInitialized, analyzeImage } from '@/services/media/geminiMediaAnalyzer';
 
 interface MediaPreviewProps {
   file: MediaFile | null;
@@ -53,6 +56,7 @@ export function MediaPreview({
   onClose,
   onDelete,
   onNavigate,
+  onUpdate,
 }: MediaPreviewProps) {
   const [zoom, setZoom] = useState(1);
   const [showMetadata, setShowMetadata] = useState(true);
@@ -61,6 +65,7 @@ export function MediaPreview({
   const [synthIdInfoOpen, setSynthIdInfoOpen] = useState(false);
   const [synthIdDetectionFailureOpen, setSynthIdDetectionFailureOpen] = useState(false);
   const [currentFile, setCurrentFile] = useState<MediaFile | null>(file);
+  const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
     setCurrentFile(file);
@@ -129,6 +134,78 @@ export function MediaPreview({
     link.click();
     document.body.removeChild(link);
     toast.success('Download started');
+  };
+
+  const handleAnalyzeWithAI = async () => {
+    if (!currentFile || currentFile.file_type !== 'image') return;
+    setAnalyzing(true);
+    try {
+      if (!isGeminiInitialized()) {
+        const { data: apiKey } = await supabase.rpc('get_secret', { secret_name: 'GEMINI_API_KEY' });
+        if (!apiKey) {
+          toast.error('Gemini API key not found. Please configure in Supabase Vault.');
+          return;
+        }
+        initializeGeminiVision(apiKey);
+      }
+
+      let base64Data: string;
+      if (currentFile.original_image_data) {
+        base64Data = currentFile.original_image_data;
+      } else {
+        const response = await fetch(currentFile.url);
+        const blob = await response.blob();
+        base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      const analysis = await analyzeImage(base64Data, currentFile.mime_type, currentFile.filename);
+
+      const { error } = await supabase.from('media').update({
+        title: analysis.suggestedTitle,
+        description: analysis.altText,
+        auto_tags: analysis.tags,
+        detected_objects: analysis.detectedObjects,
+        dominant_colors: analysis.dominantColors,
+        ai_analysis_cost: analysis.cost,
+        ai_analysis_model: analysis.model,
+        synthid_detected: analysis.synthId?.detected ?? null,
+        synthid_confidence: analysis.synthId?.confidence ?? null,
+        synthid_generated_by: analysis.synthId?.generatedBy ?? null,
+        synthid_details: analysis.synthId?.details ?? null,
+        custom_metadata: {
+          ...currentFile.custom_metadata,
+          ai_analysis: {
+            content_type: analysis.contentType,
+            use_cases: analysis.useCases,
+            confidence: analysis.confidence,
+            analyzed_at: new Date().toISOString(),
+          },
+        },
+      }).eq('id', currentFile.id);
+
+      if (error) throw error;
+
+      const { data: updatedFile, error: fetchError } = await supabase
+        .from('media')
+        .select('*, creator_profile:profiles!created_by(full_name, avatar_url)')
+        .eq('id', currentFile.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (updatedFile) setCurrentFile(updatedFile as MediaFile);
+
+      toast.success('AI analysis complete!');
+      onUpdate?.();
+    } catch (error: unknown) {
+      console.error('AI analysis error:', error);
+      toast.error(`AI analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -240,6 +317,26 @@ export function MediaPreview({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Zoom out (-)</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAnalyzeWithAI}
+                      disabled={analyzing}
+                      className="text-white hover:bg-white/10"
+                    >
+                      {analyzing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Analyze with AI (tags, objects, colors)</p>
                   </TooltipContent>
                 </Tooltip>
               </>
