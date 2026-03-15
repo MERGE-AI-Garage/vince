@@ -23,40 +23,64 @@ When I saw the Gemini Live Agent Challenge, the Creative Storyteller category de
 
 Vince is a voice-driven AI creative director for brand teams. You speak to him in real time, he listens, asks the right questions, and generates complete campaigns — headlines, body copy, and images woven together in a single response — all automatically grounded in your brand's DNA.
 
-The system starts with nothing. No preloaded brands. Everything is built live through conversation. Tell Vince your brand name and website; he crawls it, extracts your visual identity, color profile, typography, imagery style, and tone. Upload brand guidelines, annual reports, or style guides; he reads them and integrates that knowledge. Vince synthesizes all of this into a unified brand profile — and from that point on, every generation is brand-aware without you having to ask.
+The system starts with nothing. No preloaded brands. Everything is built live through conversation. Tell Vince your brand name and website; he crawls it, extracts your visual identity, color profile, typography, imagery style, and tone. Upload brand guidelines, annual reports, or style guides; he reads them and integrates that knowledge. Reference images get analyzed at the art-director level — camera settings, lighting setup, composition rules, film stock. Vince synthesizes all of this into a unified Brand DNA profile, and from that point on, every generation is brand-aware without you having to ask.
 
-The "beyond text box" moment: when you brief a campaign by voice, Vince calls tools mid-conversation to build brand-precise generation prompts. The Live API fires a `generate_creative_package` tool call; the backend makes a separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']`; and the response comes back as alternating copy blocks and images — a complete creative package in one shot, while Vince keeps talking. You hear him say "Love that direction, sketching concepts now" and a few seconds later you're looking at a campaign.
+**Competitive Intelligence.** Paste a competitor's YouTube ad URL mid-conversation. Vince fires a background tool call to Gemini 2.0 Flash for multimodal video analysis — extracting emotional hooks, messaging strategy, and creative weaknesses — while the Live session stays open. An orange Competitive Intel card appears in the conversation when it's done. Brief your counter-campaign in one sentence.
+
+**Interleaved Creative Packages.** Brief a campaign by voice. Vince calls `generate_creative_package`; the backend makes a separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']`; the response comes back as alternating copy blocks and images — a LinkedIn post, a display banner, and an email header in one shot, while Vince keeps talking. Strategy, copy, and photography together. Not assembled from separate calls.
+
+**Person-in-Scene.** Upload a headshot. Say "put me in this campaign." Vince runs a two-step chain: `generate_headshot_scene` places your face into the described scene using Gemini's image editing model, then `generate_creative_package` wraps the campaign copy around that specific image. Your actual face, in an on-brand scene, with production-ready copy. The image model never regenerates your face — it's preserved exactly through the campaign build.
+
+**Campaigns Archive.** Every creative package Vince generates is permanently stored in the Campaigns tab — complete interleaved output (copy + images), brand alignment score, generation time, and a conversation link back to the brief that created it. One click to download a ZIP organized by deliverable: `01-linkedin-post.txt`, `01-linkedin-post.jpg`, and so on. Built for agency handoff.
+
+**Brand Coaching.** Say "walk me through this brand." Vince acts as a creative director briefing a new team member — narrating the visual DNA, photography standards, color story, tone of voice, and active governance rules. Not reading back a style guide. Interpreting it. RAG-powered brand memory serving as institutional knowledge in conversation.
+
+**Chrome Extension.** Vince's full voice and chat capability lives in a Chrome side panel — open it on any page, brief in context. Browse a competitor's site, open the panel, paste the YouTube URL without switching windows.
+
+**Mobile.** iOS app brings Vince's full voice interface to the field — brief a campaign on a walk, assets sync to your library and are waiting when you get back to your desk. Android in beta.
+
+**SynthID Provenance.** Every AI-generated image is tagged at insert time — `synthid_detected: true`, model ID, generation timestamp. The media library surfaces this in a Watermark Detection panel. Built for agency compliance, not as an afterthought.
 
 ### How I built it
 
 **The two-model architecture** is the central technical insight. The Gemini Live API (`ai.live.connect()`) handles real-time bidirectional voice and tool calling — it's what makes Vince a conversational agent instead of a form. But image models don't support function calling. You can't have one model do both. So the architecture deliberately splits them: the Live session orchestrates; a separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']` handles interleaved output. The Live API fires a tool call, the backend executes it, and results render on the frontend while the voice session continues. These aren't two models competing — they're two models doing what each does best.
 
-**Why the GenAI SDK directly, not ADK.** The Gemini Live API requires precise control over audio resampling (16kHz PCM), tool injection timing, and session resumption across WebSocket reconnects. ADK abstracts these in ways that would have cost us control over the user experience. Using the SDK directly meant writing more code, but it meant we owned the session lifecycle completely.
+**Three Gemini models in one workflow.** When a user pastes a competitor ad URL, Gemini 2.0 Flash handles multimodal video analysis (extracting emotional strategy from the raw MP4). When they brief a campaign, Gemini 3.1 Flash Image Preview handles interleaved copy + image output. The Live API (`gemini-2.5-flash-native-audio`) orchestrates both — routing the brief, injecting brand context, calling the right model for the right job.
 
-**Invisible RAG for brand context.** Brand guidelines are never far from any generation. When Vince generates a creative package, `recall_brand_guidelines` runs a semantic search against the brand's vector memory and injects the relevant rules into the generation prompt automatically — visual identity standards, photography directives, tone constraints, compliance guardrails. The user never asks for brand rules. They're always already there.
+**Why the GenAI SDK directly, not ADK.** The Gemini Live API requires precise control over audio resampling (16kHz PCM), tool injection timing, and session resumption across WebSocket reconnects. ADK abstracts these in ways that would have cost us control over the user experience. Using `@google/genai` SDK directly meant writing more code, but it meant we owned the session lifecycle completely.
 
-**26 tools across 8 categories.** The full tool surface covers: brand analysis (website crawl, image analysis, document import), synthesis (brand DNA, guardrail generation, playbook orchestration), generation (single images, creative packages, video via Veo 3), brand setup (create brand, header/card generation), reference collections, camera presets, prompt library, and session management. Tool calls chain — `create_brand` auto-triggers website analysis; `generate_brand_playbook` orchestrates synthesis, all six guardrail domains, prompt generation, and UI card creation as a single operation.
+**Invisible RAG for brand context.** Brand guidelines are never far from any generation. When Vince generates a creative package, `recall_brand_guidelines` runs a semantic search against the brand's pgvector memory and injects the relevant rules automatically — visual identity standards, photography directives, tone constraints, compliance guardrails. The user never asks for brand rules. They're always already there. Brand rules are vectorized using `text-embedding-004`.
 
-**Infrastructure.** Supabase (PostgreSQL, Auth, Edge Functions, Storage, Realtime) handles the data layer, brand intelligence pipeline, and file storage. Cloud Run serves both the React frontend and the backend generation service. A Chrome Extension (Manifest V3) adds Vince's voice and chat to any browser tab via a side panel — browse a client's site, open the panel, brief a campaign in context.
+**Five-layer brand intelligence stack.** Raw sources (website, images, documents) → Brand DNA profile (visual, photography, composition, tone, product catalog) → Agent Directives (6 governance domains, activate/deactivate) → Synthesized Generation Prompt (9 sections, section toggles) → Quick Starters (pre-built creative recipes). Each layer builds on the last. The Art Direction dialog surfaces the photography and composition intelligence — aperture preferences, focal length, film stock — that drives every generation invisibly.
+
+**26 tools across 8 categories.** Brand analysis (website crawl, image analysis, document import), synthesis (brand DNA, guardrail generation), generation (single images, creative packages, headshot scenes, video via Veo 3), brand setup, reference collections, camera presets, prompt library, and session management. Tool calls chain — `generate_headshot_scene` auto-feeds into `generate_creative_package` when a headshot is in context.
+
+**Infrastructure.** Supabase (PostgreSQL, Auth, Edge Functions, Storage, Realtime) handles the data layer, brand intelligence pipeline, and file storage. Cloud Run serves the React frontend. 21 Deno Edge Functions handle all AI operations. A Chrome Extension (Manifest V3) adds Vince's voice and chat to any browser tab via a side panel.
 
 ### Challenges
 
-**WebSocket timing with long-running tool calls.** The Gemini Live API expects tool results back quickly. Brand website analysis takes 30-60 seconds. The pattern that worked: fire-and-forget for async operations. Vince acknowledges the tool call immediately, returns a stub result so the WebSocket stays alive, and pushes the real result to the frontend via Supabase Realtime when the operation completes. The voice session never stalls waiting for a slow tool.
+**WebSocket timing with long-running tool calls.** The Gemini Live API expects tool results back quickly. Brand website analysis takes 30-60 seconds. The pattern that worked: fire-and-forget. Vince acknowledges the tool call immediately, returns a stub result so the WebSocket stays alive, and pushes the real result to the frontend via Supabase Realtime when the operation completes. The voice session never stalls waiting for a slow tool.
 
-**Image models don't support function calling.** This wasn't a bug to work around — it was a constraint that forced a better architecture. Trying to do everything in one model would have meant compromising the voice experience or the generation quality. Splitting them cleanly meant each model operates at its ceiling.
+**Image models don't support function calling.** This wasn't a bug to work around — it was a constraint that forced a better architecture. The Live session became pure orchestration; the generation call became pure creative execution. Splitting them cleanly meant each model operates at its ceiling.
 
-**Audio resampling for the Live API.** Browser microphone audio comes in at various sample rates. The Live API requires 16kHz PCM. Getting this right without latency meant handling resampling in the audio worklet before bytes hit the WebSocket — not in the main thread, not on the server.
+**Person-in-scene with face preservation.** Standard `TEXT+IMAGE` interleaved mode drops image generation entirely when inline image data is passed (~2s response, 0 images). The fix: `IMAGE`-only modality for `generate_headshot_scene`, with a face-preservation prompt pattern that maintains the subject's features while changing background, environment, and lighting. Then `pre_generated_image_url` passes the output URL into `generate_creative_package`, which switches to copy-only mode (`gemini-2.0-flash`, TEXT modality) and attaches the preserved image.
 
-**Brand context at scale.** A full brand profile can exceed 10,000 tokens. Injecting all of it into every generation call is wasteful and dilutes the prompt. The semantic search against vector memory solves this: only the relevant rules for the current generation type get injected. Visual identity rules for image generation. Tone directives for copy. Compliance guardrails always.
+**Audio resampling for the Live API.** Browser microphone audio comes in at various sample rates. The Live API requires 16kHz PCM. Handling resampling in the audio worklet before bytes hit the WebSocket — not in the main thread, not on the server.
+
+**Brand context at scale.** A full brand profile can exceed 10,000 tokens. The semantic search against pgvector memory solves this: only the relevant rules for the current generation type get injected. Visual identity rules for image generation. Tone directives for copy. Compliance guardrails always.
 
 ### Accomplishments
 
-- **Complete brand intelligence pipeline** — website crawl → document import → image analysis → unified DNA → vector memory, all built through conversation
+- **Five-layer brand intelligence pipeline** — website crawl → document import → image analysis → unified DNA → vector memory, all built through conversation
+- **Three Gemini models in one workflow** — Live API for orchestration, Gemini 2.0 Flash for video analysis, Gemini 3.1 Flash Image for interleaved output
 - **Interleaved creative packages** — a single `generateContent` call returns alternating copy and images, grounded in brand context retrieved automatically
+- **Person-in-scene campaign chain** — face-preserving headshot editing feeding directly into campaign generation
+- **Competitive intelligence** — multimodal video analysis of competitor ads mid-voice-conversation
+- **Campaigns archive** — permanent record of every creative package with full copy, images, brand alignment scores, and ZIP export
 - **Voice tool calling mid-conversation** — 26 tools callable during a live voice session, including async tools that don't block the WebSocket
-- **Fully conversational brand governance** — compliance guardrails generated, stored, and applied without the user interacting with any settings panel
 - **Chrome Extension** that brings Vince's full capability to any browser context
-- **iOS and Android mobile app** — brief a campaign on the go, assets sync to your library and are waiting when you get back to your desk
+- **iOS mobile app** — brief a campaign in the field, assets ready at the desk
+- **SynthID provenance** on every generated image
 
 ### What I learned
 
@@ -66,30 +90,30 @@ Voice-first is fundamentally different from chat-first. When you design for voic
 
 Brand intelligence is the actual product. Any tool can generate images from prompts. The value is in what wraps every generation — visual identity rules, photography standards, tone constraints, compliance guardrails, all retrieved automatically, all applied invisibly. The pipeline that builds that context is where the work is.
 
+I'm not a developer. I built this with Claude as my engineering partner. What I learned about Gemini — the constraints, the architecture patterns, the WebSocket edge cases — I learned by building this. That's the capability shift that matters: people who understand the problem deeply can now build the solution directly.
+
 ### What's next
 
 - **Multi-brand workspaces** — agency teams managing multiple client brands in a single Vince session
 - **Collaborative brand reviews** — multiple team members in one voice session, briefing and iterating together in real time
-- **Export to ad platforms** — send approved creative packages directly to Meta Ads, Google Ads, and LinkedIn Campaign Manager
+- **Export to ad platforms** — send approved creative packages directly to Google Ads, Meta Ads, and LinkedIn Campaign Manager
 - **Video in creative packages** — Veo 3 campaign videos alongside static assets in a single package
 
 ---
 
 ## Built With
 
-- Gemini Live API (Gemini 2.5 Flash Native Audio)
-- Gemini 3.1 Flash Image Preview
-- Gemini 3 Flash
-- Google GenAI SDK
-- Veo 3
+- Gemini Live API (`gemini-2.5-flash-native-audio`) — voice + tool orchestration
+- Gemini 2.0 Flash — multimodal video analysis (competitive intelligence)
+- Gemini 3.1 Flash Image Preview — interleaved TEXT + IMAGE generation
+- Gemini `text-embedding-004` — brand memory vectorization
+- Google GenAI SDK (`@google/genai`)
+- Veo 3 — video generation
 - Google Cloud Run
 - Google Search Grounding
-- TypeScript
-- React
-- Vite
-- Tailwind CSS
-- shadcn/ui
-- Supabase (PostgreSQL, Auth, Edge Functions, Storage, Realtime)
+- TypeScript / React / Vite
+- Tailwind CSS + shadcn/ui
+- Supabase (PostgreSQL + pgvector, Auth, Edge Functions, Storage, Realtime)
 - Chrome Extension (Manifest V3)
 - Zustand
 
@@ -102,12 +126,15 @@ Brand intelligence is the actual product. Any tool can generate images from prom
 
 ## Video Demo Link
 
-- YouTube: (unlisted URL — record on Day 10)
+- YouTube: (unlisted URL)
 
 ## Image Gallery
 
-- Screenshot of Creative Studio with generated creative package (interleaved copy + images)
-- Screenshot of Brand DNA dialog showing synthesized visual identity
-- Screenshot of Vince voice mode with audio visualizer
-- Two-model architecture diagram
-- Chrome Extension side panel in context
+- Screenshot: Creative Studio with generated creative package (interleaved copy + images)
+- Screenshot: Competitive Intel card with competitor video analysis
+- Screenshot: Campaigns tab archive with mosaic thumbnails and brand alignment scores
+- Screenshot: Person-in-scene — headshot placed in professional scene with campaign copy
+- Screenshot: Brand DNA dialog — synthesized visual identity
+- Screenshot: Vince voice mode with audio visualizer active
+- Screenshot: Chrome Extension side panel in browser context
+- Architecture diagram: Two-model split + RAG + Realtime async
