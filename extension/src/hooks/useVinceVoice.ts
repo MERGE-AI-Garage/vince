@@ -14,11 +14,21 @@ import type { UserContext } from '@/services/brand-agent/brandAgentGeminiService
 
 export type VoiceState = 'idle' | 'connecting' | 'active' | 'error';
 
+export interface GenerationRecord {
+  id: string;
+  output_urls: string[];
+  prompt_text: string | null;
+  model_used: string;
+  generation_type: string;
+  created_at: string;
+}
+
 export type ToolResult =
   | { type: 'creative_package'; data: Record<string, unknown> }
   | { type: 'generated_images'; data: { image_urls: string[] } }
   | { type: 'generated_videos'; data: { video_urls: string[] } }
-  | { type: 'competitor_analysis'; data: Record<string, unknown> };
+  | { type: 'competitor_analysis'; data: Record<string, unknown> }
+  | { type: 'generation_history'; data: { generations: GenerationRecord[] } };
 
 export interface UseVinceVoice {
   voiceState: VoiceState;

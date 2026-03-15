@@ -300,7 +300,7 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '6px',
+        gap: '8px',
       }}>
         {categories.map((cat) => {
           const Icon = iconForCategory(cat.key);
@@ -313,35 +313,45 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '10px',
-                borderRadius: '8px',
-                border: `1px solid ${isExpanded ? hexToRgba(accents.primary, 0.3) : hexToRgba(accents.dark, 0.08)}`,
-                background: isExpanded ? hexToRgba(accents.primary, 0.04) : '#fff',
+                padding: '11px 10px',
+                borderRadius: '12px',
+                border: `1px solid ${isExpanded ? hexToRgba(accents.primary, 0.35) : 'rgba(0,0,0,0.07)'}`,
+                background: isExpanded
+                  ? `linear-gradient(135deg, ${hexToRgba(accents.primary, 0.07)} 0%, ${hexToRgba(accents.primary, 0.04)} 100%)`
+                  : 'rgba(255,255,255,0.9)',
+                boxShadow: isExpanded
+                  ? `0 2px 8px ${hexToRgba(accents.primary, 0.12)}, 0 1px 3px rgba(0,0,0,0.06)`
+                  : '0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)',
                 cursor: 'pointer',
                 textAlign: 'left',
                 fontFamily: 'Epilogue, system-ui, sans-serif',
-                transition: 'all 0.15s ease',
+                transition: 'all 0.18s ease',
               }}
               onMouseEnter={(e) => {
                 if (!isExpanded) {
-                  e.currentTarget.style.borderColor = hexToRgba(accents.primary, 0.2);
-                  e.currentTarget.style.background = hexToRgba(accents.primary, 0.02);
+                  e.currentTarget.style.borderColor = hexToRgba(accents.primary, 0.25);
+                  e.currentTarget.style.boxShadow = `0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)`;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isExpanded) {
-                  e.currentTarget.style.borderColor = hexToRgba(accents.dark, 0.08);
-                  e.currentTarget.style.background = '#fff';
+                  e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }
               }}
             >
               <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '6px',
+                width: '26px',
+                height: '26px',
+                borderRadius: '8px',
                 background: isExpanded
                   ? `linear-gradient(135deg, ${accents.dark} 0%, ${accents.darkAlt} 100%)`
-                  : `linear-gradient(135deg, ${hexToRgba(accents.primary, 0.08)} 0%, ${hexToRgba(accents.primary, 0.04)} 100%)`,
+                  : `linear-gradient(135deg, ${hexToRgba(accents.primary, 0.15)} 0%, ${hexToRgba(accents.primary, 0.08)} 100%)`,
+                boxShadow: isExpanded
+                  ? `0 2px 4px ${hexToRgba(accents.dark, 0.3)}`
+                  : `inset 0 1px 0 rgba(255,255,255,0.6)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -353,9 +363,10 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
                 {cat.label}
               </div>
               <ChevronDown size={10} style={{
-                color: '#6b7280',
-                transition: 'transform 0.15s ease',
+                color: isExpanded ? accents.primary : '#9ca3af',
+                transition: 'transform 0.18s ease',
                 transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                flexShrink: 0,
               }} />
             </button>
           );
@@ -368,10 +379,10 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
         if (!cat) return null;
         return (
           <div style={{
-            marginTop: '8px',
+            marginTop: '10px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '5px',
+            gap: '6px',
           }}>
             {cat.presets.map((preset) => {
               const isEditing = editingPreset?.catKey === cat.key && editingPreset?.presetLabel === preset.label;
@@ -398,24 +409,27 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
                     alignItems: 'flex-start',
                     gap: '10px',
                     width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: `1px solid ${hexToRgba(accents.primary, 0.1)}`,
-                    background: hexToRgba(accents.primary, 0.02),
+                    padding: '11px 13px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0,0,0,0.07)',
+                    background: 'rgba(255,255,255,0.9)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)',
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontFamily: 'Epilogue, system-ui, sans-serif',
-                    transition: 'all 0.15s ease',
+                    transition: 'all 0.18s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = hexToRgba(accents.primary, 0.06);
-                    e.currentTarget.style.borderColor = hexToRgba(accents.primary, 0.25);
-                    e.currentTarget.style.boxShadow = `0 1px 3px ${hexToRgba(accents.primary, 0.08)}`;
+                    e.currentTarget.style.background = 'rgba(255,255,255,1)';
+                    e.currentTarget.style.borderColor = hexToRgba(accents.primary, 0.3);
+                    e.currentTarget.style.boxShadow = `0 4px 14px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)`;
+                    e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = hexToRgba(accents.primary, 0.02);
-                    e.currentTarget.style.borderColor = hexToRgba(accents.primary, 0.1);
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.9)';
+                    e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   <div style={{

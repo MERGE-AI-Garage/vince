@@ -7,6 +7,7 @@ import { CreativePackageCard } from './CreativePackageCard';
 import { ImageResultCard } from './ImageResultCard';
 import { VideoResultCard } from './VideoResultCard';
 import { CompetitorAnalysisCard } from './CompetitorAnalysisCard';
+import { GenerationHistoryCard } from './GenerationHistoryCard';
 import type { PackagePart } from './CreativePackageCard';
 
 interface Props {
@@ -17,8 +18,8 @@ interface Props {
 
 export function ToolResultRenderer({ result, onSelectCampaignDirection }: Props) {
   const containerStyle: React.CSSProperties = {
-    background: 'rgba(139,92,246,0.04)',
-    border: '1px solid rgba(139,92,246,0.18)',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: '10px',
     padding: '12px',
     marginTop: '6px',
@@ -67,6 +68,14 @@ export function ToolResultRenderer({ result, onSelectCampaignDirection }: Props)
             ? (dir, i) => onSelectCampaignDirection(`Let's go with direction ${i + 1}: ${dir.title}`)
             : undefined}
         />
+      </div>
+    );
+  }
+
+  if (result.type === 'generation_history') {
+    return (
+      <div style={containerStyle}>
+        <GenerationHistoryCard generations={result.data.generations} />
       </div>
     );
   }

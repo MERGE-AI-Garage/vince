@@ -12,8 +12,8 @@ import type { ToolResult, VoiceState } from '../hooks/useVinceVoice';
 import type { TranscriptItem } from '@/services/brand-agent/brandAgentLiveService';
 
 // Vince always speaks in purple — never inherits the selected brand color
-const PURPLE = '#8b5cf6';
-const PURPLE_RGB = '139, 92, 246';
+const PURPLE = '#7c6ef5';
+const PURPLE_RGB = '124, 110, 245';
 
 interface Props {
   brandId: string | null;
@@ -90,13 +90,7 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
   const syncedTranscriptIds = useRef(new Set<string>());
   const shownVoiceResultsCount = useRef(0);
 
-  // Create a conversation row on mount so messages are persisted
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      createBrandAgentConversation(user.id).then(setConversationId).catch(() => {/* non-fatal */});
-    });
-  }, []);
+  // Conversation record is created lazily on first message send
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -201,7 +195,19 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
     setIsSending(true);
 
     try {
-      const response = await sendChatMessage(fullText, brandId, conversationId ?? undefined);
+      // Lazily create conversation record on first message
+      let activeConversationId = conversationId;
+      if (!activeConversationId) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          try {
+            activeConversationId = await createBrandAgentConversation(user.id, 'extension');
+            setConversationId(activeConversationId);
+          } catch { /* non-fatal */ }
+        }
+      }
+
+      const response = await sendChatMessage(fullText, brandId, activeConversationId ?? undefined);
       setMessages(prev => prev.map(m => m.id === loadingMsg.id
         ? { ...m, text: response.message, isLoading: false, toolResults: response.toolResults }
         : m
@@ -222,11 +228,8 @@ export function ChatTab({ brandId, voiceState, isMuted, voiceTranscript, voiceTo
     setInput('');
     setAttachedUrl('');
     setAttachedFileName('');
+    setConversationId(null);
     setShowHistory(false);
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      createBrandAgentConversation(user.id).then(setConversationId).catch(() => {});
-    });
   }, []);
 
   const handleRestoreConversation = useCallback((id: string, restoredMessages: Message[]) => {

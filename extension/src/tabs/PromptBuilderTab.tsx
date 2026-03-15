@@ -104,8 +104,14 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
     <div style={{ fontFamily: 'Epilogue, system-ui, sans-serif' }}>
       {/* Welcome hero */}
       <div style={{
-        padding: '20px 16px 16px',
-        background: `linear-gradient(180deg, ${hexToRgba(accentDark, 0.03)} 0%, transparent 100%)`,
+        padding: '14px 14px 12px',
+        margin: '14px 14px 0',
+        borderRadius: '16px',
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.95)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)',
       }}>
         <div style={{
           display: 'flex',
@@ -146,7 +152,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
               fontSize: '15px',
               fontWeight: 700,
               color: accentDark,
-              fontFamily: 'Fraunces, serif',
+              fontFamily: 'Google Sans, Roboto, system-ui, sans-serif',
               lineHeight: 1.2,
             }}>
               {title}
@@ -354,18 +360,27 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
 
       {/* Quick starters */}
       {!generatedPrompt && !isLoading && (
-        <div style={{ padding: '0 16px 16px' }}>
+        <div style={{ padding: '0 14px 16px' }}>
+          <div style={{
+            borderRadius: '16px',
+            background: 'rgba(255,255,255,0.72)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.9)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)',
+            padding: '14px',
+          }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            marginBottom: '10px',
+            marginBottom: '12px',
           }}>
             <span style={{
               fontSize: '10px',
-              fontWeight: 600,
+              fontWeight: 700,
               textTransform: 'uppercase',
-              letterSpacing: '0.06em',
+              letterSpacing: '0.08em',
               color: '#6b7280',
             }}>
               Quick start
@@ -373,16 +388,24 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
             <div style={{
               flex: 1,
               height: '1px',
-              background: 'rgba(0, 0, 0, 0.06)',
+              background: 'rgba(0,0,0,0.08)',
             }} />
           </div>
           <QuickStarters categories={quickStarterCategories} isLoading={quickStartersLoading} brandColor={brandColor} onSelect={handleQuickStart} />
+          </div>
         </div>
       )}
 
       {/* Build prompt form */}
       <div style={{
-        padding: '0 16px',
+        margin: '0 14px 14px',
+        padding: '16px',
+        borderRadius: '16px',
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.95)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)',
         display: 'flex',
         flexDirection: 'column',
         gap: '14px',
@@ -428,7 +451,16 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
       </div>
 
       {/* Output */}
-      <div style={{ padding: '16px' }}>
+      <div style={generatedPrompt || isLoading || error ? {
+        margin: '0 14px',
+        padding: '16px',
+        borderRadius: '16px',
+        background: 'rgba(255,255,255,0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.95)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)',
+      } : { padding: '0 16px' }}>
         <PromptOutput
           prompt={generatedPrompt}
           isLoading={isLoading}
@@ -440,7 +472,10 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
       </div>
 
       {/* Prompt history */}
-      <div style={{ padding: '0 16px 16px' }}>
+      <div style={{
+        margin: '0 14px 14px',
+        padding: '4px 0',
+      }}>
         <PromptHistory
           history={history}
           onReuse={handleReusePrompt}

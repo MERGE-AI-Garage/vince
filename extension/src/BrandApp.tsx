@@ -240,27 +240,6 @@ function TabLayout() {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  {/* Brand icon — prefer logo_mark_url (monogram), fall back to logo_url, then dot */}
-                  {(selectedBrand?.logo_mark_url || selectedBrand?.logo_url) ? (
-                    <div style={{
-                      width: '20px', height: '20px', borderRadius: '4px',
-                      background: 'rgba(255,255,255,0.95)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      overflow: 'hidden', flexShrink: 0,
-                    }}>
-                      <img
-                        src={selectedBrand.logo_mark_url || selectedBrand.logo_url!}
-                        alt={selectedBrand.name}
-                        style={{ maxWidth: '16px', maxHeight: '16px', objectFit: 'contain' }}
-                      />
-                    </div>
-                  ) : (
-                    <div style={{
-                      width: '8px', height: '8px', borderRadius: '50%',
-                      background: selectedBrand?.primary_color || theme.accent,
-                      border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0,
-                    }} />
-                  )}
                   <span style={{ fontSize: '10px', fontWeight: 600, color: '#EAE8E3', letterSpacing: '0.01em' }}>
                     {selectedBrand?.name || 'Select brand'}
                   </span>
@@ -295,7 +274,6 @@ function TabLayout() {
                         onMouseEnter={(e) => { if (brand.id !== selectedBrandId) e.currentTarget.style.background = accentAlpha(0.06); }}
                         onMouseLeave={(e) => { if (brand.id !== selectedBrandId) e.currentTarget.style.background = 'transparent'; }}
                       >
-                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: brand.primary_color || '#636466', border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }} />
                         <span style={{ fontSize: '11px', fontWeight: brand.id === selectedBrandId ? 700 : 500, color: brand.id === selectedBrandId ? theme.accent : '#EAE8E3' }}>
                           {brand.name}
                         </span>
@@ -315,7 +293,6 @@ function TabLayout() {
               {/* Tabs — icon + label, compact for 5 tabs */}
               <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {tabs.map((tab) => {
-                  const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
                   return (
                     <button
@@ -323,7 +300,7 @@ function TabLayout() {
                       onClick={() => setActiveTab(tab.id)}
                       title={tab.label}
                       style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         padding: '10px 0', background: 'none', border: 'none',
                         borderBottom: isActive ? `2px solid ${theme.accent}` : '2px solid transparent',
                         color: isActive ? theme.accent : 'rgba(234, 232, 227, 0.4)',
@@ -332,7 +309,6 @@ function TabLayout() {
                         minWidth: 0,
                       }}
                     >
-                      <Icon size={12} strokeWidth={isActive ? 2.5 : 2} style={{ flexShrink: 0 }} />
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {tab.label}
                       </span>
@@ -388,7 +364,7 @@ function TabLayout() {
           onToggleMute={vince.toggleMute}
         />
       </div>
-      <div style={{ display: activeTab !== 'chat' ? 'flex' : 'none', flex: 1, overflowY: activeTab === 'logos' || activeTab === 'creations' ? 'hidden' : 'auto', flexDirection: 'column', background: '#fafafa', color: '#111111', paddingBottom: vince.voiceState !== 'idle' ? '180px' : 0 }}>
+      <div style={{ display: activeTab !== 'chat' ? 'flex' : 'none', flex: 1, overflowY: activeTab === 'logos' || activeTab === 'creations' ? 'hidden' : 'auto', flexDirection: 'column', background: '#eef0f3', color: '#111111', paddingBottom: vince.voiceState !== 'idle' ? '180px' : 0 }}>
         {activeTab === 'prompt-builder' && (
           <PromptBuilderTab
             detectedPlatform={detectedPlatform}

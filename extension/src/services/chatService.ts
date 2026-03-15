@@ -2,7 +2,7 @@
 // ABOUTME: Sends user messages and parses structured tool results (creative packages, images, etc).
 
 import { supabase } from '@/integrations/supabase/client';
-import type { ToolResult } from '../hooks/useVinceVoice';
+import type { ToolResult, GenerationRecord } from '../hooks/useVinceVoice';
 import type { PackagePart } from '../chat/CreativePackageCard';
 
 export interface ChatResponse {
@@ -43,6 +43,11 @@ function extractToolResults(toolActions: AgentToolAction[]): ToolResult[] {
       const directions = r.campaign_directions as unknown[] | undefined;
       if (directions?.length) {
         results.push({ type: 'competitor_analysis', data: r });
+      }
+    } else if (action.toolName === 'list_generations') {
+      const generations = r.generations as GenerationRecord[] | undefined;
+      if (generations?.length) {
+        results.push({ type: 'generation_history', data: { generations } });
       }
     }
   }

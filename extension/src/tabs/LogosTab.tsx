@@ -132,25 +132,25 @@ function LogoCard({ logo, brandColor, onRename, compact = false }: CardProps) {
           }}>PRIMARY</div>
         )}
         {/* Action buttons top-right */}
-        {!compact && (
-          <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
-            <button
-              onClick={handleCopy}
-              title="Copy image to clipboard"
-              style={{ width: '26px', height: '26px', borderRadius: '6px', background: btnBg, backdropFilter: 'blur(4px)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-            >
-              {feedback === 'copied' || feedback === 'url'
-                ? <Check size={11} style={{ color: '#22c55e' }} />
-                : <Copy size={11} style={{ color: iconColor }} />
-              }
-            </button>
+        <div style={{ position: 'absolute', top: compact ? '4px' : '8px', right: compact ? '4px' : '8px', display: 'flex', gap: '4px' }}>
+          <button
+            onClick={handleCopy}
+            title="Copy image to clipboard"
+            style={{ width: compact ? '22px' : '26px', height: compact ? '22px' : '26px', borderRadius: '6px', background: btnBg, backdropFilter: 'blur(4px)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            {feedback === 'copied' || feedback === 'url'
+              ? <Check size={compact ? 9 : 11} style={{ color: '#22c55e' }} />
+              : <Copy size={compact ? 9 : 11} style={{ color: iconColor }} />
+            }
+          </button>
+          {!compact && (
             <a href={logo.url} download target="_blank" rel="noreferrer" title="Download"
               style={{ width: '26px', height: '26px', borderRadius: '6px', background: btnBg, backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
             >
               <Download size={11} style={{ color: iconColor }} />
             </a>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Info */}
