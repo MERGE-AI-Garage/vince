@@ -27,7 +27,7 @@ The system starts with nothing. No preloaded brands. Everything is built live th
 
 **Competitive Intelligence.** Paste a competitor's YouTube ad URL mid-conversation. Vince fires a background tool call to Gemini 2.0 Flash for multimodal video analysis — extracting emotional hooks, messaging strategy, and creative weaknesses — while the Live session stays open. An orange Competitive Intel card appears in the conversation when it's done. Brief your counter-campaign in one sentence.
 
-**Interleaved Creative Packages.** Brief a campaign by voice. Vince calls `generate_creative_package`; the backend makes a separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']`; the response comes back as alternating copy blocks and images — a LinkedIn post, a display banner, and an email header in one shot, while Vince keeps talking. Strategy, copy, and photography together. Not assembled from separate calls.
+**Interleaved Creative Packages.** Brief a campaign by voice. Vince calls `generate_creative_package` mid-conversation. The Gemini image model — running as the execution partner to the Live API's orchestration — responds with `responseModalities: ['TEXT', 'IMAGE']`: one call, alternating copy blocks and images. Strategy, copy, and photography woven together. Not assembled from separate requests. While Vince keeps talking.
 
 **Person-in-Scene.** Upload a headshot. Say "put me in this campaign." Vince runs a two-step chain: `generate_headshot_scene` places your face into the described scene using Gemini's image editing model, then `generate_creative_package` wraps the campaign copy around that specific image. Your actual face, in an on-brand scene, with production-ready copy. The image model never regenerates your face — it's preserved exactly through the campaign build.
 
@@ -43,7 +43,7 @@ The system starts with nothing. No preloaded brands. Everything is built live th
 
 ### How I built it
 
-**The two-model architecture** is the central technical insight. The Gemini Live API (`ai.live.connect()`) handles real-time bidirectional voice and tool calling — it's what makes Vince a conversational agent instead of a form. But image models don't support function calling. You can't have one model do both. So the architecture deliberately splits them: the Live session orchestrates; a separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']` handles interleaved output. The Live API fires a tool call, the backend executes it, and results render on the frontend while the voice session continues. These aren't two models competing — they're two models doing what each does best.
+**The two-model architecture** is the central technical insight. The Gemini Live API (`ai.live.connect()`) handles real-time bidirectional voice and tool calling — it's what makes Vince a conversational agent instead of a form. But image models don't support function calling. You can't have one model do both. So the architecture deliberately splits them: the Live session orchestrates; the Gemini image model — the execution partner — handles interleaved output via `responseModalities: ['TEXT', 'IMAGE']`, returning copy and images woven together in one response. The Live API fires a tool call, the backend executes it, and results render on the frontend while the voice session continues. These aren't two models competing — they're two models doing what each does best.
 
 **Three Gemini models in one workflow.** When a user pastes a competitor ad URL, Gemini 2.0 Flash handles multimodal video analysis (extracting emotional strategy from the raw MP4). When they brief a campaign, Gemini 3.1 Flash Image Preview handles interleaved copy + image output. The Live API (`gemini-2.5-flash-native-audio`) orchestrates both — routing the brief, injecting brand context, calling the right model for the right job.
 
@@ -55,7 +55,7 @@ The system starts with nothing. No preloaded brands. Everything is built live th
 
 **26 tools across 8 categories.** Brand analysis (website crawl, image analysis, document import), synthesis (brand DNA, guardrail generation), generation (single images, creative packages, headshot scenes, video via Veo 3), brand setup, reference collections, camera presets, prompt library, and session management. Tool calls chain — `generate_headshot_scene` auto-feeds into `generate_creative_package` when a headshot is in context.
 
-**Infrastructure.** Supabase (PostgreSQL, Auth, Edge Functions, Storage, Realtime) handles the data layer, brand intelligence pipeline, and file storage. Cloud Run serves the React frontend. 21 Deno Edge Functions handle all AI operations. A Chrome Extension (Manifest V3) adds Vince's voice and chat to any browser tab via a side panel.
+**Infrastructure.** Supabase (PostgreSQL, Auth, Edge Functions, Storage, Realtime) handles the data layer, brand intelligence pipeline, and file storage. Cloud Run serves the React frontend. 19 Deno Edge Functions handle all AI operations. A Chrome Extension (Manifest V3) adds Vince's voice and chat to any browser tab via a side panel.
 
 ### Challenges
 
@@ -90,7 +90,9 @@ Voice-first is fundamentally different from chat-first. When you design for voic
 
 Brand intelligence is the actual product. Any tool can generate images from prompts. The value is in what wraps every generation — visual identity rules, photography standards, tone constraints, compliance guardrails, all retrieved automatically, all applied invisibly. The pipeline that builds that context is where the work is.
 
-I'm not a developer. I built this with Claude as my engineering partner. What I learned about Gemini — the constraints, the architecture patterns, the WebSocket edge cases — I learned by building this. That's the capability shift that matters: people who understand the problem deeply can now build the solution directly.
+I'm not a developer. The Google AI ecosystem is what enabled me to build this — and that distinction matters. The code was the last step, not the first. I take walks and brain-dump into Gemini for 30 minutes at a time — raw thinking about architecture and problems. Those ideas go into NotebookLM alongside the Gemini API docs and code lab notebooks for synthesis — then I take that output and build a Gemini Gem: a persistent knowledge base I can keep querying and extending as the project evolves. Gemini Deep Research validated architectural decisions against the full LLM landscape before any implementation. Connecting my GitHub repo to Gemini and chatting with my own codebase — while walking — let me ask architecture questions against code that already existed. Canvas drafted content and UI narrative. Colab gave me working examples to run before integrating. Stitch turned screen concepts into real designs. AI Studio and Vertex AI Studio tested prompt patterns against actual model behavior. Jules was a thinking partner for architecture and best practices. Cloud Run hosts the whole thing.
+
+What I learned about Gemini — the multimodal constraints, the WebSocket session lifecycle, the two-model architecture — I learned by building this, using Google's tools to research and understand it first. That's the capability shift that matters: people who understand the problem deeply can now build the solution directly, with an ecosystem that covers every phase of the work.
 
 ### What's next
 

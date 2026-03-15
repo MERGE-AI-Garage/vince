@@ -36,6 +36,8 @@ import {
   Users,
   Clock,
   TrendingUp,
+  Copy,
+  ClipboardCheck,
 } from 'lucide-react';
 
 // ─── Brand palette ────────────────────────────────────────────────────────────
@@ -45,6 +47,15 @@ const ORANGE = '#F97316';
 const PURPLE = '#A78BFA';
 const TEAL = '#2DD4BF';
 const ROSE = '#F43F5E';
+
+// Muted glow colors — dark/desaturated versions for ambient section backgrounds.
+// Vivid brand colors look neon as blurs; these match the WelcomeScreen treatment.
+const GLOW_GREEN = '#0A5C28';
+const GLOW_BLUE = '#1A4A8A';
+const GLOW_ORANGE = '#6B3A0A';
+const GLOW_PURPLE = '#4A3A7A';
+const GLOW_TEAL = '#0D6B60';
+const GLOW_ROSE = '#6B1A2A';
 
 // ─── Fade-in section wrapper ──────────────────────────────────────────────────
 function Reveal({
@@ -96,6 +107,83 @@ function Badge({ icon: Icon, label, color }: { icon: React.ElementType; label: s
   );
 }
 
+// ─── Section glow blobs ───────────────────────────────────────────────────────
+// motion.div handles x/y drift; inner div uses CSS animate-pulse for opacity —
+// matching WelcomeScreen brand-page treatment exactly (same opacities, same pulse).
+function SectionGlow({ color }: { color: string }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <motion.div
+        className="absolute -top-1/4 -left-1/4 w-3/4 h-3/4"
+        animate={{ x: [0, 60, -35, 15, 0], y: [0, -35, 60, -20, 0] }}
+        transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <div
+          className="w-full h-full rounded-full opacity-[0.025] blur-3xl animate-pulse"
+          style={{ background: `radial-gradient(circle, ${color}, transparent)`, animationDuration: '6s' }}
+        />
+      </motion.div>
+      <motion.div
+        className="absolute -bottom-1/4 -right-1/4 w-3/4 h-3/4"
+        animate={{ x: [0, -45, 25, -15, 0], y: [0, 35, -45, 20, 0] }}
+        transition={{ duration: 34, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
+      >
+        <div
+          className="w-full h-full rounded-full opacity-[0.015] blur-3xl animate-pulse"
+          style={{ background: `radial-gradient(circle, ${color}, transparent)`, animationDuration: '8s', animationDelay: '2s' }}
+        />
+      </motion.div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5))]" />
+    </div>
+  );
+}
+
+// Hero glows — three drifting orbs, WelcomeScreen "no brand" opacities + movement.
+// Four-corner ambient blobs — one muted color per corner, slow drift + pulse.
+function HeroGlow() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Top-left — green */}
+      <motion.div
+        className="absolute -top-1/4 -left-1/4 w-2/3 h-2/3"
+        animate={{ x: [0, 35, -20, 10, 0], y: [0, -20, 35, -10, 0] }}
+        transition={{ duration: 32, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <div className="w-full h-full rounded-full opacity-[0.05] blur-3xl animate-pulse"
+          style={{ background: `radial-gradient(circle, ${GLOW_GREEN}, transparent)`, animationDuration: '8s' }} />
+      </motion.div>
+      {/* Top-right — orange */}
+      <motion.div
+        className="absolute -top-1/4 -right-1/4 w-2/3 h-2/3"
+        animate={{ x: [0, -30, 20, -10, 0], y: [0, -15, 30, -10, 0] }}
+        transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+      >
+        <div className="w-full h-full rounded-full opacity-[0.04] blur-3xl animate-pulse"
+          style={{ background: `radial-gradient(circle, ${GLOW_ORANGE}, transparent)`, animationDuration: '10s', animationDelay: '2s' }} />
+      </motion.div>
+      {/* Bottom-left — blue */}
+      <motion.div
+        className="absolute -bottom-1/4 -left-1/4 w-2/3 h-2/3"
+        animate={{ x: [0, 25, -35, 15, 0], y: [0, 30, -20, 10, 0] }}
+        transition={{ duration: 36, repeat: Infinity, ease: 'easeInOut', delay: 7 }}
+      >
+        <div className="w-full h-full rounded-full opacity-[0.04] blur-3xl animate-pulse"
+          style={{ background: `radial-gradient(circle, ${GLOW_BLUE}, transparent)`, animationDuration: '9s', animationDelay: '1s' }} />
+      </motion.div>
+      {/* Bottom-right — purple */}
+      <motion.div
+        className="absolute -bottom-1/4 -right-1/4 w-2/3 h-2/3"
+        animate={{ x: [0, -25, 15, -10, 0], y: [0, 25, -30, 10, 0] }}
+        transition={{ duration: 40, repeat: Infinity, ease: 'easeInOut', delay: 12 }}
+      >
+        <div className="w-full h-full rounded-full opacity-[0.04] blur-3xl animate-pulse"
+          style={{ background: `radial-gradient(circle, ${GLOW_PURPLE}, transparent)`, animationDuration: '11s', animationDelay: '3s' }} />
+      </motion.div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.4))]" />
+    </div>
+  );
+}
+
 // ─── Section header ───────────────────────────────────────────────────────────
 function SectionHeader({
   eyebrow,
@@ -130,22 +218,34 @@ const DEMO_BRIEFS = [
   {
     brand: 'MERGE',
     color: GREEN,
-    brief: 'Campaign package for the AI Enablement Summit — executive tone, thought leadership, all formats',
-    formats: ['Billboard 16:9', 'LinkedIn post', 'Email header'],
+    brief: "Full campaign package for the AI Enablement Summit. Executive tone, thought leadership angle. I need everything — all formats, ready to go.",
+    deliverables: [
+      { label: 'Billboard', ratio: '16:9' },
+      { label: 'LinkedIn post', ratio: '1:1' },
+      { label: 'Email header', ratio: '3:1' },
+    ],
     category: 'Campaign',
   },
   {
     brand: 'Google',
     color: BLUE,
-    brief: 'Beat this ad — paste Workspace competitor URL, give me 3 counter directions for Q2 push',
-    formats: ['Scene analysis', '3 counter briefs', 'Creative directions'],
+    brief: "Microsoft just dropped a new Surface Pro ad targeting our Q2 audience. Analyze it and give me three counter-campaign directions grounded in our positioning.",
+    deliverables: [
+      { label: 'Scene analysis', ratio: null as string | null },
+      { label: 'Counter brief ×3', ratio: null as string | null },
+      { label: 'Creative directions', ratio: null as string | null },
+    ],
     category: 'Beat This Ad',
   },
   {
     brand: 'MERGE',
     color: PURPLE,
-    brief: 'Brand refresh launch — hero imagery, social suite, OOH transit, copy that lands the repositioning',
-    formats: ['Hero 16:9', 'Story 9:16', 'OOH transit'],
+    brief: "Brand refresh launch — I need hero imagery, a full social suite, OOH transit, and copy that lands the repositioning. All formats.",
+    deliverables: [
+      { label: 'Hero banner', ratio: '16:9' },
+      { label: 'Story', ratio: '9:16' },
+      { label: 'OOH transit', ratio: '2:1' },
+    ],
     category: 'Brand Launch',
   },
 ];
@@ -274,24 +374,37 @@ function DirectorBriefHero() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="rounded-xl border p-3 space-y-2"
+              className="rounded-xl border p-3"
               style={{ borderColor: `${scenario.color}30`, backgroundColor: `${scenario.color}08` }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="w-3.5 h-3.5" style={{ color: scenario.color }} />
                 <span className="text-xs font-semibold" style={{ color: scenario.color }}>
-                  Package ready — {scenario.formats.length} deliverables
+                  Package ready — {scenario.deliverables.length} deliverables
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {scenario.formats.map((f) => (
-                  <span
-                    key={f}
-                    className="text-[10px] px-2 py-0.5 rounded-full border"
-                    style={{ borderColor: `${scenario.color}40`, color: `${scenario.color}CC` }}
+              <div className="grid grid-cols-3 gap-2">
+                {scenario.deliverables.map((d, i) => (
+                  <motion.div
+                    key={d.label}
+                    initial={{ opacity: 0, scale: 0.88 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.1, type: 'spring', stiffness: 350, damping: 22 }}
+                    className="rounded-lg border p-2 flex flex-col items-center gap-1.5"
+                    style={{ borderColor: `${scenario.color}25`, backgroundColor: `${scenario.color}10` }}
                   >
-                    {f}
-                  </span>
+                    <div
+                      className="w-full flex items-center justify-center rounded py-1.5"
+                      style={{ backgroundColor: `${scenario.color}18` }}
+                    >
+                      {d.ratio ? (
+                        <span className="font-mono text-[9px] font-bold" style={{ color: scenario.color }}>{d.ratio}</span>
+                      ) : (
+                        <CheckCircle2 className="w-3 h-3" style={{ color: scenario.color }} />
+                      )}
+                    </div>
+                    <span className="text-[9px] text-white/50 text-center leading-tight">{d.label}</span>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
@@ -318,6 +431,7 @@ function ProblemSection() {
   return (
     <section ref={ref} className="relative py-32 overflow-hidden bg-[#0A0A0F]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_60%,_rgba(239,68,68,0.04)_0%,_transparent_60%)]" />
+      <SectionGlow color={GLOW_ROSE} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         <Reveal className="flex items-center gap-3 mb-16">
@@ -326,7 +440,7 @@ function ProblemSection() {
         </Reveal>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          {/* Left: stat */}
+          {/* Left: stat + 50 interpretations card */}
           <Reveal>
             <div
               className="font-black leading-none mb-6"
@@ -340,12 +454,40 @@ function ProblemSection() {
             >
               60%
             </div>
-            <p className="text-lg text-white/50 leading-relaxed max-w-sm">
+            <p className="text-lg text-white/50 leading-relaxed max-w-sm mb-8">
               of marketing materials don't conform to brand guidelines today. That's with humans trying their best — before AI entered the workflow.
             </p>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.4 }}
+              className="rounded-2xl border border-red-500/15 bg-red-500/[0.04] p-5"
+            >
+              <div className="flex items-baseline gap-3 mb-2">
+                <span
+                  className="text-6xl font-black leading-none tracking-tight"
+                  style={{
+                    background: 'linear-gradient(135deg, #EF4444 0%, #F97316 60%, #F59E0B 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  50
+                </span>
+                <span className="text-xl font-bold text-white/70 leading-tight">
+                  interpretations<br />of your brand.
+                </span>
+              </div>
+              <p className="text-sm text-white/40 leading-relaxed mt-3">
+                Ten people. Five AI tools. One brief.{' '}
+                <span className="text-white/75 font-semibold">None of them right.</span>{' '}
+                All of them close enough that someone might use them anyway.
+              </p>
+            </motion.div>
           </Reveal>
 
-          {/* Right: explanation */}
+          {/* Right: explanation + table */}
           <Reveal delay={0.15}>
             <h2 className="text-4xl md:text-5xl font-black text-white mb-5 leading-[1.1] tracking-tight">
               Add AI.
@@ -356,7 +498,7 @@ function ProblemSection() {
               At every agency right now, people are using Gemini, Firefly, Claude, and a dozen other tools to generate content. Each person grabs whatever brand context they can find — a hex code from memory, a paragraph from the brand guide, a screenshot from the client's site — and pastes it into a prompt.
             </p>
 
-            <div className="rounded-2xl border border-white/[0.07] overflow-hidden mb-6">
+            <div className="rounded-2xl border border-white/[0.07] overflow-hidden">
               <div className="px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-white/35">
                   5 people · 5 tools · 1 campaign brief · 5 different results
@@ -376,15 +518,6 @@ function ProblemSection() {
                 </motion.div>
               ))}
             </div>
-
-            <motion.p
-              className="text-sm text-white/35 leading-relaxed"
-              initial={{ opacity: 0 }}
-              animate={inView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.8 }}
-            >
-              Ten people prompting five different AI tools means fifty interpretations of your brand. None of them right. All of them close enough that someone might use them anyway.
-            </motion.p>
           </Reveal>
         </div>
       </div>
@@ -396,17 +529,7 @@ function ProblemSection() {
 function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-[#050508]">
-      {/* Background glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px] opacity-20"
-          style={{ background: `radial-gradient(circle, ${GREEN}, transparent)` }}
-        />
-        <div
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px] opacity-15"
-          style={{ background: `radial-gradient(circle, ${BLUE}, transparent)` }}
-        />
-      </div>
+      <HeroGlow />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-24 grid md:grid-cols-2 gap-16 items-center">
         {/* Left: copy */}
@@ -417,7 +540,7 @@ function HeroSection() {
               style={{ borderColor: `${GREEN}40`, color: GREEN, backgroundColor: `${GREEN}10` }}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Brand-Native AI · Google Gemini Live API Hackathon
+              Brand-Native AI
             </div>
           </Reveal>
 
@@ -472,26 +595,43 @@ function HeroSection() {
 }
 
 // ─── Brand Intelligence Section ───────────────────────────────────────────────
-const DNA_LAYERS = [
-  { icon: FileText, label: 'Brand DNA', color: GREEN, desc: 'Voice, values, personality — the brand\'s foundational identity' },
-  { icon: BrainCircuit, label: 'Agent Directives', color: BLUE, desc: 'How Vince thinks about your brand — rules, guardrails, style' },
-  { icon: Sparkles, label: 'Generation Prompt', color: ORANGE, desc: 'Synthesized prompt that shapes every creative output' },
-  { icon: Zap, label: 'Quick Starters', color: PURPLE, desc: 'Ready-to-brief campaign scenarios tailored to the brand' },
-  { icon: Image, label: 'Output Control', color: TEAL, desc: 'Visual style, color system, aspect ratios, photography direction' },
+const IMPORT_SOURCES = [
+  { icon: Globe, label: 'Website URL', note: 'Scraped automatically', color: BLUE, auto: true },
+  { icon: FileText, label: 'Brand Style Guide', note: 'PDF', color: GREEN },
+  { icon: Package, label: 'Product Catalog', note: 'PDF / CSV', color: ORANGE },
+  { icon: Camera, label: 'Photography References', note: 'JPG / PNG', color: TEAL },
+  { icon: Image, label: 'Logo Package', note: 'SVG / PNG', color: PURPLE },
+  { icon: BarChart2, label: 'Annual Report', note: 'PDF', color: BLUE },
+  { icon: Video, label: 'Brand Video', note: 'MP4', color: ROSE },
+  { icon: MonitorPlay, label: 'Competitive Examples', note: 'URL / file', color: ORANGE },
+];
+
+const INTELLIGENCE_OUTPUTS = [
+  { icon: Dna, label: 'Brand DNA', note: 'Voice, values, personality', color: GREEN },
+  { icon: Camera, label: 'Photography Direction', note: 'f/2.8 · 5600K · editorial', color: TEAL },
+  { icon: Sparkles, label: 'Art Direction', note: 'Composition rules, hero angles', color: BLUE },
+  { icon: Image, label: 'Color Palette', note: 'Primary, secondary, semantic', color: PURPLE },
+  { icon: BrainCircuit, label: 'Agent Directives', note: '12 behavioral rules', color: ORANGE },
+  { icon: FileText, label: 'Generation Prompts', note: 'Master prompt, auto-injected', color: GREEN },
+  { icon: Zap, label: 'Quick Starters', note: '6 ready campaign briefs', color: TEAL },
+  { icon: Database, label: 'Visual Reference Library', note: 'Logos + approved images indexed', color: BLUE },
 ];
 
 function BrandIntelligenceSection() {
-  const [active, setActive] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: false, margin: '-80px' });
+  const inView = useInView(ref, { once: false, margin: '-60px' });
+  const [revealed, setRevealed] = useState(0);
+  const total = IMPORT_SOURCES.length + INTELLIGENCE_OUTPUTS.length;
 
   useEffect(() => {
-    if (!inView) return;
-    const interval = setInterval(() => {
-      setActive((a) => (a + 1) % DNA_LAYERS.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [inView]);
+    if (!inView) {
+      setRevealed(0);
+      return;
+    }
+    if (revealed >= total) return;
+    const t = setTimeout(() => setRevealed((r) => r + 1), 160);
+    return () => clearTimeout(t);
+  }, [inView, revealed, total]);
 
   return (
     <section id="brand-intelligence" ref={ref} className="relative py-32 bg-[#080A0F] overflow-hidden">
@@ -499,9 +639,10 @@ function BrandIntelligenceSection() {
         className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${BLUE}, transparent)` }}
       />
+      <SectionGlow color={GLOW_BLUE} />
 
       <div className="max-w-7xl mx-auto px-6">
-        <Reveal className="mb-20">
+        <Reveal className="mb-16">
           <SectionHeader
             eyebrow="Brand Intelligence"
             eyebrowColor={BLUE}
@@ -512,95 +653,116 @@ function BrandIntelligenceSection() {
                 <span style={{ color: BLUE }}>Brief forever.</span>
               </>
             }
-            sub="Tell Vince about your brand once. He synthesizes it into a living knowledge stack that governs every generation — voice, visual, composition, guardrails — automatically."
+            sub="Tell Vince your brand and he'll scrape your website, build the Brand DNA, and start briefing immediately. Then keep feeding it — style guides, catalogs, photography, logos, annual reports. The more context you give it, the deeper the intelligence."
           />
         </Reveal>
 
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Layer list */}
-          <div className="space-y-3">
-            {DNA_LAYERS.map((layer, i) => (
-              <Reveal key={layer.label} delay={i * 0.08}>
-                <button
-                  onClick={() => setActive(i)}
-                  className="w-full text-left flex items-start gap-4 p-4 rounded-2xl border transition-all duration-300"
-                  style={{
-                    borderColor: active === i ? `${layer.color}50` : 'transparent',
-                    backgroundColor: active === i ? `${layer.color}10` : 'rgba(255,255,255,0.03)',
-                  }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${layer.color}20`, color: layer.color }}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_64px_1fr] gap-4 items-start">
+          {/* Inputs panel */}
+          <div className="rounded-2xl bg-[#111318] border border-white/[0.08] overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">What you bring</p>
+            </div>
+            <div className="p-3 space-y-1.5">
+              {IMPORT_SOURCES.map((src, i) => {
+                const visible = revealed > i;
+                return (
+                  <motion.div
+                    key={src.label}
+                    animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : -10 }}
+                    transition={{ duration: 0.35 }}
+                    className="flex items-center gap-3 p-2.5 rounded-xl"
+                    style={{ backgroundColor: visible ? `${src.color}08` : 'transparent' }}
                   >
-                    <layer.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white text-sm mb-1">{layer.label}</p>
-                    <p className="text-xs text-white/40 leading-relaxed">{layer.desc}</p>
-                  </div>
-                  {active === i && <ArrowRight className="w-4 h-4 ml-auto shrink-0 mt-1" style={{ color: layer.color }} />}
-                </button>
-              </Reveal>
-            ))}
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${src.color}18`, color: visible ? src.color : '#444' }}
+                    >
+                      <src.icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-white/80 leading-none mb-0.5">{src.label}</p>
+                      <p className="font-mono text-[10px] text-white/30">{src.note}</p>
+                    </div>
+                    {src.auto && visible && (
+                      <span
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                        style={{ backgroundColor: `${BLUE}20`, color: BLUE }}
+                      >
+                        AUTO
+                      </span>
+                    )}
+                    {!src.auto && visible && (
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color: src.color }} />
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Visual: pipeline */}
-          <Reveal delay={0.3}>
-            <div className="rounded-2xl bg-[#111318] border border-white/10 p-6 space-y-4">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: BLUE }} />
-                <span className="text-xs text-white/40 font-mono">brand_intelligence.knowledge_stack</span>
-              </div>
+          {/* Synthesis column */}
+          <div className="flex flex-row md:flex-col items-center justify-center gap-3 py-4 md:py-12">
+            {revealed < total ? (
+              <motion.div
+                className="w-8 h-8 rounded-full border-2"
+                style={{ borderColor: BLUE, borderTopColor: 'transparent' }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
+              />
+            ) : (
+              <CheckCircle2 className="w-8 h-8" style={{ color: BLUE }} />
+            )}
+            <ArrowRight className="w-4 h-4 text-white/15 md:rotate-90" />
+            <p className="font-mono text-[9px] text-white/20 text-center leading-relaxed">
+              pgvector{'\n'}HNSW
+            </p>
+          </div>
 
-              {DNA_LAYERS.map((layer, i) => (
-                <motion.div
-                  key={layer.label}
-                  animate={{ opacity: i <= active ? 1 : 0.3, x: i <= active ? 0 : 10 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex items-center gap-3"
-                >
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{
-                      backgroundColor: i <= active ? `${layer.color}20` : 'rgba(255,255,255,0.05)',
-                      color: i <= active ? layer.color : '#555',
-                    }}
-                  >
-                    <layer.icon className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: layer.color }}
-                      animate={{ width: i <= active ? '100%' : '0%' }}
-                      transition={{ duration: 0.5, delay: i * 0.1 }}
-                    />
-                  </div>
-                  <span
-                    className="text-xs font-medium w-32 text-right"
-                    style={{ color: i <= active ? layer.color : '#444' }}
-                  >
-                    {layer.label}
-                  </span>
-                </motion.div>
-              ))}
-
-              <div className="mt-6 pt-4 border-t border-white/10">
-                <div
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-                  style={{ backgroundColor: `${DNA_LAYERS[active].color}15`, color: DNA_LAYERS[active].color }}
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  {DNA_LAYERS[active].label} active — injected into every output
-                </div>
-              </div>
+          {/* Outputs panel */}
+          <div className="rounded-2xl bg-[#111318] border border-white/[0.08] overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">What Vince creates</p>
             </div>
-          </Reveal>
+            <div className="p-3 space-y-1.5">
+              {INTELLIGENCE_OUTPUTS.map((out, i) => {
+                const visible = revealed > IMPORT_SOURCES.length + i;
+                return (
+                  <motion.div
+                    key={out.label}
+                    animate={{ opacity: visible ? 1 : 0, x: visible ? 0 : 10 }}
+                    transition={{ duration: 0.35 }}
+                    className="flex items-center gap-3 p-2.5 rounded-xl"
+                    style={{ backgroundColor: visible ? `${out.color}08` : 'transparent' }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${out.color}18`, color: visible ? out.color : '#444' }}
+                    >
+                      <out.icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-white/80 leading-none mb-0.5">{out.label}</p>
+                      <p className="font-mono text-[10px] text-white/30">{out.note}</p>
+                    </div>
+                    {visible && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color: out.color }} />
+                      </motion.div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* pgvector callout */}
-        <Reveal delay={0.2} className="mt-16">
+        <Reveal delay={0.2} className="mt-10">
           <div className="rounded-2xl bg-gradient-to-r from-blue-950/40 to-blue-900/20 border border-blue-500/20 p-6 flex items-center gap-6">
             <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
               <Database className="w-6 h-6 text-blue-400" />
@@ -652,10 +814,7 @@ function CreativeDirectorSection() {
         className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${GREEN}, transparent)` }}
       />
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[160px] opacity-10 pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${GREEN}, transparent)` }}
-      />
+      <SectionGlow color={GLOW_GREEN} />
 
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-16 items-center">
@@ -814,7 +973,7 @@ function DirectorModeSection() {
     <section className="relative py-32 bg-[#080A0F] overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${PURPLE}, transparent)` }} />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(139,92,246,0.07)_0%,_transparent_60%)]" />
+      <SectionGlow color={GLOW_PURPLE} />
 
       <div className="max-w-7xl mx-auto px-6">
         <Reveal className="mb-20">
@@ -1069,6 +1228,7 @@ function BeatThisAdSection() {
         className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${ORANGE}, transparent)` }}
       />
+      <SectionGlow color={GLOW_ORANGE} />
 
       <div className="max-w-7xl mx-auto px-6">
         <Reveal className="mb-20 text-center">
@@ -1093,7 +1253,7 @@ function BeatThisAdSection() {
             {/* Video player mockup */}
             <div className="rounded-2xl bg-[#0D0F14] border border-white/10 overflow-hidden">
               {/* Player body */}
-              <div className="relative h-32 bg-[#090B10] flex items-center justify-center overflow-hidden">
+              <div className="relative h-72 bg-[#090B10] flex items-center justify-center overflow-hidden">
                 {/* Brand watermark */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 select-none pointer-events-none">
                   <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-black/40 border border-white/[0.06]">
@@ -1319,6 +1479,7 @@ function CampaignPackagesSection() {
         className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${PURPLE}, transparent)` }}
       />
+      <SectionGlow color={GLOW_PURPLE} />
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           {/* Copy */}
@@ -1456,49 +1617,133 @@ function CampaignPackagesSection() {
   );
 }
 
-// ─── Chrome Extension Section ─────────────────────────────────────────────────
-function ChromeExtensionSection() {
-
+// ─── Available Everywhere Section ─────────────────────────────────────────────
+function AvailableEverywhereSection() {
   return (
-    <section id="chrome-extension" className="relative py-32 bg-[#080A0F] overflow-hidden">
+    <section id="platforms" className="relative py-32 bg-[#080A0F] overflow-hidden">
       <div
         className="absolute top-0 left-0 w-full h-1"
-        style={{ background: `linear-gradient(90deg, transparent, ${TEAL}, transparent)` }}
+        style={{ background: `linear-gradient(90deg, transparent, ${TEAL}, ${PURPLE}, transparent)` }}
       />
+      <SectionGlow color={GLOW_TEAL} />
 
       <div className="max-w-7xl mx-auto px-6">
-        <Reveal className="mb-20">
-          <div className="text-center mb-3">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.05] border border-white/[0.08]">
-              {/* Chrome logo */}
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
-                <circle cx="12" cy="12" r="10" fill="#4285F4" />
-                <circle cx="12" cy="12" r="4" fill="white" />
-                <path d="M12 8h10a10 10 0 0 0-10-6V8z" fill="#EA4335" />
-                <path d="M12 8H2a10 10 0 0 0 5 8.66L12 8z" fill="#FBBC04" />
-                <path d="M12 16a4 4 0 0 1-3.46-2L3 22a10 10 0 0 0 18 0l-5.54-8A4 4 0 0 1 12 16z" fill="#34A853" />
-              </svg>
-              <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: TEAL }}>Chrome Extension</span>
-            </div>
-          </div>
+        <Reveal className="mb-16">
           <SectionHeader
             eyebrowColor={TEAL}
             headline={
               <>
-                Vince lives in
+                Available
                 <br />
-                <span style={{ color: TEAL }}>your browser.</span>
+                <span style={{ color: TEAL }}>everywhere.</span>
               </>
             }
-            sub="One-click access to the Creative Director from any tab. Brief campaigns, generate images, and query brand standards without switching context."
+            sub="Three surfaces. One Creative Director. Your brand built in across browser, iOS, and Android."
           />
         </Reveal>
 
-        {/* Full-width browser mockup */}
-        <Reveal className="mb-16">
-          <VinceBrowserMockup />
+        {/* Browser + phone mockups side by side */}
+        <Reveal className="mb-12">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Browser mockup */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-4 text-center" style={{ color: TEAL }}>Chrome Extension</p>
+              <VinceBrowserMockup />
+            </div>
+
+            {/* Phone mockup */}
+            <div className="flex flex-col items-center">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-4 text-center" style={{ color: PURPLE }}>iOS + Android</p>
+              <div className="relative">
+                <div className="w-56 h-[480px] rounded-[2.5rem] bg-[#1C1C1E] border-2 border-white/20 shadow-2xl overflow-hidden relative">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-black rounded-b-2xl z-10" />
+                  <div className="absolute inset-0 pt-8 px-4 pb-6 flex flex-col">
+                    <div className="flex items-center justify-between mb-4 mt-2">
+                      <p className="text-xs font-semibold text-white">Vince</p>
+                      <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: GREEN }} />
+                    </div>
+                    <div className="flex-1 space-y-3 overflow-hidden">
+                      <div className="flex justify-end">
+                        <div className="bg-blue-600 rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%]">
+                          <p className="text-[10px] text-white">Build me a LinkedIn campaign for the summit</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-start">
+                        <div className="bg-[#2C2C2E] rounded-2xl rounded-tl-sm px-3 py-2 max-w-[85%]">
+                          <p className="text-[10px] text-white/80">On it — pulling MERGE brand context…</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-start">
+                        <div
+                          className="rounded-2xl rounded-tl-sm p-2 max-w-[85%] border"
+                          style={{ borderColor: `${GREEN}30`, backgroundColor: `${GREEN}10` }}
+                        >
+                          <div className="w-full h-20 rounded-xl bg-gradient-to-br from-green-900/50 to-green-700/30 mb-2 flex items-center justify-center">
+                            <Image className="w-6 h-6 text-green-400/50" />
+                          </div>
+                          <p className="text-[9px]" style={{ color: GREEN }}>
+                            LinkedIn post · 1:1 · Copy + image
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 bg-[#2C2C2E] rounded-full px-3 py-2">
+                      <Mic className="w-3.5 h-3.5" style={{ color: GREEN }} />
+                      <div className="flex-1 flex gap-0.5 items-center">
+                        {[2, 4, 3, 5, 2, 4, 3].map((h, i) => (
+                          <motion.div
+                            key={i}
+                            className="w-0.5 rounded-full"
+                            style={{ backgroundColor: GREEN }}
+                            animate={{ height: [h, h * 2.5, h] }}
+                            transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                </div>
+              </div>
+
+              </div>
+            </div>
+          </div>
         </Reveal>
 
+        {/* Download CTAs */}
+        <Reveal delay={0.15} className="mb-12">
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="#"
+              className="flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all hover:opacity-90"
+              style={{ backgroundColor: TEAL, color: '#000' }}
+            >
+              <Chrome className="w-4 h-4" />
+              Add to Chrome
+            </a>
+            <a
+              href="#"
+              className="flex items-center gap-2 px-6 py-3 rounded-full border font-semibold text-sm transition-all hover:bg-white/10"
+              style={{ borderColor: `${PURPLE}50`, color: PURPLE }}
+            >
+              <svg viewBox="0 0 14 17" className="w-3.5 h-4 fill-current" aria-hidden>
+                <path d="M13.2 8.7c0-2.7 2.2-4 2.3-4.1-1.2-1.8-3.1-2-3.8-2.1-1.6-.2-3.2 1-4 1s-2.1-1-3.5-.9C2.6 3.7 1 4.7.3 6.2-1.2 9.4.1 14.1 1.6 16.8c.7 1.3 1.6 2.8 2.8 2.7 1.1-.1 1.5-.7 2.9-.7s1.7.7 2.9.7c1.2 0 2-1.3 2.7-2.6.9-1.5 1.2-2.9 1.2-3C14 13.9 13.2 11.8 13.2 8.7zM10.5 1.7C11.1.9 11.5-.1 11.3-1c-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.8-.9 2.8.9.1 1.9-.5 2.7-1.5z" />
+              </svg>
+              App Store
+            </a>
+            <a
+              href="#"
+              className="flex items-center gap-2 px-6 py-3 rounded-full border font-semibold text-sm transition-all hover:bg-white/10"
+              style={{ borderColor: `${GREEN}50`, color: GREEN }}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden>
+                <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5S11 23.33 11 22.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A5.84 5.84 0 0 0 12 1.5c-.96 0-1.86.23-2.66.63L7.88.65c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C7.15 3.53 6 5.47 6 7.5h12c0-2.03-1.15-3.97-2.47-5.34zM10 5.5H9v-1h1v1zm5 0h-1v-1h1v1z" />
+              </svg>
+              Google Play
+            </a>
+          </div>
+        </Reveal>
+
+        {/* Feature grid */}
         <Reveal delay={0.2}>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -1506,13 +1751,13 @@ function ChromeExtensionSection() {
                 icon: Zap,
                 color: TEAL,
                 title: 'Brand Quick Starters',
-                desc: 'Every brand gets its own set of pre-briefed starting points — configured in the studio, available in the extension.',
+                desc: 'Every brand gets its own pre-briefed starting points — available in the extension and on mobile.',
               },
               {
                 icon: Bot,
                 color: GREEN,
-                title: 'Full Creative Director access',
-                desc: 'The same 26-tool voice session available in the studio, in a side panel. Works on any tab.',
+                title: 'Full Creative Director',
+                desc: 'The same 26-tool voice session from the studio, in a browser side panel or your phone.',
               },
               {
                 icon: Globe,
@@ -1521,10 +1766,10 @@ function ChromeExtensionSection() {
                 desc: "Vince can see the page you're on. Reference competitor sites, LinkedIn posts, or briefs directly.",
               },
               {
-                icon: Chrome,
+                icon: Mic,
                 color: PURPLE,
-                title: 'One-click install',
-                desc: 'Packaged as a Chrome extension. No separate login — same auth as the studio.',
+                title: 'Voice on the go',
+                desc: 'Full Gemini Live voice session on mobile. Brief campaigns from a cab, lobby, or coffee shop.',
               },
             ].map(({ icon: Icon, color, title, desc }) => (
               <div key={title} className="flex items-start gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
@@ -1542,151 +1787,6 @@ function ChromeExtensionSection() {
             ))}
           </div>
         </Reveal>
-      </div>
-    </section>
-  );
-}
-
-// ─── Mobile Apps Section ──────────────────────────────────────────────────────
-function MobileAppsSection() {
-  return (
-    <section id="mobile" className="relative py-32 bg-[#050508] overflow-hidden">
-      <div
-        className="absolute top-0 left-0 w-full h-1"
-        style={{ background: `linear-gradient(90deg, transparent, ${PURPLE}, transparent)` }}
-      />
-      <div
-        className="absolute top-1/2 right-0 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[120px] opacity-10 pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${PURPLE}, transparent)` }}
-      />
-
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          {/* Copy */}
-          <div>
-            <Reveal>
-              <SectionHeader
-                eyebrow="iOS & Android"
-                eyebrowColor={PURPLE}
-                headline={
-                  <>
-                    The Creative Director
-                    <br />
-                    <span style={{ color: PURPLE }}>in your pocket.</span>
-                  </>
-                }
-                sub="Full Vince experience on mobile — voice briefing, image generation, brand intelligence, and campaign packages. Capacitor-native on both platforms."
-                center={false}
-              />
-            </Reveal>
-
-            <Reveal delay={0.2} className="mt-10 space-y-4">
-              {[
-                { icon: Mic, color: PURPLE, label: 'Voice briefing', desc: 'Full Gemini Live voice session on mobile' },
-                { icon: Image, color: BLUE, label: 'Image generation', desc: 'Generate and preview campaign assets on-device' },
-                { icon: Dna, color: GREEN, label: 'Brand intelligence', desc: 'Full brand knowledge stack — works offline-capable' },
-                { icon: Smartphone, color: ORANGE, label: 'Capacitor native', desc: 'iOS and Android from a single React codebase' },
-              ].map(({ icon: Icon, color, label, desc }) => (
-                <div key={label} className="flex items-center gap-4">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${color}20`, color }}
-                  >
-                    <Icon className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{label}</p>
-                    <p className="text-xs text-white/40">{desc}</p>
-                  </div>
-                </div>
-              ))}
-            </Reveal>
-          </div>
-
-          {/* Phone mockup */}
-          <Reveal delay={0.2} className="flex justify-center">
-            <div className="relative">
-              {/* Phone frame */}
-              <div className="w-56 h-[480px] rounded-[2.5rem] bg-[#1C1C1E] border-2 border-white/20 shadow-2xl overflow-hidden relative">
-                {/* Notch */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-black rounded-b-2xl z-10" />
-
-                {/* Screen */}
-                <div className="absolute inset-0 pt-8 px-4 pb-6 flex flex-col">
-                  <div className="flex items-center justify-between mb-4 mt-2">
-                    <p className="text-xs font-semibold text-white">Vince</p>
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: GREEN }} />
-                  </div>
-
-                  {/* Chat bubbles */}
-                  <div className="flex-1 space-y-3 overflow-hidden">
-                    <div className="flex justify-end">
-                      <div className="bg-blue-600 rounded-2xl rounded-tr-sm px-3 py-2 max-w-[80%]">
-                        <p className="text-[10px] text-white">Build me a LinkedIn campaign for the summit</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-start">
-                      <div className="bg-[#2C2C2E] rounded-2xl rounded-tl-sm px-3 py-2 max-w-[85%]">
-                        <p className="text-[10px] text-white/80">On it — pulling MERGE brand context…</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-start">
-                      <div
-                        className="rounded-2xl rounded-tl-sm p-2 max-w-[85%] border"
-                        style={{ borderColor: `${GREEN}30`, backgroundColor: `${GREEN}10` }}
-                      >
-                        <div className="w-full h-20 rounded-xl bg-gradient-to-br from-green-900/50 to-green-700/30 mb-2 flex items-center justify-center">
-                          <Image className="w-6 h-6 text-green-400/50" />
-                        </div>
-                        <p className="text-[9px]" style={{ color: GREEN }}>
-                          LinkedIn post · 1:1 · Copy + image
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Input */}
-                  <div className="flex items-center gap-2 bg-[#2C2C2E] rounded-full px-3 py-2">
-                    <Mic className="w-3.5 h-3.5" style={{ color: GREEN }} />
-                    <div className="flex-1 flex gap-0.5 items-center">
-                      {[2, 4, 3, 5, 2, 4, 3].map((h, i) => (
-                        <motion.div
-                          key={i}
-                          className="w-0.5 rounded-full"
-                          style={{ backgroundColor: GREEN }}
-                          animate={{ height: [h, h * 2.5, h] }}
-                          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating badges */}
-              <div
-                className="absolute -left-14 top-1/4 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium shadow-lg"
-                style={{ backgroundColor: '#111318', borderColor: `${BLUE}40`, color: BLUE }}
-              >
-                {/* Apple logo */}
-                <svg viewBox="0 0 14 17" className="w-3 h-3.5 fill-current" aria-hidden>
-                  <path d="M13.2 8.7c0-2.7 2.2-4 2.3-4.1-1.2-1.8-3.1-2-3.8-2.1-1.6-.2-3.2 1-4 1s-2.1-1-3.5-.9C2.6 3.7 1 4.7.3 6.2-1.2 9.4.1 14.1 1.6 16.8c.7 1.3 1.6 2.8 2.8 2.7 1.1-.1 1.5-.7 2.9-.7s1.7.7 2.9.7c1.2 0 2-1.3 2.7-2.6.9-1.5 1.2-2.9 1.2-3C14 13.9 13.2 11.8 13.2 8.7zM10.5 1.7C11.1.9 11.5-.1 11.3-1c-.9.1-2 .6-2.6 1.4-.6.7-1.1 1.8-.9 2.8.9.1 1.9-.5 2.7-1.5z" />
-                </svg>
-                iOS
-              </div>
-              <div
-                className="absolute -right-16 top-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium shadow-lg"
-                style={{ backgroundColor: '#111318', borderColor: `${GREEN}40`, color: GREEN }}
-              >
-                {/* Android robot */}
-                <svg viewBox="0 0 24 24" className="w-3 h-3 fill-current" aria-hidden>
-                  <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5S11 23.33 11 22.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A5.84 5.84 0 0 0 12 1.5c-.96 0-1.86.23-2.66.63L7.88.65c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C7.15 3.53 6 5.47 6 7.5h12c0-2.03-1.15-3.97-2.47-5.34zM10 5.5H9v-1h1v1zm5 0h-1v-1h1v1z" />
-                </svg>
-                Android
-              </div>
-            </div>
-          </Reveal>
-        </div>
       </div>
     </section>
   );
@@ -1766,96 +1866,176 @@ function RequestFlowDiagram() {
 }
 
 // ─── Browser Extension Mockup ─────────────────────────────────────────────────
-const EXT_CHAT = [
-  { role: 'user', text: 'Build me a counter-campaign for this post' },
-  { role: 'tool', text: 'Reading page context...' },
-  { role: 'vince', text: "Got it — I can see this is a Microsoft Surface ad targeting students. Pulling MERGE brand context now." },
-  { role: 'user', text: 'Go. All formats.' },
-  { role: 'vince', text: '3 counter directions ready. Generating LinkedIn, Billboard, and Story with copy + images.' },
+const EXT_QUICK_STARTERS = [
+  { label: 'Beat this ad', color: ORANGE, icon: BarChart2 },
+  { label: 'LinkedIn post', color: BLUE, icon: FileText },
+  { label: 'Campaign brief', color: GREEN, icon: Package },
+  { label: 'Brand audit', color: PURPLE, icon: Star },
 ];
 
+// The on-brand prompt Vince generates for "LinkedIn post"
+const PASTE_TEXT = 'Write a LinkedIn post for MERGE — executive tone, AI enablement angle, ≤200 words. Voice: direct, confident, no corporate jargon. Open with a sharp insight about how agencies are (mis)using AI. End with a clear POV, no CTA.';
+
+// phases: closed → quickstart → selected → prompt_ready → copied → pasting
+type ExtPhase = 'closed' | 'quickstart' | 'selected' | 'prompt_ready' | 'copied' | 'pasting';
+
 function VinceBrowserMockup() {
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [chatStep, setChatStep] = useState(0);
+  const [phase, setPhase] = useState<ExtPhase>('closed');
+  const [pasteChars, setPasteChars] = useState(0);
   const [cycle, setCycle] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
+  // Cycle reset
   useEffect(() => {
     if (!inView) return;
     const interval = setInterval(() => {
       setCycle((c) => c + 1);
-      setPanelOpen(false);
-      setChatStep(0);
-    }, 16000);
+      setPhase('closed');
+      setPasteChars(0);
+    }, 24000);
     return () => clearInterval(interval);
   }, [inView]);
 
+  // Phase timeline
   useEffect(() => {
     if (!inView) return;
     const timers = [
-      setTimeout(() => setPanelOpen(true), 800),
-      setTimeout(() => setChatStep(1), 2200),
-      setTimeout(() => setChatStep(2), 3600),
-      setTimeout(() => setChatStep(3), 5200),
-      setTimeout(() => setChatStep(4), 7000),
+      setTimeout(() => setPhase('quickstart'), 1000),   // panel opens, quick starters shown
+      setTimeout(() => setPhase('selected'), 3500),      // LinkedIn post button highlighted
+      setTimeout(() => setPhase('prompt_ready'), 5500),  // brand prompt appears in sidebar
+      setTimeout(() => setPhase('copied'), 9200),        // copy button flashes
+      setTimeout(() => setPhase('pasting'), 10400),      // types into Gemini input bar
     ];
     return () => timers.forEach(clearTimeout);
   }, [cycle, inView]);
 
+  // Typewriter effect into Gemini input
+  useEffect(() => {
+    if (phase !== 'pasting') { setPasteChars(0); return; }
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setPasteChars(i);
+      if (i >= PASTE_TEXT.length) clearInterval(interval);
+    }, 22);
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const panelOpen = phase !== 'closed';
+  const isPasting = phase === 'pasting';
+
   return (
-    <div ref={ref} className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#1A1A2E]">
+    <div ref={ref} className="w-full max-w-3xl mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-[#1C1C26]">
       {/* Browser chrome */}
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#12121C] border-b border-white/[0.06]">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#13131D] border-b border-white/[0.06]">
         <div className="flex gap-1.5">
           <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]/70" />
           <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]/70" />
           <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]/70" />
         </div>
-        <div className="flex-1 h-5 bg-white/[0.05] rounded-md px-3 flex items-center mx-4">
-          <span className="font-mono text-[9px] text-white/25">linkedin.com/feed · Microsoft Surface promoted post</span>
+        <div className="flex-1 h-6 bg-white/[0.05] rounded-md px-3 flex items-center gap-1.5 mx-4">
+          <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 shrink-0" fill="rgba(255,255,255,0.2)">
+            <path d="M9 5V3.5a3 3 0 0 0-6 0V5H2v6h8V5H9zm-4-1.5a1 1 0 0 1 2 0V5H5V3.5z" />
+          </svg>
+          <span className="font-mono text-[9px] text-white/25">gemini.google.com</span>
         </div>
-        {/* Extension icon in toolbar */}
         <motion.div
           className="w-6 h-6 rounded flex items-center justify-center cursor-pointer"
-          style={{ backgroundColor: panelOpen ? `${GREEN}25` : 'transparent' }}
-          animate={!panelOpen ? { scale: [1, 1.15, 1] } : {}}
-          transition={{ duration: 1.2, repeat: !panelOpen ? Infinity : 0 }}
-          onClick={() => setPanelOpen((p) => !p)}
+          style={{ backgroundColor: panelOpen ? `${GREEN}20` : 'transparent' }}
+          animate={!panelOpen ? { scale: [1, 1.2, 1] } : {}}
+          transition={{ duration: 1.4, repeat: !panelOpen ? Infinity : 0 }}
         >
-          <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill={panelOpen ? GREEN : 'rgba(255,255,255,0.35)'}>
+          <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill={panelOpen ? GREEN : 'rgba(255,255,255,0.3)'}>
             <rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.2" />
-            <rect x="9" y="1" width="6" height="14" rx="1" fill="currentColor" opacity="0.6" />
+            <rect x="9" y="1" width="6" height="14" rx="1" fill="currentColor" opacity="0.5" />
           </svg>
         </motion.div>
       </div>
 
       {/* Browser body */}
-      <div className="flex" style={{ height: 320 }}>
-        {/* Page content */}
-        <div className="flex-1 p-5 bg-[#0E0E1A] overflow-hidden">
-          <div className="space-y-3 opacity-50">
-            <div className="h-2.5 bg-white/[0.08] rounded w-2/3" />
-            <div className="h-2 bg-white/[0.05] rounded w-full" />
-            <div className="h-2 bg-white/[0.05] rounded w-5/6" />
-            <div className="h-28 bg-white/[0.04] rounded-lg mt-3 flex items-center justify-center">
-              <span className="text-[10px] text-white/20 font-mono">Microsoft Surface — promoted</span>
+      <div className="flex" style={{ height: 360 }}>
+        {/* Gemini page */}
+        <div className="flex-1 bg-[#1A1A28] overflow-hidden flex flex-col">
+          {/* Gemini nav */}
+          <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/[0.05]">
+            <div className="flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#4285F4" />
+              </svg>
+              <span className="text-[11px] font-semibold text-white/40">Gemini</span>
             </div>
-            <div className="h-2 bg-white/[0.04] rounded w-3/4" />
-            <div className="h-2 bg-white/[0.04] rounded w-1/2" />
+            <div className="flex gap-3 ml-4">
+              {['Explore', 'Gem manager'].map((t) => (
+                <span key={t} className="text-[9px] text-white/20">{t}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Chat area */}
+          <div className="flex-1 px-5 py-4 flex flex-col justify-between overflow-hidden">
+            <div className="space-y-3">
+              <div className="flex justify-end">
+                <div className="bg-white/[0.06] rounded-2xl rounded-tr-sm px-3 py-2 max-w-[70%]">
+                  <p className="text-[10px] text-white/50 leading-relaxed">What's the best hardware for a creative team on a budget?</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4285F4, #8B5CF6)' }}>
+                  <span className="text-[7px] font-bold text-white">G</span>
+                </div>
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-2 bg-white/[0.08] rounded w-full" />
+                  <div className="h-2 bg-white/[0.06] rounded w-5/6" />
+                  <div className="h-2 bg-white/[0.06] rounded w-4/5" />
+                  <div className="mt-2 p-2 bg-white/[0.04] rounded-lg border border-white/[0.05]">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-8 h-8 bg-white/[0.05] rounded-md" />
+                      <div className="space-y-1 flex-1">
+                        <div className="h-2 bg-white/[0.08] rounded w-2/3" />
+                        <div className="h-1.5 bg-white/[0.04] rounded w-1/2" />
+                      </div>
+                    </div>
+                    <div className="text-[8px] text-blue-400/50">Microsoft Surface Pro — featured result</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Input bar — typewriters the Vince prompt when pasting */}
+            <motion.div
+              className="mt-3 flex items-start gap-2 rounded-2xl px-4 py-3 border min-h-[36px]"
+              animate={{
+                borderColor: isPasting ? 'rgba(66,133,244,0.45)' : 'rgba(255,255,255,0.07)',
+                backgroundColor: isPasting ? 'rgba(66,133,244,0.06)' : 'rgba(255,255,255,0.04)',
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {isPasting ? (
+                <p className="text-[9px] text-blue-300/80 flex-1 font-mono leading-relaxed break-words">
+                  {PASTE_TEXT.slice(0, pasteChars)}
+                  <motion.span animate={{ opacity: [1, 0] }} transition={{ duration: 0.5, repeat: Infinity }}>|</motion.span>
+                </p>
+              ) : (
+                <>
+                  <span className="text-[9px] text-white/15 flex-1 self-center">Ask Gemini</span>
+                  <Mic className="w-3 h-3 text-white/15 shrink-0 self-center" />
+                </>
+              )}
+            </motion.div>
           </div>
         </div>
 
-        {/* Vince sidebar panel */}
+        {/* Vince sidebar */}
         <motion.div
-          className="bg-[#0A1A14] border-l border-white/[0.08] flex-shrink-0 overflow-hidden"
-          animate={{ width: panelOpen ? 220 : 0 }}
+          className="bg-[#0B1C14] border-l border-white/[0.08] flex-shrink-0 overflow-hidden"
+          animate={{ width: panelOpen ? 210 : 0 }}
           transition={{ duration: 0.4, ease: 'easeInOut' }}
         >
-          <div className="w-[220px] h-full flex flex-col">
+          <div className="w-[210px] h-full flex flex-col">
             {/* Panel header */}
             <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/[0.06]">
-              <div className="w-5 h-5 rounded-lg flex items-center justify-center text-[9px] font-black" style={{ backgroundColor: GREEN, color: '#000' }}>V</div>
+              <div className="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-black shrink-0" style={{ backgroundColor: GREEN, color: '#000' }}>V</div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-bold text-white/80">Vince</p>
                 <p className="text-[8px] text-white/30">Creative Director · MERGE</p>
@@ -1863,37 +2043,128 @@ function VinceBrowserMockup() {
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: GREEN }} />
             </div>
 
-            {/* Chat */}
-            <div className="flex-1 p-2.5 space-y-2 overflow-hidden">
-              {EXT_CHAT.slice(0, chatStep).map((msg, i) => (
-                <motion.div key={`${cycle}-${i}`} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-                  {msg.role === 'user' && (
-                    <div className="bg-white/[0.07] rounded-xl rounded-tr-sm px-2.5 py-1.5 ml-6">
-                      <p className="text-[9px] text-white/65 leading-relaxed">{msg.text}</p>
-                    </div>
-                  )}
-                  {msg.role === 'tool' && (
+            {/* Sidebar content */}
+            <div className="flex-1 overflow-hidden relative">
+
+              {/* Phase: quick starters */}
+              <AnimatePresence>
+                {(phase === 'quickstart' || phase === 'selected') && (
+                  <motion.div
+                    key="quickstart"
+                    className="absolute inset-0 p-2.5 flex flex-col gap-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, x: -8 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <p className="text-[9px] text-white/25 font-semibold uppercase tracking-widest px-1 mt-1">MERGE Quick Start</p>
+                    {EXT_QUICK_STARTERS.map((qs, i) => {
+                      const isSelected = phase === 'selected' && i === 1; // LinkedIn post
+                      return (
+                        <motion.div
+                          key={qs.label}
+                          className="flex items-center gap-2 px-2.5 py-2 rounded-lg border"
+                          style={{
+                            borderColor: isSelected ? `${qs.color}55` : `${qs.color}18`,
+                            backgroundColor: isSelected ? `${qs.color}15` : `${qs.color}07`,
+                          }}
+                          animate={isSelected ? { scale: [1, 0.97, 1] } : {}}
+                          transition={{ duration: 0.25 }}
+                        >
+                          <qs.icon className="w-3 h-3 shrink-0" style={{ color: qs.color }} />
+                          <span className="text-[10px] font-medium flex-1" style={{ color: isSelected ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)' }}>
+                            {qs.label}
+                          </span>
+                          {isSelected && (
+                            <motion.div
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: qs.color }}
+                              animate={{ opacity: [1, 0.2, 1] }}
+                              transition={{ duration: 0.45, repeat: Infinity }}
+                            />
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Phase: prompt ready + copy button */}
+              <AnimatePresence>
+                {(phase === 'prompt_ready' || phase === 'copied') && (
+                  <motion.div
+                    key="prompt"
+                    className="absolute inset-0 p-2.5 flex flex-col gap-2"
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                  >
                     <div className="flex items-center gap-1.5 px-1">
-                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                        <Sparkles className="w-2.5 h-2.5 text-orange-400" />
-                      </motion.div>
-                      <span className="font-mono text-[8px] text-orange-400/60">{msg.text}</span>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: BLUE }} />
+                      <p className="text-[9px] text-white/30 font-semibold uppercase tracking-widest">On-brand prompt</p>
                     </div>
-                  )}
-                  {msg.role === 'vince' && (
-                    <div className="rounded-xl rounded-tl-sm px-2.5 py-1.5 mr-4 border" style={{ backgroundColor: `${GREEN}08`, borderColor: `${GREEN}20` }}>
-                      <p className="text-[9px] leading-relaxed" style={{ color: `${GREEN}CC` }}>{msg.text}</p>
+                    <div
+                      className="flex-1 rounded-xl border p-2.5 text-[9px] font-mono leading-relaxed overflow-hidden"
+                      style={{ borderColor: `${BLUE}25`, backgroundColor: `${BLUE}07`, color: `${BLUE}BB` }}
+                    >
+                      {PASTE_TEXT}
                     </div>
-                  )}
-                </motion.div>
-              ))}
+                    <motion.button
+                      className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border text-[10px] font-semibold transition-all"
+                      animate={{
+                        borderColor: phase === 'copied' ? `${GREEN}50` : 'rgba(255,255,255,0.12)',
+                        backgroundColor: phase === 'copied' ? `${GREEN}20` : 'rgba(255,255,255,0.05)',
+                        color: phase === 'copied' ? GREEN : 'rgba(255,255,255,0.5)',
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {phase === 'copied'
+                        ? <><ClipboardCheck className="w-3 h-3" /> Copied to clipboard</>
+                        : <><Copy className="w-3 h-3" /> Copy prompt</>
+                      }
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Phase: pasting — show a "Paste it anywhere" confirmation */}
+              <AnimatePresence>
+                {phase === 'pasting' && (
+                  <motion.div
+                    key="pasting"
+                    className="absolute inset-0 p-2.5 flex flex-col items-center justify-center gap-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <motion.div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: `${GREEN}20` }}
+                      animate={{ scale: [1, 1.08, 1] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                    >
+                      <ClipboardCheck className="w-5 h-5" style={{ color: GREEN }} />
+                    </motion.div>
+                    <div className="text-center space-y-1">
+                      <p className="text-[10px] font-bold text-white/70">Pasting into Gemini</p>
+                      <p className="text-[9px] text-white/30 leading-relaxed">Brand-calibrated prompt,<br />any AI window.</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full border border-white/[0.08] bg-white/[0.03]">
+                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: BLUE }} />
+                      <span className="text-[8px] text-white/25 font-mono">site-agnostic</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Input */}
             <div className="p-2.5 border-t border-white/[0.06]">
-              <div className="flex items-center gap-1.5 bg-white/[0.05] rounded-lg px-2.5 py-1.5">
+              <div className="flex items-center gap-1.5 bg-white/[0.04] rounded-lg px-2.5 py-1.5">
                 <Mic className="w-3 h-3 shrink-0" style={{ color: GREEN }} />
-                <span className="text-[9px] text-white/20 flex-1">Brief Vince...</span>
+                <span className="text-[9px] text-white/20 flex-1">Or brief Vince by voice...</span>
               </div>
             </div>
           </div>
@@ -1918,9 +2189,8 @@ const TECH_STACK = [
     layer: 'Image & Video Generation',
     color: PURPLE,
     items: [
-      { icon: Image, label: 'Imagen 4 Standard', desc: 'Photorealistic image generation from synthesized brand prompts' },
-      { icon: Image, label: 'Imagen 4 Ultra', desc: 'Next-gen image quality with improved instruction following' },
-      { icon: Image, label: '🍌 Nano Banana Pro', desc: 'Ultra-fast low-cost image generation for rapid iteration and previews' },
+      { icon: Image, label: 'Imagen 4 Standard · Ultra', desc: 'Photorealistic brand image generation — Standard for speed, Ultra for maximum quality' },
+      { icon: Image, label: '🍌 Nano Banana 2 · Pro', desc: 'Ultra-fast low-cost generation for rapid iteration, previews, and high-volume output' },
       { icon: Video, label: 'Veo 3.1', desc: 'Video generation for motion creative, B-roll, and scene animation' },
     ],
   },
@@ -1949,6 +2219,7 @@ function TechSection() {
         className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${ROSE}, transparent)` }}
       />
+      <SectionGlow color={GLOW_ROSE} />
 
       <div className="max-w-7xl mx-auto px-6">
         <Reveal className="mb-20">
@@ -2007,35 +2278,119 @@ function TechSection() {
   );
 }
 
-// ─── Why Vince Wins Section ───────────────────────────────────────────────────
+// ─── Architecture Section ─────────────────────────────────────────────────────
+function VoiceVisual() {
+  return (
+    <div className="flex items-end gap-[3px] h-7 mt-3">
+      {([0.5, 0.85, 0.55, 1, 0.65, 0.9, 0.45, 0.75, 0.6] as const).map((h, i) => (
+        <motion.div
+          key={i}
+          className="w-[3px] rounded-full"
+          style={{ background: `${GREEN}55`, height: `${h * 26}px` }}
+          animate={{ scaleY: [1, 1.7, 1] }}
+          transition={{ duration: 0.45 + i * 0.06, repeat: Infinity, ease: 'easeInOut', delay: i * 0.07 }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DnaVisual() {
+  return (
+    <div className="flex gap-1.5 mt-3 flex-wrap" style={{ maxWidth: 120 }}>
+      {Array.from({ length: 15 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="w-1.5 h-1.5 rounded-full"
+          style={{ backgroundColor: BLUE }}
+          animate={{ opacity: [0.15, 0.85, 0.15] }}
+          transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.09, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PipelineVisual() {
+  return (
+    <div className="flex items-center gap-2 mt-3">
+      <div
+        className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold"
+        style={{ border: `1px solid ${TEAL}35`, color: TEAL, backgroundColor: `${TEAL}10` }}
+      >
+        Live
+      </div>
+      <div className="flex-1 flex items-center">
+        <motion.div
+          className="h-px w-full rounded-full"
+          style={{ background: `linear-gradient(90deg, ${TEAL}, transparent)` }}
+          animate={{ scaleX: [0, 1, 0], originX: 0 }}
+          transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
+      <div
+        className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold"
+        style={{ border: `1px solid ${TEAL}35`, color: TEAL, backgroundColor: `${TEAL}10` }}
+      >
+        Flash
+      </div>
+    </div>
+  );
+}
+
+function BrowserVisual() {
+  return (
+    <div className="mt-3 rounded-lg border overflow-hidden" style={{ borderColor: `${ORANGE}25`, maxWidth: 120 }}>
+      <div className="flex items-center gap-1 px-2 py-1 border-b" style={{ borderColor: `${ORANGE}15`, backgroundColor: `${ORANGE}08` }}>
+        {[1, 2, 3].map((k) => (
+          <div key={k} className="w-1.5 h-1.5 rounded-full bg-white/15" />
+        ))}
+      </div>
+      <div className="flex gap-1 p-1.5">
+        <div className="flex-1 h-8 rounded bg-white/[0.03]" />
+        <motion.div
+          className="w-6 h-8 rounded"
+          style={{ backgroundColor: `${ORANGE}15`, border: `1px solid ${ORANGE}35` }}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.8, repeat: Infinity }}
+        />
+      </div>
+    </div>
+  );
+}
+
 const DIFFERENTIATORS = [
   {
     color: GREEN,
     icon: Mic,
     title: 'Voice-first creative direction',
     tag: 'Category Differentiator',
-    desc: 'You speak your brief. Vince responds in real time, retrieves brand memory, builds the prompt, and directs the generation — all by voice. No keyboard. No prompt engineering. This UX exists nowhere else in creative AI.',
+    desc: 'You speak your brief. Vince responds in real time, retrieves brand memory, builds the prompt, and directs the generation — all by voice. No keyboard. No prompt engineering.',
+    Visual: VoiceVisual,
   },
   {
     color: BLUE,
     icon: Dna,
     title: 'Brand DNA as a retrieval layer',
     tag: 'Technical Foundation',
-    desc: "Brand intelligence isn't a static system prompt. It's a semantic retrieval layer — chunked, embedded, indexed with pgvector HNSW. When a brief arrives, the exact relevant context is retrieved automatically.",
+    desc: "Brand intelligence isn't a static system prompt. It's a semantic retrieval layer — chunked, embedded, indexed with pgvector HNSW. The exact relevant context is retrieved automatically at generation time.",
+    Visual: DnaVisual,
   },
   {
     color: TEAL,
     icon: Layers,
-    title: 'Two-model Gemini pipeline',
+    title: 'Dual Gemini model pipeline',
     tag: 'Novel Architecture',
-    desc: "Gemini Live owns the agent loop (voice, tools, conversation); Gemini Flash handles interleaved text+image generation in parallel. The Live session speaks while results render. Dead air eliminated by design.",
+    desc: "Gemini Live owns the agent loop — voice, tools, conversation. Gemini Flash handles interleaved text and image generation in parallel. The Live session speaks while results render. Dead air eliminated by design.",
+    Visual: PipelineVisual,
   },
   {
     color: ORANGE,
     icon: Globe,
-    title: 'Browser-level distribution',
+    title: 'Browser-level brand distribution',
     tag: 'Distribution Advantage',
-    desc: "Not an integration with specific AI tools — a browser-level layer. Gemini, Claude, Firefly, Midjourney, ChatGPT — Vince's brand sidebar is there on all of them. The brand travels with the prompt.",
+    desc: "Not a point integration — a browser layer. Gemini, Claude, Firefly, Midjourney, ChatGPT — the brand sidebar is present on all of them. The brand travels with the prompt.",
+    Visual: BrowserVisual,
   },
 ];
 
@@ -2046,19 +2401,20 @@ function WhySection() {
         className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${GREEN}, transparent)` }}
       />
+      <SectionGlow color={GLOW_GREEN} />
       <div className="max-w-7xl mx-auto px-6">
         <Reveal className="mb-20">
           <SectionHeader
-            eyebrow="Why Vince Wins"
+            eyebrow="Architecture"
             eyebrowColor={GREEN}
             headline={
               <>
-                Four things.
+                Four decisions.
                 <br />
-                <span style={{ color: GREEN }}>No one has all four.</span>
+                <span style={{ color: GREEN }}>Each one deliberate.</span>
               </>
             }
-            sub="The market is full of AI asset generators. What the market doesn't have: voice-first direction, brand DNA as a retrieval layer, a two-model Gemini pipeline, and a browser-level distribution mechanism — combined, in production."
+            sub="Voice-first input. Brand DNA as a retrieval layer. Dual Gemini models. Browser-level distribution. Four architectural choices — each one solving a specific problem in how AI tools handle brand context today."
           />
         </Reveal>
 
@@ -2083,10 +2439,11 @@ function WhySection() {
                     {d.tag}
                   </span>
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="text-lg font-bold text-white mb-2 leading-snug">{d.title}</h3>
                   <p className="text-sm text-white/45 leading-relaxed">{d.desc}</p>
                 </div>
+                <d.Visual />
               </div>
             </Reveal>
           ))}
@@ -2099,53 +2456,146 @@ function WhySection() {
 // ─── CTA Section ──────────────────────────────────────────────────────────────
 function CTASection() {
   return (
-    <section className="relative py-40 bg-[#080A0F] overflow-hidden">
+    <section className="relative py-48 bg-[#080A0F] overflow-hidden">
       <div
         className="absolute top-0 left-0 w-full h-1"
         style={{ background: `linear-gradient(90deg, transparent, ${GREEN}, transparent)` }}
       />
+      <SectionGlow color={GLOW_GREEN} />
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse 80% 50% at 50% 100%, ${GREEN}18, transparent)`,
-        }}
+        style={{ background: `radial-gradient(ellipse 70% 60% at 50% 110%, ${GREEN}0A, transparent)` }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse 35% 35% at 50% 85%, ${GREEN}05, transparent)` }}
       />
 
       <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+        {/* Eyebrow */}
         <Reveal>
-          <p className="text-xs font-bold tracking-[0.2em] uppercase mb-4" style={{ color: GREEN }}>
-            Vince · by MERGE
-          </p>
-          <h2 className="text-5xl md:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border" style={{ borderColor: `${GREEN}25`, backgroundColor: `${GREEN}08` }}>
+              <Users className="w-3 h-3" style={{ color: GREEN }} />
+              <span className="text-[10px] font-bold tracking-[0.15em] uppercase" style={{ color: GREEN }}>Human × AI Collaboration</span>
+            </div>
+          </div>
+
+          {/* Main headline */}
+          <h2 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white leading-[1.02] mb-14">
             Your brand.
             <br />
             <span style={{ color: GREEN }}>Built in.</span>
           </h2>
-          <p className="text-xl text-white/40 mb-12 leading-relaxed">
-            Talk to Vince. He already knows your brand — copy and images together, every format, every output.
-            <br />
-            Powered by Gemini Live, Imagen 4, and pgvector.
+
+          {/* The one line */}
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <div className="relative w-7 h-7 flex items-center justify-center">
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{ backgroundColor: `${GREEN}18` }}
+                animate={{ scale: [1, 1.5, 1] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <div className="relative w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${GREEN}30` }}>
+                <Mic className="w-2 h-2" style={{ color: GREEN }} />
+              </div>
+            </div>
+            <p className="text-3xl md:text-4xl font-semibold text-white/90 tracking-tight">
+              Talk to Vince.
+            </p>
+          </div>
+
+          <p className="text-base text-white/35 mb-14 leading-relaxed max-w-lg mx-auto">
+            He already knows your brand. Brief by voice — copy and images together, every format, the first time and every time.
           </p>
         </Reveal>
+      </div>
 
-        <Reveal delay={0.2}>
-          <div className="flex flex-wrap justify-center gap-8">
-            {[
-              { icon: Mic, label: 'Voice-first', color: GREEN },
-              { icon: Globe, label: 'Chrome Extension', color: BLUE },
-              { icon: Smartphone, label: 'iOS + Android', color: PURPLE },
-              { icon: BarChart2, label: 'Beat This Ad', color: ORANGE },
-            ].map(({ icon: Icon, label, color }) => (
-              <div key={label} className="flex flex-col items-center gap-2">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                  style={{ backgroundColor: `${color}20`, color }}
-                >
-                  <Icon className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-white/40">{label}</span>
+      {/* Meta story + tech stack — full page width */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6">
+        <Reveal delay={0.15}>
+          <div
+            className="rounded-2xl border p-8 md:p-10 mb-6 text-left"
+            style={{ borderColor: `${GREEN}18`, backgroundColor: `${GREEN}06` }}
+          >
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-1 h-10 rounded-full" style={{ background: `linear-gradient(to bottom, ${GREEN}, ${BLUE})` }} />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35 mb-0.5">The meta-story</p>
+                <p className="text-xs text-white/25">Google Gemini Live API Hackathon · March 2026</p>
               </div>
-            ))}
+            </div>
+            <p className="text-xl md:text-2xl font-semibold text-white/85 leading-relaxed mb-5 max-w-3xl">
+              I'm not a developer. I'm a Director of AI Enablement at a full-service marketing agency — and the Google AI ecosystem is what enabled me to build it.
+            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <p className="text-sm text-white/45 leading-relaxed">
+                The code was the last step. I take walks and brain-dump into <span className="text-white/65">Gemini</span> for 30 minutes — raw thinking, no filter. Those ideas go into <span className="text-white/65">NotebookLM</span> as Gems alongside the API docs, so I can reason across my own thinking and the real specifications at the same time. <span className="text-white/65">Gemini Deep Research</span> validated architecture decisions against the full LLM landscape before I committed to anything.
+              </p>
+              <p className="text-sm text-white/45 leading-relaxed">
+                <span className="text-white/65">Canvas</span> drafted the content and UI narrative. <span className="text-white/65">Colab</span> and the developer code labs gave me working examples to run before integrating. <span className="text-white/65">Stitch</span> turned concepts into screens. <span className="text-white/65">AI Studio</span> tested prompts against real models. <span className="text-white/65">Jules</span> was an architecture sounding board. Connecting my <span className="text-white/65">GitHub repo to Gemini</span> and chatting with my own codebase while walking closed the loop. Deployed on <span className="text-white/65">Cloud Run</span>.
+              </p>
+            </div>
+            <p className="text-sm font-semibold leading-relaxed mt-6" style={{ color: `${GREEN}CC` }}>
+              The product demonstrates human-AI collaboration.
+              <br />
+              So does the fact that it was built at all.
+            </p>
+          </div>
+        </Reveal>
+
+        {/* Tech stack + pillars — two columns */}
+        <Reveal delay={0.2}>
+          <div className="grid md:grid-cols-2 gap-6 mb-14 text-left">
+            {/* Tech badges */}
+            <div
+              className="rounded-2xl border p-6"
+              style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' }}
+            >
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30 mb-4">Built with</p>
+              <div className="flex flex-wrap gap-2.5">
+                {[
+                  { label: 'Gemini Live API', color: BLUE },
+                  { label: 'Imagen 4', color: GREEN },
+                  { label: 'Veo 3', color: PURPLE },
+                  { label: 'Gemini 2.0 Flash', color: TEAL },
+                  { label: 'pgvector HNSW', color: ORANGE },
+                  { label: 'Supabase Realtime', color: ROSE },
+                ].map(({ label, color }) => (
+                  <div
+                    key={label}
+                    className="px-4 py-2 rounded-full border font-mono text-xs font-semibold"
+                    style={{ borderColor: `${color}30`, color: `${color}CC`, backgroundColor: `${color}10` }}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Four pillars */}
+            <div
+              className="rounded-2xl border p-6 grid grid-cols-2 gap-4"
+              style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' }}
+            >
+              {[
+                { icon: Mic, label: 'Voice-first', color: GREEN },
+                { icon: Globe, label: 'Chrome Extension', color: BLUE },
+                { icon: Smartphone, label: 'iOS + Android', color: PURPLE },
+                { icon: TrendingUp, label: 'Competitive Intel', color: ORANGE },
+              ].map(({ icon: Icon, label, color }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}25` }}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-sm text-white/50 font-medium leading-tight">{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </Reveal>
       </div>
@@ -2180,7 +2630,6 @@ function ShowcaseNav() {
           V
         </div>
         <span className="text-sm font-bold text-white">Vince</span>
-        <span className="text-xs text-white/30 ml-1">by MERGE</span>
       </div>
 
       <div className="hidden md:flex items-center gap-6 text-xs text-white/40">
@@ -2189,8 +2638,7 @@ function ShowcaseNav() {
           { label: 'Creative Director', id: 'creative-director' },
           { label: 'Beat This Ad', id: 'beat-this-ad' },
           { label: 'Packages', id: 'packages' },
-          { label: 'Chrome Extension', id: 'chrome-extension' },
-          { label: 'Mobile', id: 'mobile' },
+          { label: 'Platforms', id: 'platforms' },
           { label: 'Architecture', id: 'architecture' },
         ].map(({ label, id }) => (
           <a
@@ -2207,13 +2655,22 @@ function ShowcaseNav() {
         ))}
       </div>
 
-      <a
-        href="/"
-        className="text-xs font-semibold px-4 py-2 rounded-full border transition-all hover:bg-white/10"
-        style={{ borderColor: `${GREEN}50`, color: GREEN }}
-      >
-        Open Studio →
-      </a>
+      <div className="flex items-center gap-3">
+        <div
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-semibold"
+          style={{ borderColor: `${BLUE}30`, color: `${BLUE}AA`, backgroundColor: `${BLUE}08` }}
+        >
+          <Sparkles className="w-3 h-3" />
+          Built with Gemini
+        </div>
+        <a
+          href="/"
+          className="text-xs font-semibold px-4 py-2 rounded-full border transition-all hover:bg-white/10"
+          style={{ borderColor: `${GREEN}50`, color: GREEN }}
+        >
+          Open Studio →
+        </a>
+      </div>
     </nav>
   );
 }
@@ -2224,12 +2681,13 @@ export default function VinceShowcase() {
     <div className="min-h-screen bg-[#050508] text-white font-sans antialiased">
       <ShowcaseNav />
       <HeroSection />
+      <ProblemSection />
       <BrandIntelligenceSection />
       <CreativeDirectorSection />
+      <DirectorModeSection />
       <BeatThisAdSection />
       <CampaignPackagesSection />
-      <ChromeExtensionSection />
-      <MobileAppsSection />
+      <AvailableEverywhereSection />
       <TechSection />
       <WhySection />
       <CTASection />
