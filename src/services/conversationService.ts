@@ -29,6 +29,8 @@ export interface FetchConversationsOptions {
   offset?: number;
   search?: string;
   daysBack?: number;
+  sortBy?: 'updated_at' | 'created_at';
+  sortAsc?: boolean;
 }
 
 /**
@@ -65,7 +67,8 @@ export async function fetchConversations(options: FetchConversationsOptions): Pr
       )
     `, { count: 'exact' })
     .contains('metadata', { assistant: options.agent })
-    .order('updated_at', { ascending: false })
+    .not('messages', 'eq', '[]')
+    .order(options.sortBy ?? 'updated_at', { ascending: options.sortAsc ?? false })
     .range(fetchOffset, fetchOffset + fetchLimit - 1);
 
   if (options.daysBack) {

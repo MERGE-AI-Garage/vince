@@ -177,7 +177,7 @@ const VinceControlPanel = () => {
             </Card>
 
             <Card
-              className="border-l-4 border-l-emerald-500 cursor-pointer hover:shadow-md transition-all"
+              className="border-l-4 border-l-purple-500 cursor-pointer hover:shadow-md transition-all"
               onClick={() => handleTabChange('conversations')}
             >
               <CardContent className="p-4">
@@ -186,8 +186,8 @@ const VinceControlPanel = () => {
                     <p className="text-sm text-muted-foreground">Conversations</p>
                     <p className="text-2xl font-bold">{conversationCount ?? '...'}</p>
                   </div>
-                  <div className="p-2 rounded-lg bg-emerald-500/10">
-                    <MessagesSquare className="h-5 w-5 text-emerald-500" />
+                  <div className="p-2 rounded-lg bg-purple-500/10">
+                    <MessagesSquare className="h-5 w-5 text-purple-500" />
                   </div>
                 </div>
               </CardContent>

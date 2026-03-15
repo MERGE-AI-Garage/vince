@@ -28,9 +28,9 @@ const features = [
     title: 'Multi-Brand Switching',
     description:
       'Every brand built in Creative Studio appears automatically. Select a brand — the extension recolors itself to match the brand\'s palette.',
-    stripe: 'from-emerald-400 to-emerald-600',
-    iconBg: 'bg-emerald-500/10',
-    iconColor: 'text-emerald-500',
+    stripe: 'from-purple-400 to-purple-600',
+    iconBg: 'bg-purple-500/10',
+    iconColor: 'text-purple-500',
   },
   {
     icon: Sparkles,
@@ -117,7 +117,7 @@ function DownloadButton({ size = 'lg' }: { size?: 'lg' | 'sm' }) {
     <a
       href={EXTENSION_DOWNLOAD_URL}
       download
-      className={`inline-flex items-center gap-2 rounded-xl bg-violet-600 text-white font-semibold transition-all hover:bg-violet-500 shadow-lg shadow-violet-900/30 hover:shadow-violet-800/40 ${
+      className={`inline-flex items-center gap-2 rounded-xl bg-[#1ED75F] text-[#0D1B16] font-semibold transition-all hover:bg-[#1ED75F]/90 shadow-lg shadow-[#1ED75F]/20 hover:shadow-[#1ED75F]/30 ${
         isLarge ? 'px-8 py-3.5 text-sm' : 'px-6 py-2.5 text-xs'
       }`}
     >
@@ -165,11 +165,8 @@ export function ExtensionTab() {
       {/* ── Section 1: Hero ── */}
       <section
         ref={heroRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1e1b4b] via-[#4c1d95] to-[#1e1b4b] py-20 px-8"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-20 px-8"
       >
-        {/* Radial glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_50%,rgba(139,92,246,0.20),transparent_60%)]" />
-
         {/* Chrome watermark */}
         <Chrome className="absolute -bottom-6 -right-6 w-40 h-40 text-white/[0.04] transform -rotate-12" />
 
@@ -181,7 +178,7 @@ export function ExtensionTab() {
         >
           {/* Eyebrow badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 mb-8">
-            <Chrome className="w-4 h-4 text-violet-300" />
+            <Chrome className="w-4 h-4 text-[#1ED75F]" />
             <span className="font-epilogue text-sm font-medium text-white/80">Browser & Mobile</span>
           </div>
 
@@ -262,9 +259,8 @@ export function ExtensionTab() {
       {/* ── Section 3: Mobile Apps ── */}
       <section
         ref={mobileRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1e1b4b] via-[#2d1b69] to-[#1e1b4b] py-16 px-8"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-16 px-8"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_40%,rgba(139,92,246,0.15),transparent_70%)]" />
         <Smartphone className="absolute -top-4 -right-4 w-48 h-48 text-white/[0.03] transform rotate-12" />
 
         <motion.div
@@ -274,7 +270,7 @@ export function ExtensionTab() {
           className="relative z-10 text-center mb-12"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 mb-6">
-            <Smartphone className="w-4 h-4 text-violet-300" />
+            <Smartphone className="w-4 h-4 text-[#1ED75F]" />
             <span className="font-epilogue text-sm font-medium text-white/80">Mobile Apps</span>
           </div>
           <h2 className="font-fraunces text-3xl font-bold text-white mb-4">
@@ -298,7 +294,7 @@ export function ExtensionTab() {
               <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
                 <Apple className="w-8 h-8 text-white" />
               </div>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/20 border border-violet-400/30 text-violet-300 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1ED75F]/20 border border-[#1ED75F]/30 text-[#1ED75F] text-xs font-semibold">
                 <CheckCircle2 className="w-3 h-3" />
                 Available Now
               </span>
@@ -371,8 +367,8 @@ export function ExtensionTab() {
                   <div className="hidden md:block absolute top-7 left-[60%] w-[80%] h-px bg-border" />
                 )}
 
-                <div className="w-14 h-14 rounded-full bg-violet-500/10 flex items-center justify-center mx-auto mb-4">
-                  <Icon className="w-6 h-6 text-violet-500" />
+                <div className="w-14 h-14 rounded-full bg-[#1ED75F]/10 flex items-center justify-center mx-auto mb-4">
+                  <Icon className="w-6 h-6 text-[#1ED75F]" />
                 </div>
                 <div className="font-epilogue text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
                   Step {i + 1}
@@ -410,8 +406,8 @@ export function ExtensionTab() {
           <div className="divide-y divide-border/40">
             {installSteps.map((step, i) => (
               <div key={i} className="flex gap-4 p-5">
-                <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="font-epilogue text-sm font-bold text-violet-400">{i + 1}</span>
+                <div className="w-8 h-8 rounded-full bg-[#00856C]/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="font-epilogue text-sm font-bold text-[#00856C]">{i + 1}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-epilogue text-sm leading-relaxed">
@@ -447,9 +443,8 @@ export function ExtensionTab() {
       {/* ── Section 6: Supported Platforms + Final CTA ── */}
       <section
         ref={ctaRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1e1b4b] via-[#4c1d95] to-[#1e1b4b] py-16 px-8"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-16 px-8"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(139,92,246,0.15),transparent_60%)]" />
 
         <div className="relative z-10 grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
           {/* Left — Supported platforms */}
@@ -467,7 +462,7 @@ export function ExtensionTab() {
                   key={platform}
                   className="inline-flex items-center gap-1.5 rounded-full bg-white/10 border border-white/10 px-3 py-1.5 font-epilogue text-xs text-white/80"
                 >
-                  <CheckCircle2 className="w-3 h-3 text-violet-400" />
+                  <CheckCircle2 className="w-3 h-3 text-[#1ED75F]" />
                   {platform}
                 </span>
               ))}
@@ -485,7 +480,7 @@ export function ExtensionTab() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center flex flex-col items-center justify-center"
           >
-            <Chrome className="w-12 h-12 text-violet-400 mb-4" />
+            <Chrome className="w-12 h-12 text-[#1ED75F] mb-4" />
             <h3 className="font-epilogue text-base font-semibold text-white mb-1">
               Vince
             </h3>

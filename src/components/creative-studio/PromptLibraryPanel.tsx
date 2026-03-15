@@ -367,7 +367,7 @@ function PromptCard({
                 </Badge>
               )}
               {hasRefImages && (
-                <Badge variant="outline" className="text-[8px] h-4 px-1.5 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                <Badge variant="outline" className="text-[8px] h-4 px-1.5 bg-purple-500/10 text-purple-600 border-purple-500/20">
                   <Images className="w-2 h-2 mr-0.5" />
                   {template.reference_images!.length} ref{template.reference_images!.length !== 1 ? 's' : ''}
                 </Badge>

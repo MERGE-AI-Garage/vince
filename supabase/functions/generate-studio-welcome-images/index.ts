@@ -1,5 +1,5 @@
-// ABOUTME: Generates stylized 3D icon images for Creative Studio system welcome cards
-// ABOUTME: Uses Gemini image generation for the 8 capability cards + hero welcome images
+// ABOUTME: Generates editorial-quality images for Creative Studio system welcome cards
+// ABOUTME: Uses Gemini image generation for the 8 capability cards + hero welcome image
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -19,56 +19,64 @@ const MODEL = "gemini-3-pro-image-preview";
 
 /*
  * Brand color context:
- * - Primary: dark green #133B34, viridian #00856C
- * - Accent: electrolight green #1ED75F
- * - Warm gray #EAE8E3
- * - Aesthetic: modern tech-agency sophistication
+ * - Primary dark: #0D1B16 (deep forest green)
+ * - Viridian: #00856C
+ * - Accent: #1ED75F (electrolight green)
+ * - Aesthetic: premium, editorial, Apple/Google campaign quality
+ *
+ * Image style direction for all cards:
+ * - Show the OUTPUT or result of the capability — not an abstract icon
+ * - Editorial photography aesthetic: Apple or Google product campaign quality
+ * - No 3D cartoon objects, no floating geometry, no literal tech metaphors
+ * - No text overlays, no UI chrome, no watermarks
+ * - Clean composition with intentional negative space
+ * - Lighting: either soft studio or dramatic editorial
  */
 
 const SECTION_PROMPTS: Record<string, { prompt: string; aspectRatio: string }> =
   {
     hero: {
-      prompt: `Professional editorial photograph: A sweeping modern creative studio command center with three ultrawide curved displays showing abstract generative AI visualizations — flowing color gradients, geometric wireframes, and luminous particle effects in viridian green (#00856C) and teal. Clean brushed-aluminum desk, matte dark concrete walls. Soft ambient LED lighting with subtle green accent strips. The scene conveys multi-model creative power and brand-aware AI generation. Wide cinematic composition. No people, no text, no logos. Color palette: dark green (#133B34), viridian (#00856C), warm gray (#EAE8E3), subtle electrolight green accents. Premium and contemporary.`,
+      prompt: `Abstract color-field fine art photograph: deep emerald green shadows dissolving into warm charcoal black, with a single luminous viridian shaft of light cutting diagonally through the frame. Painterly quality, like a Rothko color study translated to photography. No people, no objects, no text, no technology. Pure mood — creative possibility in darkness. Aspect ratio wide. Soft gradients, rich shadow detail, subtle green (#00856C) and electrolight green (#1ED75F) as color accents. Premium, contemporary, like a Peloton or Apple campaign backdrop. Full bleed.`,
       aspectRatio: "16:9",
     },
 
     image_generation: {
-      prompt: `A stylized 3D icon of a luminous paintbrush leaving a trail of glowing pixels and light particles, rendered in viridian green (#00856C) and electrolight green (#1ED75F) against a dark charcoal (#1a1a2e) background. The brush stroke transforms into a cascade of colorful geometric shapes suggesting image creation. Clean, minimal, modern icon style — like a premium app icon or game asset. Single centered subject with generous negative space. No text, no additional elements. Bold enough to read clearly at 100×100 pixels. Soft studio lighting from above.`,
+      prompt: `Editorial portrait photography: an ultra-sharp, high-fashion studio portrait of a woman with striking bone structure, dramatic side lighting, deep shadow on one side of the face, catchlights in the eyes. Flawless skin texture visible, subtle green-tinted rim light. Clean charcoal gray seamless backdrop. Shallow depth of field, Canon 85mm f/1.2 quality. The image demonstrates flawless AI image generation — photorealistic, technically perfect. No text, no UI, no logos. Apple product campaign aesthetic. Square format.`,
       aspectRatio: "1:1",
     },
 
     video_generation: {
-      prompt: `A stylized 3D icon of a film clapperboard with flowing motion lines and luminous frame strips extending from it, rendered in viridian green (#00856C) and teal (#0D9488) against a dark charcoal (#1a1a2e) background. The motion lines suggest dynamic video creation. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text, no additional elements. Bold enough to read clearly at 100×100 pixels. Soft studio lighting from above.`,
+      prompt: `Cinematic still frame from a high-budget short film: a lone figure silhouetted against a massive emerald green aurora borealis over a dramatic Nordic fjord landscape at night. Ultra-wide lens, anamorphic flare, deep shadow foreground, luminous sky. Rich color grading — deep teals and electric greens. Film grain texture. Composition like a Malick film or an Apple TV cinematic trailer. No text, no UI, no branding. Square format, full bleed.`,
       aspectRatio: "1:1",
     },
 
     editing_suite: {
-      prompt: `A stylized 3D icon of precision scissors cutting through a luminous image plane, with geometric fragments floating away and reforming into a new composition, rendered in viridian green (#00856C) and warm gray (#EAE8E3) against a dark charcoal (#1a1a2e) background. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text, no additional elements. Bold and readable at small sizes. Soft studio lighting.`,
+      prompt: `Editorial split-composition photograph: left half shows a raw, flat, slightly underexposed street photograph of a city alley — desaturated and gray. Right half shows the same scene precision-edited: rich contrast, vibrant emerald and amber tones, sharp detail pulled from shadows, cinematic color grade. A clean hairline divides the two halves. The result communicates precision image editing power. No text, no UI elements. Square format, clean professional aesthetic.`,
       aspectRatio: "1:1",
     },
 
     upscaling: {
-      prompt: `A stylized 3D icon of a magnifying glass with a grid of pixels inside it, where the pixels are transforming from blurry/large to crisp/detailed, rendered in viridian green (#00856C) and electrolight green (#1ED75F) against a dark charcoal (#1a1a2e) background. Glowing enhancement rays emanate from the lens. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text. Soft studio lighting.`,
+      prompt: `Extreme macro close-up editorial photograph: a luxury watch face, shot at 1:1 macro scale. The rhodium-plated indices gleam with razor-sharp precision. Applied indices catch light perfectly. The grain of the guilloché dial pattern is exquisitely resolved — you can count every line. Depth of field is razor thin. Swiss watchmaking precision. Black and dark forest green background. Demonstrates hyper-detail upscaling capability. No text, no UI. Square format.`,
       aspectRatio: "1:1",
     },
 
     product_recontext: {
-      prompt: `A stylized 3D icon of a product box or package hovering above a glowing scene-generation platform, with luminous environment rays projecting outward suggesting scene creation, rendered in viridian green (#00856C) and warm teal against a dark charcoal (#1a1a2e) background. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text. Soft studio lighting from above.`,
+      prompt: `Premium product photography: a single dark green glass perfume bottle with a gold stopper, floating in a dreamlike underwater scene with soft emerald light rays filtering through water from above. The bottle is perfectly sharp, lit by soft caustic light patterns. Bubbles catch the light. Dark vignette edges, vivid viridian and deep teal tones. Shot like a Chanel or Tom Ford fragrance campaign. No text, no logos. Square format.`,
       aspectRatio: "1:1",
     },
 
     virtual_tryon: {
-      prompt: `A stylized 3D icon of a clothing hanger with a flowing fabric garment that has a subtle digital grid pattern, suggesting AI-powered virtual fitting, rendered in viridian green (#00856C) and soft teal against a dark charcoal (#1a1a2e) background. The fabric has a luminous edge glow. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text. Soft studio lighting.`,
+      prompt: `High-fashion editorial photography: a beautifully tailored forest-green structured blazer, photographed on a minimal off-white studio seamless backdrop. The blazer is the sole subject — perfectly draped, softly lit with a large softbox. Every stitch, texture, and lapel edge is crisp. Clean negative space. Shot like a luxury menswear campaign — Loro Piana or Brunello Cucinelli quality. No model needed — just the garment as hero. Square format.`,
       aspectRatio: "1:1",
     },
 
     conversational_editing: {
-      prompt: `A stylized 3D icon of two overlapping speech bubbles, one containing a small image canvas and the other containing a luminous cursor or wand, rendered in viridian green (#00856C) and electrolight green (#1ED75F) against a dark charcoal (#1a1a2e) background. Suggests back-and-forth creative dialogue. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text. Soft studio lighting.`,
+      prompt: `Minimal graphic design photograph: an elegant dark-mode UI fragment on a deep charcoal background. A single rounded chat bubble in viridian green (#00856C) sits at the top left, containing a one-line text prompt in clean white sans-serif. Below, a thumbnail preview shows a partially transformed photograph with a subtle green processing overlay. The composition is 70% negative space — dark, premium, intentional. No branding, no chrome, no labels. Square format.`,
       aspectRatio: "1:1",
     },
 
     camera_controls: {
-      prompt: `A stylized 3D icon of a camera lens with concentric aperture blades partially open, showing a luminous focal point in the center, rendered in viridian green (#00856C) and warm gray (#EAE8E3) against a dark charcoal (#1a1a2e) background. Subtle depth-of-field bokeh circles around the edges. Clean, minimal, modern icon style — like a premium app icon. Single centered subject with generous negative space. No text. Soft studio lighting.`,
+      prompt: `Dramatic architectural photography: looking straight up at a modernist glass-and-steel skyscraper from directly below, ultra-wide 14mm fisheye perspective. The building's steel ribs converge toward a brilliant viridian-lit cloudy sky at center. Deep contrast, dark foreground columns, luminous top. Geometric perfection of perspective distortion. Shot like a Julius Shulman or Iwan Baan architectural image. Demonstrates advanced camera angle and perspective control. No text, no UI. Square format.`,
       aspectRatio: "1:1",
     },
   };

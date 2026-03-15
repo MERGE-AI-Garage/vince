@@ -36,12 +36,12 @@ export default function Login() {
         style={{ backgroundImage: 'url(/images/studio-hero.jpeg)' }}
       />
 
-      {/* Dark gradient overlay — deep teal/emerald, matches app interior */}
+      {/* Dark gradient overlay — deep teal/purple, matches app interior */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0D1B16]/92 via-[#0A2820]/88 to-[#071A10]/95" />
 
       {/* Subtle radial glow behind the card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[600px] h-[600px] rounded-full bg-emerald-500/10 blur-[120px]" />
+        <div className="w-[600px] h-[600px] rounded-full bg-purple-500/10 blur-[120px]" />
       </div>
 
       {/* Login card */}
@@ -87,7 +87,7 @@ export default function Login() {
               onChange={e => setEmail(e.target.value)}
               autoComplete="email"
               required
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-emerald-400/50 focus:bg-white/8 transition-all text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-purple-400/50 focus:bg-white/8 transition-all text-sm"
               placeholder="you@example.com"
             />
           </div>
@@ -103,7 +103,7 @@ export default function Login() {
               onChange={e => setPassword(e.target.value)}
               autoComplete="current-password"
               required
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-emerald-400/50 focus:bg-white/8 transition-all text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/25 focus:outline-none focus:border-purple-400/50 focus:bg-white/8 transition-all text-sm"
               placeholder="••••••••"
             />
           </div>

@@ -112,7 +112,7 @@ export function GenerationInfoDialog({ generation, onClose }: GenerationInfoDial
   };
 
   const statusColor = {
-    completed: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+    completed: 'bg-purple-500/10 text-purple-600 border-purple-200',
     processing: 'bg-amber-500/10 text-amber-600 border-amber-200',
     failed: 'bg-red-500/10 text-red-600 border-red-200',
     pending: 'bg-gray-500/10 text-gray-500 border-gray-200',

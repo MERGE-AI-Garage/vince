@@ -267,7 +267,7 @@ function ColorSwatch({ color }: { color: ColorEntry }) {
 
 function ColorSystemCard({ data }: { data: ColorSystem }) {
   return (
-    <BentoCard title="Color System" icon={Palette} iconColor="text-emerald-500">
+    <BentoCard title="Color System" icon={Palette} iconColor="text-purple-500">
       {data.color_groups?.map((group, gi) => (
         <div key={gi} className="mb-3 last:mb-0">
           {group.name && (
@@ -578,7 +578,7 @@ function WriterGuidelinesCard({ data }: { data: WriterGuidelines }) {
                   <p className="text-[10px] text-muted-foreground italic">Instead of: {p.example_instead_of}</p>
                 )}
                 {p.example_try && (
-                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 italic">Try: {p.example_try}</p>
+                  <p className="text-[10px] text-purple-600 dark:text-purple-400 italic">Try: {p.example_try}</p>
                 )}
               </div>
             )}
@@ -1033,7 +1033,7 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
                   {hasSectionData(standards.color_system as Record<string, unknown> | null) ? (
                     <ColorSystemCard data={standards.color_system!} />
                   ) : (
-                    <BentoCard title="Color System" icon={Palette} iconColor="text-emerald-500">
+                    <BentoCard title="Color System" icon={Palette} iconColor="text-purple-500">
                       <EmptyHint text="Import brand style guide to populate color specifications." />
                     </BentoCard>
                   )}

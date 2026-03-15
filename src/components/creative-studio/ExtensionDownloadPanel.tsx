@@ -6,7 +6,7 @@ import { Chrome, Download, Palette, Sparkles, Zap, Globe, CheckCircle2 } from 'l
 const DOWNLOAD_URL = '/vince-extension.zip';
 
 const features = [
-  { icon: Palette, label: 'Multi-Brand Switching', color: 'text-emerald-500' },
+  { icon: Palette, label: 'Multi-Brand Switching', color: 'text-purple-500' },
   { icon: Sparkles, label: 'LLM Prompt Builder', color: 'text-purple-500' },
   { icon: Zap, label: 'QuickStarters', color: 'text-amber-500' },
   { icon: Globe, label: 'Site Detection', color: 'text-blue-500' },

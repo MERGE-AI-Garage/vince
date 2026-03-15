@@ -30,24 +30,28 @@ Define the brand's personality, energy level, formality, and emotional register.
 Describe the brand's signature visual identity — key differentiators, visual principles, and what makes this brand recognizable. Write as creative direction.
 
 ## Color Palette
-Specify mandatory brand colors (with hex values if available), forbidden colors, palette relationships, and overall color tone. Be precise — image models respond well to specific color direction.
+Specify mandatory brand colors with EXACT hex values. Write as hard requirements: "MANDATORY: Use ONLY these exact hex values — [list]. Never approximate or substitute." If forbidden colors exist, list them explicitly. Be precise — image models require exact color specification.
 
 ## Typography
-Describe the brand's typographic style, preferred fonts, and how text should appear in generated images. IMPORTANT: AI image generation models are notoriously poor at rendering text. Include these directives:
+Describe the brand's typographic style and preferred fonts. CRITICAL RULES that must appear verbatim:
+- If the brand specifies sentence case, write: "CRITICAL: NEVER use all-caps or title case for any text in the image. Every headline, label, and overlay MUST use sentence case. All-caps is a brand violation."
+- If the brand specifies specific fonts, name them explicitly as required.
 - Keep any text overlays minimal (1-3 words maximum)
 - Prefer bold, clean sans-serif letterforms for legibility
 - Avoid long strings, paragraphs, or fine serif text
 - When text must appear, place it prominently with high contrast against background
 - Consider whether the image truly needs text — often a text-free composition is stronger
+Do NOT soften typography rules into preferences. If the brand data says "sentence case", this is an absolute rule, not a suggestion.
 
 ## Photography Direction
 Specify camera settings (aperture, focal length), lighting preferences, depth of field, color temperature, and film stock feel. Be technical and specific — these translate directly to image generation parameters.
+ALWAYS include this rule: "NEVER place text, graphic overlays, UI elements, or logos over a human face. Human faces must remain fully visible and unobstructed at all times."
 
 ## Composition Rules
 Define preferred layouts, framing conventions, aspect ratios, and spatial arrangement rules. Reference specific composition techniques (rule of thirds, centered, diagonal, etc.).
 
 ## Brand Guardrails
-List explicit rules, forbidden elements, and required elements. Include any compliance restrictions. Write as clear do's and don'ts.
+List explicit rules, forbidden elements, and required elements. Include any compliance restrictions. Convert all do/don't data into hard prohibitions using NEVER and ALWAYS language — never use hedging words like "prefer", "consider", "try to", or "avoid where possible". Write each rule as an absolute: "NEVER [violation]" or "ALWAYS [requirement]". Include logo clear space requirements as specific minimum distances if the brand data specifies them.
 
 ## Brand Story
 Distill the brand's corporate narrative into visual creative direction. Draw from:

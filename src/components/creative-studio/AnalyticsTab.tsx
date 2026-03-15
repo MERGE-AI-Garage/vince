@@ -326,7 +326,7 @@ export function AnalyticsTab() {
           title={`Active Users (${rangeLabel})`}
           value={stats.unique_users}
           icon={<CheckCircle className="h-6 w-6" />}
-          iconBg="bg-emerald-500/10 text-emerald-500"
+          iconBg="bg-purple-500/10 text-purple-500"
           delta={comparison?.deltas.unique_users ?? null}
           deltaLabel={`vs previous ${rangeLabel}`}
           description={

@@ -509,7 +509,7 @@ export function BrandDNABuilder({
         >
           <DialogHeader className="space-y-1">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white shrink-0">
+              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-teal-600 text-white shrink-0">
                 <Dna className="h-4 w-4" />
               </div>
               <div>
@@ -586,9 +586,9 @@ export function BrandDNABuilder({
             {!analysisResult && !analyzeWebsite.isPending && (
               <div className="space-y-3">
                 {/* What the system does */}
-                <div className="p-3 rounded-lg bg-gradient-to-r from-emerald-500/5 to-teal-500/5 border border-emerald-500/10">
+                <div className="p-3 rounded-lg bg-gradient-to-r from-purple-500/5 to-teal-500/5 border border-purple-500/10">
                   <div className="flex items-start gap-2.5">
-                    <Info className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <Info className="h-4 w-4 text-purple-500 mt-0.5 shrink-0" />
                     <div className="space-y-1.5">
                       <p className="text-sm font-medium">How Website DNA Extraction works</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">
@@ -666,7 +666,7 @@ export function BrandDNABuilder({
 
             {analyzeWebsite.isPending && (
               <div className="p-6 bg-muted/30 rounded-lg space-y-3 text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto text-emerald-500" />
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-purple-500" />
                 <div className="space-y-1">
                   <p className="font-medium">Analyzing website...</p>
                   <p className="text-sm text-muted-foreground">
@@ -690,9 +690,9 @@ export function BrandDNABuilder({
             )}
 
             {analysisResult && (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+              <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-emerald-500" />
+                  <CheckCircle className="h-5 w-5 text-purple-500" />
                   <span className="font-medium">
                     Website analyzed successfully ({pagesAnalyzed} page{pagesAnalyzed !== 1 ? 's' : ''})
                   </span>
@@ -741,7 +741,7 @@ export function BrandDNABuilder({
                 </div>
               )}
               {extractedProductCount !== null && (
-                <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <div className="flex items-center gap-2 text-sm text-purple-600">
                   <CheckCircle className="h-4 w-4" />
                   <span>{extractedProductCount} product{extractedProductCount !== 1 ? 's' : ''} added to catalog</span>
                 </div>
@@ -1001,7 +1001,7 @@ export function BrandDNABuilder({
                     <Label className="text-xs text-muted-foreground uppercase tracking-wider">
                       Site Imagery
                       {selectedLogoUrl && (
-                        <span className="ml-1.5 text-emerald-500 normal-case tracking-normal">— logo selected</span>
+                        <span className="ml-1.5 text-purple-500 normal-case tracking-normal">— logo selected</span>
                       )}
                     </Label>
                     <p className="text-[10px] text-muted-foreground">
@@ -1068,7 +1068,7 @@ export function BrandDNABuilder({
                 )}
 
                 {/* Summary + overwrite confirmation */}
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg space-y-2">
+                <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg space-y-2">
                   <p className="text-sm font-medium">Ready to build {brandName}'s profile?</p>
                   <p className="text-xs text-muted-foreground">
                     Your edits above will be merged with any existing image analyses to create a unified brand DNA profile.

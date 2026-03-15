@@ -94,10 +94,10 @@ export const DEFAULT_QUICK_PROMPTS = [
 export const DEFAULT_GREETING_TEMPLATES = [
   '{name}. Vince online. Dialed in on {brandName}. What are we shooting?',
   '{name}. Good {timeOfDay}. Locked into the {brandName} visual playbook. Direct me.',
-  '{name}. Standing by with {brandName} brand guidelines. What do you need?',
-  '{name}. Vince here. Camera, lighting, styling — I know the {brandName} playbook. What\'s the shot?',
-  '{name}. {brandName} creative director mode. Tell me what you see.',
-  'Good {timeOfDay}, {name}. {brandName} brand library loaded. Ready to shoot.',
+  '{name}. Vince here. I know the full {brandName} playbook — camera, lighting, tone, the whole brief. New here, or ready to shoot?',
+  '{name}. {brandName} creative director. New to this brand? Say the word and I\'ll walk you through it. Otherwise, what\'s the shot?',
+  'Good {timeOfDay}, {name}. {brandName} brand library loaded. Want a quick brief on the brand, or straight into a generation?',
+  '{name}. I\'ve got the full {brandName} playbook — visual DNA, photography standards, tone, compliance. Where do you want to start?',
 ];
 
 export const DEFAULT_VOICE_PROMPT = `PERSONALITY:

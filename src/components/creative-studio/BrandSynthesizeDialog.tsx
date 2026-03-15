@@ -128,7 +128,7 @@ export function BrandSynthesizeDialog({
 
   const confidencePercent = result ? Math.round(result.confidence_score * 100) : 0;
   const confidenceColor = confidencePercent >= 70
-    ? 'text-emerald-600'
+    ? 'text-purple-600'
     : confidencePercent >= 40
       ? 'text-amber-600'
       : 'text-red-500';
@@ -225,7 +225,7 @@ export function BrandSynthesizeDialog({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-lg border bg-card/50">
-                  <Globe className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <Globe className="h-4 w-4 text-purple-500 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold">{sourceCount.websites}</p>
                     <p className="text-[10px] text-muted-foreground">Website{sourceCount.websites !== 1 ? 's' : ''}</p>
@@ -337,8 +337,8 @@ export function BrandSynthesizeDialog({
                   {result.updated_sections.map((section) => {
                     const Icon = SECTION_ICONS[section] || Brain;
                     return (
-                      <div key={section} className="flex items-center gap-2 p-2 rounded-md bg-emerald-500/5 border border-emerald-500/10">
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      <div key={section} className="flex items-center gap-2 p-2 rounded-md bg-purple-500/5 border border-purple-500/10">
+                        <CheckCircle className="h-3.5 w-3.5 text-purple-500 shrink-0" />
                         <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span className="text-xs font-medium">{section}</span>
                       </div>

@@ -10,6 +10,8 @@ import {
   Wrench,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   MessagesSquare,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +32,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { fetchConversations, type ConversationRecord } from '@/services/conversationService';
+import { fetchConversations, type ConversationRecord, type FetchConversationsOptions } from '@/services/conversationService';
 import { useDebounceSearch } from '@/hooks/useDebounceSearch';
 import { ConversationDetailDialog } from './ConversationDetailDialog';
 
@@ -44,32 +46,52 @@ interface ConversationsTabProps {
 export function ConversationsTab({ agent, agentLabel }: ConversationsTabProps) {
   const [page, setPage] = useState(0);
   const [daysFilter, setDaysFilter] = useState<string>('30');
+  const [sortBy, setSortBy] = useState<FetchConversationsOptions['sortBy']>('updated_at');
+  const [sortAsc, setSortAsc] = useState(false);
   const { query: searchQuery, setQuery: setSearchQuery, debouncedQuery } = useDebounceSearch();
 
   const [selectedConversation, setSelectedConversation] = useState<ConversationRecord | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: [`${agent}-conversations`, page, debouncedQuery, daysFilter],
+    queryKey: [`${agent}-conversations`, page, debouncedQuery, daysFilter, sortBy, sortAsc],
     queryFn: () => fetchConversations({
       agent,
       limit: PAGE_SIZE,
       offset: page * PAGE_SIZE,
       search: debouncedQuery || undefined,
       daysBack: daysFilter !== 'all' ? Number(daysFilter) : undefined,
+      sortBy,
+      sortAsc,
     }),
   });
+
+  function toggleSort(col: FetchConversationsOptions['sortBy']) {
+    if (sortBy === col) {
+      setSortAsc(a => !a);
+    } else {
+      setSortBy(col);
+      setSortAsc(false);
+    }
+    setPage(0);
+  }
+
+  function SortIcon({ col }: { col: FetchConversationsOptions['sortBy'] }) {
+    if (sortBy !== col) return null;
+    return sortAsc ? <ChevronUp className="inline h-3 w-3 ml-1" /> : <ChevronDown className="inline h-3 w-3 ml-1" />;
+  }
 
   const conversations = data?.conversations ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Summary stats from current page
-  const avgMessages = conversations.length > 0
-    ? Math.round(conversations.reduce((sum, c) => sum + c.message_count, 0) / conversations.length)
+  // Summary stats from current page (only conversations with messages)
+  const withMessages = conversations.filter(c => c.message_count > 0);
+  const avgMessages = withMessages.length > 0
+    ? Math.round(withMessages.reduce((sum, c) => sum + c.message_count, 0) / withMessages.length)
     : 0;
-  const avgToolCalls = conversations.length > 0
-    ? Math.round(conversations.reduce((sum, c) => sum + c.tool_calls_count, 0) / conversations.length)
+  const avgToolCalls = withMessages.length > 0
+    ? Math.round(withMessages.reduce((sum, c) => sum + c.tool_calls_count, 0) / withMessages.length)
     : 0;
 
   function getPreview(c: ConversationRecord): string {
@@ -151,7 +173,12 @@ export function ConversationsTab({ agent, agentLabel }: ConversationsTabProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:text-foreground"
+                  onClick={() => toggleSort('updated_at')}
+                >
+                  Date<SortIcon col="updated_at" />
+                </TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Preview</TableHead>
                 <TableHead className="text-center">Messages</TableHead>

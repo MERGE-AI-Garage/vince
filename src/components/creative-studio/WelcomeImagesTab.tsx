@@ -131,7 +131,7 @@ export function WelcomeImagesTab() {
       {/* Summary bar */}
       <div className="flex items-center gap-3">
         <Badge variant="secondary" className="text-xs">
-          <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" />
+          <CheckCircle2 className="h-3 w-3 mr-1 text-purple-500" />
           {presentCount}/{ALL_KEYS.length} present
         </Badge>
         {missingCount > 0 && (
@@ -200,7 +200,7 @@ export function WelcomeImagesTab() {
             )}
             <div className={cn(
               'absolute top-2 right-2 w-2.5 h-2.5 rounded-full',
-              images?.hero ? 'bg-emerald-500' : 'bg-gray-400',
+              images?.hero ? 'bg-purple-500' : 'bg-gray-400',
             )} />
           </div>
           <div className="px-3 py-2 flex items-center justify-between">
@@ -276,7 +276,7 @@ export function WelcomeImagesTab() {
                   )}
                   <div className={cn(
                     'absolute top-1.5 right-1.5 w-2 h-2 rounded-full',
-                    url ? 'bg-emerald-500' : 'bg-gray-400',
+                    url ? 'bg-purple-500' : 'bg-gray-400',
                   )} />
                 </div>
                 <div className="px-2.5 py-2 flex items-center justify-between">
@@ -572,7 +572,7 @@ function WelcomeImageDetailDialog({
                       className={cn(
                         'shrink-0 rounded-md overflow-hidden border-2 transition-all hover:opacity-90',
                         isCurrent
-                          ? 'border-emerald-500 ring-1 ring-emerald-500/30'
+                          ? 'border-purple-500 ring-1 ring-purple-500/30'
                           : 'border-transparent hover:border-muted-foreground/30',
                       )}
                       onClick={() => !isCurrent && handleRestoreVersion(gen.image_url)}

@@ -224,7 +224,7 @@ export function PromptTemplateAdmin({ brandId }: PromptTemplateAdminProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
-              <BookMarked className="h-4 w-4 text-emerald-500" />
+              <BookMarked className="h-4 w-4 text-purple-500" />
               Prompt Templates
             </CardTitle>
             <CardDescription>

@@ -213,17 +213,17 @@ export function CreativePackageDisplay({
       {brandAlignment && (() => {
         const { score, dimensions } = brandAlignment;
         const tier = score >= 75 ? 'high' : score >= 50 ? 'mid' : 'low';
-        const color = tier === 'high' ? 'emerald' : tier === 'mid' ? 'amber' : 'red';
+        const color = tier === 'high' ? 'purple' : tier === 'mid' ? 'amber' : 'red';
         const containerCls = tier === 'high'
-          ? 'bg-emerald-500/5 border-emerald-500/20'
+          ? 'bg-purple-500/5 border-purple-500/20'
           : tier === 'mid'
           ? 'bg-amber-500/5 border-amber-500/20'
           : 'bg-red-500/5 border-red-500/20';
-        const iconCls = tier === 'high' ? 'text-emerald-400' : tier === 'mid' ? 'text-amber-400' : 'text-red-400';
+        const iconCls = tier === 'high' ? 'text-purple-400' : tier === 'mid' ? 'text-amber-400' : 'text-red-400';
         const scoreCls = iconCls;
-        const barCls = tier === 'high' ? 'bg-emerald-400' : tier === 'mid' ? 'bg-amber-400' : 'bg-red-400';
+        const barCls = tier === 'high' ? 'bg-purple-400' : tier === 'mid' ? 'bg-amber-400' : 'bg-red-400';
         const pillActiveCls = tier === 'high'
-          ? 'bg-emerald-500/15 text-emerald-400'
+          ? 'bg-purple-500/15 text-purple-400'
           : tier === 'mid'
           ? 'bg-amber-500/15 text-amber-400'
           : 'bg-red-500/15 text-red-400';

@@ -268,6 +268,10 @@ export async function generateBrandAgentGreeting(
 function buildBrandContextCallout(ctx: BrandContext): string | null {
   if (!ctx.brand) return 'No brand selected. Pick a brand to get started.';
   if (!ctx.profile) return `**${ctx.brand.name}** profile hasn't been trained yet. Upload reference images to build the visual DNA.`;
+  const sourceCount = ctx.sourcesAnalyzed || 0;
+  if (sourceCount > 0) {
+    return `Brand playbook loaded — ${sourceCount} source${sourceCount !== 1 ? 's' : ''} analyzed. Say "walk me through this brand" and I'll brief you on the visual DNA, photography standards, tone, and compliance rules before we shoot.`;
+  }
   return null;
 }
 

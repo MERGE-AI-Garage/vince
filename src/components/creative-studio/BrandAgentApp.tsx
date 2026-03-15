@@ -297,15 +297,6 @@ export function BrandAgentApp({
         };
         setUserContext(context);
 
-        // Create conversation record
-        try {
-          const convId = await createBrandAgentConversation(user.id);
-          setConversationId(convId);
-        } catch (convError) {
-          console.warn('[Vince] Conversation creation failed, using fallback:', convError);
-          setConversationId(uuidv4());
-        }
-
         // Load settings
         try {
           const settings = await getBrandAgentSettings();
@@ -445,9 +436,21 @@ export function BrandAgentApp({
     try {
       let accumulatedContent = '';
 
+      // Lazily create the conversation record on first message
+      let activeConversationId = conversationId;
+      if (!activeConversationId && userId) {
+        try {
+          activeConversationId = await createBrandAgentConversation(userId);
+          setConversationId(activeConversationId);
+          conversationIdRef.current = activeConversationId;
+        } catch (convError) {
+          console.warn('[Vince] Conversation creation failed:', convError);
+        }
+      }
+
       const response = await sendMessageToBrandAgent(
         text,
-        conversationId,
+        activeConversationId,
         userId,
         brandId,
         (chunk) => {
@@ -1249,13 +1252,10 @@ export function BrandAgentApp({
               className="h-6 text-[10px] gap-1 text-purple-500 border-purple-500/30 hover:bg-purple-50"
               onClick={() => {
                 setConversationId(null);
+                conversationIdRef.current = null;
                 setMessages([]);
                 setAgentResponses({});
                 setShowHistoryPicker(false);
-                supabase.auth.getUser().then(({ data: { user } }) => {
-                  if (!user) return;
-                  createBrandAgentConversation(user.id).then(setConversationId).catch(() => {});
-                });
               }}
             >
               + New chat

@@ -49,7 +49,7 @@ const ACTION_CONFIG: Record<string, { icon: React.ElementType; color: string; la
   generate: { icon: Image, color: 'text-blue-500 bg-blue-500/10', label: 'Image Generated' },
   generate_video: { icon: Video, color: 'text-purple-500 bg-purple-500/10', label: 'Video Generated' },
   upscale: { icon: Zap, color: 'text-amber-500 bg-amber-500/10', label: 'Image Upscaled' },
-  product_recontext: { icon: Sparkles, color: 'text-emerald-500 bg-emerald-500/10', label: 'Product Recontextualized' },
+  product_recontext: { icon: Sparkles, color: 'text-purple-500 bg-purple-500/10', label: 'Product Recontextualized' },
   compliance_check: { icon: Shield, color: 'text-red-500 bg-red-500/10', label: 'Compliance Check' },
 };
 
@@ -159,8 +159,8 @@ export function AuditTrailTab() {
                   <p className="text-2xl font-bold">{stats.unique_users_this_week}</p>
                   <p className="text-xs text-muted-foreground">Active Users (7d)</p>
                 </div>
-                <div className="p-2 rounded-lg bg-violet-500/10">
-                  <Users className="h-4 w-4 text-violet-500" />
+                <div className="p-2 rounded-lg bg-emerald-500/10">
+                  <Users className="h-4 w-4 text-emerald-500" />
                 </div>
               </div>
             </CardContent>
@@ -177,8 +177,8 @@ export function AuditTrailTab() {
                     <p className="text-2xl font-bold">${stats.total_cost_this_month.toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground">Cost (30d)</p>
                   </div>
-                  <div className="p-2 rounded-lg bg-violet-500/10">
-                    <DollarSign className="h-4 w-4 text-violet-500" />
+                  <div className="p-2 rounded-lg bg-green-500/10">
+                    <DollarSign className="h-4 w-4 text-green-500" />
                   </div>
                 </div>
               </CardContent>

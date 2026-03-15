@@ -334,7 +334,7 @@ export function AIGuidelinesDialog({ brand, open, onOpenChange }: AIGuidelinesDi
                       <span className="text-foreground">Check output ownership rights before using AI content in paid client deliverables</span>
                     </div>
                     <div className="flex items-start gap-2.5 text-xs">
-                      <FileText className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <FileText className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
                       <span className="text-foreground">Document AI tool usage per project for compliance tracking and audit trails</span>
                     </div>
                   </div>

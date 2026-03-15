@@ -65,7 +65,7 @@ export function ConversationDetailDialog({ conversation, agentLabel, open, onOpe
                 <div className={`flex-shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center ${
                   msg.role === 'user'
                     ? 'bg-blue-500/10 text-blue-600'
-                    : 'bg-emerald-500/10 text-emerald-600'
+                    : 'bg-purple-500/10 text-purple-600'
                 }`}>
                   {msg.role === 'user' ? (
                     <User className="w-3.5 h-3.5" />

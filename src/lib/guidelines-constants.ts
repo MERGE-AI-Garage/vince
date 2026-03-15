@@ -53,7 +53,7 @@ export function getRiskStyle(riskLevel: string | null) {
 /* ── Approval status styling ──────────────────────────────────── */
 
 export const APPROVAL_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  approved: { bg: 'bg-emerald-500/10', text: 'text-emerald-700 dark:text-emerald-400', label: 'Approved' },
+  approved: { bg: 'bg-purple-500/10', text: 'text-purple-700 dark:text-purple-400', label: 'Approved' },
   restricted: { bg: 'bg-amber-500/10', text: 'text-amber-700 dark:text-amber-400', label: 'Restricted' },
   not_approved: { bg: 'bg-red-500/10', text: 'text-red-700 dark:text-red-400', label: 'Not Approved' },
 };

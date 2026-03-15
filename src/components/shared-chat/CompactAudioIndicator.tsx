@@ -67,10 +67,10 @@ export const CompactAudioIndicator: React.FC<CompactAudioIndicatorProps> = ({
     return () => cancelAnimationFrame(rafRef.current);
   }, [volumeRef, isModelSpeaking, isUserSpeaking]);
 
-  // Color: emerald for model, cyan for user, muted when idle
+  // Color: purple for model, cyan for user, muted when idle
   let barColor: string;
   if (isModelSpeaking) {
-    barColor = isLight ? 'bg-emerald-600' : 'bg-emerald-400';
+    barColor = isLight ? 'bg-purple-600' : 'bg-purple-400';
   } else if (isUserSpeaking) {
     barColor = isLight ? 'bg-cyan-600' : 'bg-cyan-400';
   } else {

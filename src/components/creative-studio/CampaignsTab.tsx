@@ -8,8 +8,10 @@ import {
   ArrowLeft, Download, Layers, Archive, FileText, Loader2,
   FolderOpen, Clock, Cpu, Hash, Sparkles, Calendar, ShieldCheck,
   Image, LayoutGrid, List, Search, User, MessageSquare, BarChart2,
-  SortAsc, SortDesc, Bot, Link as LinkIcon, Play,
+  SortAsc, SortDesc, Bot, Link as LinkIcon, Play, Copy,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { useMyGenerations } from '@/hooks/useCreativeStudioGenerations';
+import { useAllGenerations } from '@/hooks/useCreativeStudioGenerations';
 import { CreativePackageDisplay, PackagePart } from './CreativePackageDisplay';
 import { loadConversationMessages } from '@/services/vinceConversationHistory';
 import { supabase } from '@/integrations/supabase/client';
@@ -414,7 +416,7 @@ function AnalysisPanel({ gen, resolvedNames }: { gen: GenerationWithDetails; res
       const { data, error } = await supabase.functions.invoke('brand-prompt-agent', {
         body: {
           brand_id: gen.brand_id,
-          user_message: `Please analyze these campaign deliverables for brand standards compliance. For each image, evaluate: brand color usage, visual consistency, messaging alignment, and overall brand fit. Provide a score out of 100 and specific actionable feedback for each deliverable.\n\nDeliverables:\n${imageList}\n\nBrief: ${gen.prompt_text || '(no brief)'}`,
+          user_message: `Please analyze these campaign deliverables for brand standards compliance. For each image, evaluate: brand color usage, visual consistency, messaging alignment, typography (flag any all-caps or title case headlines — sentence case is required), and overall brand fit. Also flag any instance where text, overlays, or graphic elements cover or obscure a human face — this is always a brand violation. Provide a score out of 100 and specific actionable feedback for each deliverable.\n\nDeliverables:\n${imageList}\n\nBrief: ${gen.prompt_text || '(no brief)'}`,
         },
       });
       if (error) throw error;
@@ -467,12 +469,22 @@ function AnalysisPanel({ gen, resolvedNames }: { gen: GenerationWithDetails; res
         </div>
         {brandAnalysis ? (
           <div className="space-y-3">
-            <div className="bg-muted/10 rounded-lg border border-border/30 p-4 max-h-[400px] overflow-y-auto">
-              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">{brandAnalysis}</p>
+            <div className="bg-muted/10 rounded-lg border border-border/30 p-4 max-h-[400px] overflow-y-auto prose prose-sm prose-invert max-w-none [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:text-sm [&_li]:text-foreground/80 [&_p]:text-sm [&_p]:text-foreground/85 [&_strong]:text-foreground">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{brandAnalysis}</ReactMarkdown>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setBrandAnalysis(null)} className="text-xs h-7">
-              Re-run Analysis
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setBrandAnalysis(null)} className="text-xs h-7">
+                Re-run Analysis
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 gap-1"
+                onClick={() => { navigator.clipboard.writeText(brandAnalysis); toast.success('Copied to clipboard'); }}
+              >
+                <Copy className="w-3 h-3" /> Copy
+              </Button>
+            </div>
           </div>
         ) : (
           <Button
@@ -519,12 +531,22 @@ function AnalysisPanel({ gen, resolvedNames }: { gen: GenerationWithDetails; res
         </div>
         {competitorAnalysis && (
           <div className="space-y-3">
-            <div className="bg-muted/10 rounded-lg border border-border/30 p-4 max-h-[400px] overflow-y-auto">
-              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">{competitorAnalysis}</p>
+            <div className="bg-muted/10 rounded-lg border border-border/30 p-4 max-h-[400px] overflow-y-auto prose prose-sm prose-invert max-w-none [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:text-sm [&_li]:text-foreground/80 [&_p]:text-sm [&_p]:text-foreground/85 [&_strong]:text-foreground">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{competitorAnalysis}</ReactMarkdown>
             </div>
-            <Button variant="outline" size="sm" onClick={() => { setCompetitorAnalysis(null); setCompetitorUrl(''); }} className="text-xs h-7">
-              New Comparison
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setCompetitorAnalysis(null); setCompetitorUrl(''); }} className="text-xs h-7">
+                New Comparison
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 gap-1"
+                onClick={() => { navigator.clipboard.writeText(competitorAnalysis); toast.success('Copied to clipboard'); }}
+              >
+                <Copy className="w-3 h-3" /> Copy
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -967,9 +989,7 @@ export function CampaignsTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
-  const { data: allGenerations = [], isLoading } = useMyGenerations(200);
-
-  const campaigns = allGenerations.filter(g => g.generation_type === 'creative_package');
+  const { data: campaigns = [], isLoading } = useAllGenerations({ type: 'creative_package', limit: 500 });
 
   const brands = Array.from(
     new Map(campaigns.filter(g => g.brand).map(g => [g.brand!.id, g.brand!] as const)).values()

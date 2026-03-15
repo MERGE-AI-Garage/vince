@@ -91,6 +91,7 @@ import { BrandDNABuilder } from './BrandDNABuilder';
 import { BrandDNADialog } from './BrandDNADialog';
 import { CorporateDNADialog } from './BrandStoryDialog';
 import { BrandStandardsDialog } from './BrandStandardsDialog';
+import { ArtDirectionDialog } from './ArtDirectionDialog';
 import { BrandReferenceCollections } from './BrandReferenceCollections';
 import { BrandSynthesizeDialog } from './BrandSynthesizeDialog';
 import type { BrandDialogView } from './BrandDialogNav';
@@ -154,16 +155,19 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
   const { data: profile } = useBrandProfile(effectiveBrandId ?? undefined);
   const [dnaDialogOpen, setDnaDialogOpen] = useState(false);
   const [corporateDnaOpen, setCorporateDnaOpen] = useState(false);
+  const [artDirectionOpen, setArtDirectionOpen] = useState(false);
   const [standardsDialogOpen, setStandardsDialogOpen] = useState(false);
 
   const handleDialogNavigate = (view: BrandDialogView) => {
     setDnaDialogOpen(false);
     setCorporateDnaOpen(false);
+    setArtDirectionOpen(false);
     setStandardsDialogOpen(false);
     requestAnimationFrame(() => {
       switch (view) {
         case 'brand-dna': setDnaDialogOpen(true); break;
         case 'corporate-dna': setCorporateDnaOpen(true); break;
+        case 'art-direction': setArtDirectionOpen(true); break;
         case 'brand-standards': setStandardsDialogOpen(true); break;
       }
     });
@@ -300,6 +304,7 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
                 {[
                   { label: 'Brand DNA', icon: Dna, onClick: () => setDnaDialogOpen(true) },
                   { label: 'Corporate DNA', icon: BookOpen, onClick: () => setCorporateDnaOpen(true) },
+                  { label: 'Art Direction', icon: Camera, onClick: () => setArtDirectionOpen(true) },
                   { label: 'Brand Guidelines', icon: Lightbulb, onClick: () => setStandardsDialogOpen(true) },
                 ].map(({ label, icon: Icon, onClick }, idx) => {
                   const color = btnColors[idx] || selectedBrand.primary_color;
@@ -359,6 +364,14 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
           brand={selectedBrand}
           open={corporateDnaOpen}
           onOpenChange={setCorporateDnaOpen}
+          onNavigate={handleDialogNavigate}
+        />
+      )}
+      {selectedBrand && (
+        <ArtDirectionDialog
+          brand={selectedBrand}
+          open={artDirectionOpen}
+          onOpenChange={setArtDirectionOpen}
           onNavigate={handleDialogNavigate}
         />
       )}
@@ -780,7 +793,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                       <span className="text-3xl font-bold">{stats?.directiveCount || 0}</span>
                       <span className="text-sm text-muted-foreground">directives</span>
                       <Separator orientation="vertical" className="h-5 mx-1" />
-                      <span className="text-2xl font-bold text-emerald-600">{stats?.promptCount || 0}</span>
+                      <span className="text-2xl font-bold text-purple-600">{stats?.promptCount || 0}</span>
                       <span className="text-sm text-muted-foreground">templates</span>
                     </div>
                   </div>
@@ -803,7 +816,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                     )}
                     {(stats?.promptCount || 0) > 0 && (
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground ml-auto">
-                        <BookMarked className="h-3 w-3 text-emerald-500" />
+                        <BookMarked className="h-3 w-3 text-purple-500" />
                         {stats?.promptCount} ready to use
                       </div>
                     )}
@@ -979,7 +992,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
                 icon={Layers}
                 title="Composition Rules"
                 data={profile.composition_rules}
-                iconColor="text-emerald-500"
+                iconColor="text-purple-500"
                 section="composition_rules"
                 brandId={brandId}
                 onSave={updateProfileSection.mutateAsync}
@@ -1049,14 +1062,14 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
         const renderSourceRow = (source: typeof allSources[number]) => (
           <div key={source.id} className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md border bg-muted/30 text-xs group">
             {source._sourceType === 'website' ? (
-              <Globe className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+              <Globe className="h-3.5 w-3.5 text-purple-500 shrink-0" />
             ) : (
               <FileText className="h-3.5 w-3.5 text-blue-500 shrink-0" />
             )}
             <span className="truncate flex-1 text-foreground font-medium" title={source.source_image_url}>
               {source.source_image_url}
             </span>
-            <Badge variant="outline" className={`text-[9px] h-4 px-1.5 shrink-0 ${source._sourceType === 'website' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : ''}`}>
+            <Badge variant="outline" className={`text-[9px] h-4 px-1.5 shrink-0 ${source._sourceType === 'website' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' : ''}`}>
               {source._sourceType === 'website' ? 'website' : ((source.analysis_data as any)?.document_type || 'document')}
             </Badge>
             <span className="text-muted-foreground shrink-0">
@@ -1079,7 +1092,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-emerald-500" />
+                    <Layers className="h-4 w-4 text-purple-500" />
                     Intelligence Sources
                   </CardTitle>
                   <CardDescription>
@@ -1619,7 +1632,7 @@ export function BrandIntelligenceDetail({ brandId, brandLogoUrl }: { brandId: st
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-emerald-500" />
+                <Shield className="h-4 w-4 text-purple-500" />
                 Tool Approvals
               </CardTitle>
               <CardDescription>

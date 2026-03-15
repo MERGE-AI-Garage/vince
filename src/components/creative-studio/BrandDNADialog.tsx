@@ -298,7 +298,7 @@ export function BrandDNADialog({ brand, open, onOpenChange, onNavigate }: BrandD
                     {sections}
                   </div>
                   <div className="space-y-3">
-                    <BentoCard title="Brand Imagery" icon={ImageIcon} iconColor="text-emerald-500">
+                    <BentoCard title="Brand Imagery" icon={ImageIcon} iconColor="text-purple-500">
                       <ImageGrid
                         images={brandImages}
                         headerImageUrl={headerImageUrl}

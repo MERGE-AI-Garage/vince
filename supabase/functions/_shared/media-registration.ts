@@ -53,9 +53,10 @@ async function ensureFolderPath(
       .from('media_folders')
       .insert({
         name: segment,
+        path: currentPath,
         parent_id: parentId,
         description: parentId ? null : 'Images created by AI generators across the platform',
-        color: '#10b981',
+        color: '#8b5cf6',
         icon: parentId ? 'folder' : 'sparkles',
       })
       .select('id')

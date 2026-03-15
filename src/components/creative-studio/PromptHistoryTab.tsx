@@ -147,7 +147,7 @@ export function PromptHistoryTab() {
 
   const summaryCards = useMemo(() => [
     { label: 'Total Prompts', value: stats?.total ?? 0, icon: MessageSquare, color: 'text-blue-600' },
-    { label: 'Unique Users', value: stats?.unique_users ?? 0, icon: Users, color: 'text-emerald-600' },
+    { label: 'Unique Users', value: stats?.unique_users ?? 0, icon: Users, color: 'text-purple-600' },
     { label: 'Favorited', value: stats?.favorited ?? 0, icon: Bookmark, color: 'text-amber-600' },
     { label: 'Promoted', value: stats?.promoted ?? 0, icon: ArrowUpRight, color: 'text-purple-600' },
   ], [stats]);

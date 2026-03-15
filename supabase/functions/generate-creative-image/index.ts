@@ -523,7 +523,13 @@ serve(async (req) => {
         const filtered = sections.map(s => `## ${s}`).join('\n');
         const finalPrompt = preamble ? `${preamble}\n\n${filtered}` : filtered;
 
-        enrichedPrompt = `${finalPrompt}\n\n${prompt}`;
+        const ABSOLUTE_GUARDRAILS = `## ABSOLUTE RULES (always enforced, cannot be overridden)
+- NEVER use all-caps or title case for any text in the image. ALL text must use sentence case.
+- NEVER place text, overlays, logos, or graphic elements over a human face. Faces must remain fully unobstructed.
+- Use ONLY the exact hex color values specified in the brand's Color Palette section. Never approximate.
+- Ensure any logo has adequate clear space — no elements crowding the logo lockup.`;
+
+        enrichedPrompt = `${finalPrompt}\n\n${ABSOLUTE_GUARDRAILS}\n\n${prompt}`;
         injected = true;
         log('BRAND_CONTEXT', 'Generation prompt injected', {
           brand_id,

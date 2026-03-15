@@ -15,6 +15,7 @@ import {
   Video,
   CheckCircle,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +70,7 @@ interface SelectedUser {
   email?: string;
   avatar_url?: string;
   is_unlimited: boolean;
+  onNavigateToMedia?: () => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -139,10 +141,12 @@ function UserDetailDialog({
   user,
   costData,
   onClose,
+  onNavigateToMedia,
 }: {
   user: SelectedUser | null;
   costData: WeeklyUserCost | undefined;
   onClose: () => void;
+  onNavigateToMedia?: () => void;
 }) {
   const { data: generations, isLoading } = useGenerationsByUser(user?.user_id || null);
 
@@ -184,8 +188,16 @@ function UserDetailDialog({
                 </div>
                 <div className="flex-1">
                   <DialogTitle className="text-xl">{user.full_name || user.email || 'Unknown User'}</DialogTitle>
-                  <DialogDescription>Weekly generation activity and cost breakdown</DialogDescription>
+                  <DialogDescription>
+                    {user.email && user.full_name ? user.email : 'Weekly generation activity and cost breakdown'}
+                  </DialogDescription>
                 </div>
+                {onNavigateToMedia && (
+                  <Button variant="outline" size="sm" onClick={() => { onClose(); onNavigateToMedia(); }}>
+                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    Media Library
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
                   <X className="h-4 w-4" />
                 </Button>
@@ -312,7 +324,7 @@ function UserDetailDialog({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
-export function QuotasTab() {
+export function QuotasTab({ onNavigateToMedia }: { onNavigateToMedia?: () => void }) {
   const { data: quotaUsage, isLoading: quotaLoading } = useAllUsersQuotaUsage();
   const { data: weeklyCosts } = useWeeklyUserCosts();
   const updateUserQuotaLimit = useUpdateUserQuotaLimit();
@@ -349,7 +361,10 @@ export function QuotasTab() {
     // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(u => u.full_name?.toLowerCase().includes(term));
+      result = result.filter(u =>
+        u.full_name?.toLowerCase().includes(term) ||
+        u.email?.toLowerCase().includes(term)
+      );
     }
 
     // Sort
@@ -415,6 +430,7 @@ export function QuotasTab() {
     setSelectedUser({
       user_id: quota.user_id,
       full_name: quota.full_name,
+      email: quota.email,
       avatar_url: quota.avatar_url,
       is_unlimited: quota.is_unlimited,
     });
@@ -536,7 +552,12 @@ export function QuotasTab() {
                               {quota.full_name?.charAt(0)?.toUpperCase() || '?'}
                             </div>
                           )}
-                          <span>{quota.full_name}</span>
+                          <div>
+                            <span>{quota.full_name}</span>
+                            {quota.email && (
+                              <p className="text-xs text-muted-foreground">{quota.email}</p>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
 
@@ -637,6 +658,7 @@ export function QuotasTab() {
         user={selectedUser}
         costData={selectedUser ? weeklyCosts?.get(selectedUser.user_id) : undefined}
         onClose={() => setSelectedUser(null)}
+        onNavigateToMedia={onNavigateToMedia}
       />
 
       {/* Quota Edit Dialog */}

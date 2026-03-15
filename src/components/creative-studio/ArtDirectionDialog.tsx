@@ -11,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import {
   Camera, LayoutGrid, Package, X, Globe, ScanLine, BarChart3,
+  Sparkles, Eye, CheckCircle, XCircle,
 } from 'lucide-react';
 import { useBrandProfile } from '@/hooks/useCreativeStudioBrandIntelligence';
 import type { BrandVisualProfile, CreativeStudioBrand } from '@/types/creative-studio';
@@ -106,14 +107,41 @@ function BadgeList({ label, items }: { label: string; items?: string[] }) {
 
 function PhotographySection({ data }: { data: BrandVisualProfile['photography_style'] }) {
   if (!data) return null;
+  const specs = [
+    { label: 'Aperture', value: data.preferred_aperture },
+    { label: 'Focal Length', value: data.preferred_focal_length },
+    { label: 'Color Temp', value: data.preferred_color_temperature },
+    { label: 'Film Stock', value: data.film_stock_feel },
+  ].filter(s => s.value);
+  const wide = [
+    { label: 'Lighting', value: data.preferred_lighting },
+    { label: 'Depth of Field', value: data.depth_of_field_preference },
+  ].filter(s => s.value);
   return (
-    <div className="space-y-2">
-      <Field label="Aperture" value={data.preferred_aperture} />
-      <Field label="Focal Length" value={data.preferred_focal_length} />
-      <Field label="Lighting" value={data.preferred_lighting} />
-      <Field label="Color Temperature" value={data.preferred_color_temperature} />
-      <Field label="Depth of Field" value={data.depth_of_field_preference} />
-      <Field label="Film Stock Feel" value={data.film_stock_feel} />
+    <div className="space-y-3">
+      {specs.length > 0 && (
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
+          {specs.map(spec => (
+            <div key={spec.label} className="space-y-0.5">
+              <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">{spec.label}</span>
+              <p className="text-[11px] font-semibold text-foreground leading-snug font-product-sans">{spec.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {wide.length > 0 && (
+        <div
+          className="rounded-lg px-3 py-2 space-y-2"
+          style={{ backgroundColor: 'hsl(var(--cs-surface-2))', border: '1px solid hsl(var(--cs-border-subtle))' }}
+        >
+          {wide.map(spec => (
+            <div key={spec.label}>
+              <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">{spec.label}</span>
+              <p className="text-[11px] text-foreground/85 leading-snug mt-0.5">{spec.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -123,10 +151,18 @@ function PhotographySection({ data }: { data: BrandVisualProfile['photography_st
 function CompositionSection({ data }: { data: BrandVisualProfile['composition_rules'] }) {
   if (!data) return null;
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      {data.aspect_ratio_preference && (
+        <div
+          className="flex items-center justify-between rounded-lg px-3 py-2"
+          style={{ backgroundColor: 'hsl(var(--cs-surface-2))', border: '1px solid hsl(var(--cs-border-subtle))' }}
+        >
+          <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">Aspect Ratio</span>
+          <span className="text-sm font-bold text-foreground font-product-sans">{data.aspect_ratio_preference}</span>
+        </div>
+      )}
       <BadgeList label="Preferred Layouts" items={data.preferred_layouts} />
       <BadgeList label="Framing Conventions" items={data.framing_conventions} />
-      <Field label="Aspect Ratio" value={data.aspect_ratio_preference} />
     </div>
   );
 }
@@ -208,6 +244,90 @@ function ProductCatalogSection({ data }: { data: BrandVisualProfile['product_cat
         </div>
       ))}
     </div>
+  );
+}
+
+// ── Overview prose ───────────────────────────────────────────────────────────
+
+function ArtDirectionOverview({ profile }: { profile: BrandVisualProfile }) {
+  const dna = profile.visual_dna as Record<string, unknown>;
+  const signatureStyle = dna?.signature_style as string | undefined;
+  const brandAesthetic = profile.brand_identity?.brand_aesthetic;
+  if (!signatureStyle && !brandAesthetic) return null;
+  return (
+    <BentoCard title="Overview" icon={Sparkles} iconColor="text-amber-500">
+      <div className="space-y-2.5">
+        {brandAesthetic && (
+          <p className="text-xs text-foreground/90 leading-relaxed font-medium italic border-l-2 border-amber-400/60 pl-3">
+            {brandAesthetic}
+          </p>
+        )}
+        {signatureStyle && (
+          <p className="text-xs text-foreground/70 leading-relaxed">{signatureStyle}</p>
+        )}
+      </div>
+    </BentoCard>
+  );
+}
+
+// ── Visual principles ────────────────────────────────────────────────────────
+
+function VisualPrinciples({ profile }: { profile: BrandVisualProfile }) {
+  const dna = profile.visual_dna as Record<string, unknown>;
+  const principles = dna?.visual_principles as string[] | undefined;
+  if (!principles?.length) return null;
+  return (
+    <BentoCard title="Visual Principles" icon={Eye} iconColor="text-violet-500">
+      <ul className="space-y-1.5">
+        {principles.map((p, i) => (
+          <li key={i} className="flex gap-2 text-xs text-foreground/80 leading-snug">
+            <span className="text-violet-400 shrink-0 mt-px font-bold">·</span>
+            {p}
+          </li>
+        ))}
+      </ul>
+    </BentoCard>
+  );
+}
+
+// ── Do's and Don'ts ──────────────────────────────────────────────────────────
+
+function VisualDosDonts({ profile }: { profile: BrandVisualProfile }) {
+  const dna = profile.visual_dna as Record<string, unknown>;
+  const dos = dna?.dos as string[] | undefined;
+  const donts = dna?.donts as string[] | undefined;
+  if (!dos?.length && !donts?.length) return null;
+  return (
+    <BentoCard title="Do's & Don'ts" icon={CheckCircle} iconColor="text-emerald-500">
+      <div className="space-y-3">
+        {dos && dos.length > 0 && (
+          <div>
+            <span className="text-[9px] font-semibold text-emerald-600 uppercase tracking-widest block mb-1.5">Do</span>
+            <ul className="space-y-1.5">
+              {dos.map((item, i) => (
+                <li key={i} className="flex gap-1.5 text-[11px] text-foreground/75 leading-snug">
+                  <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {donts && donts.length > 0 && (
+          <div>
+            <span className="text-[9px] font-semibold text-red-500 uppercase tracking-widest block mb-1.5">Don't</span>
+            <ul className="space-y-1.5">
+              {donts.map((item, i) => (
+                <li key={i} className="flex gap-1.5 text-[11px] text-foreground/75 leading-snug">
+                  <XCircle className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </BentoCard>
   );
 }
 
@@ -440,8 +560,11 @@ export function ArtDirectionDialog({ brand, open, onOpenChange, onNavigate }: Ar
                   </BentoCard>
                 </div>
 
-                {/* Right: Snapshot sidebar */}
-                <div className="sticky top-0">
+                {/* Right: Overview, Principles, Do/Don'ts, Snapshot */}
+                <div className="space-y-3">
+                  <ArtDirectionOverview profile={profile} />
+                  <VisualPrinciples profile={profile} />
+                  <VisualDosDonts profile={profile} />
                   <ArtDirectionSnapshot profile={profile} />
                 </div>
               </div>

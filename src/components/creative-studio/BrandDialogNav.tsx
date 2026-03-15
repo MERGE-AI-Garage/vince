@@ -1,7 +1,7 @@
-// ABOUTME: Pill-style navigation between Brand DNA, Corporate DNA, and Brand Standards dialogs
+// ABOUTME: Pill-style navigation between Brand DNA, Corporate DNA, Art Direction, and Brand Standards dialogs
 // ABOUTME: Frosted glass styling that adapts to light/dark branded headers
 
-export type BrandDialogView = 'brand-dna' | 'corporate-dna' | 'brand-standards';
+export type BrandDialogView = 'brand-dna' | 'corporate-dna' | 'art-direction' | 'brand-standards';
 
 interface BrandDialogNavProps {
   activeView: BrandDialogView;
@@ -12,6 +12,7 @@ interface BrandDialogNavProps {
 const NAV_ITEMS: { view: BrandDialogView; label: string }[] = [
   { view: 'brand-dna', label: 'Brand DNA' },
   { view: 'corporate-dna', label: 'Corporate DNA' },
+  { view: 'art-direction', label: 'Art Direction' },
   { view: 'brand-standards', label: 'Brand Guidelines' },
 ];
 

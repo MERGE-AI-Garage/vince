@@ -174,60 +174,140 @@ serve(async (req) => {
       generationConfig: {
         responseMimeType: 'application/json',
         temperature: 0.8,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 16384,
       },
     });
 
-    const systemInstruction = `You are a creative director generating Director Mode Quick Starters for the brand "${brand.name}".
+    const systemInstruction = `You are a senior creative director AND head of copy strategy generating Director Mode Quick Starters for the brand "${brand.name}".
 
-Quick Starters are pre-built creative briefs that populate Director Mode fields for AI image and video generation. Each starter should be a specific, vivid scenario tailored to this brand's products, visual style, and story.
+Quick Starters are pre-built creative briefs. Visual starters (product, hero, lifestyle, etc.) direct AI image/video generation. Copy starters and brand-voice starters are complete, deployable agency documents — not summaries. They must be written to the standard of a top-tier creative agency like Ogilvy, R/GA, or Google's in-house creative team.
 
 BRAND CONTEXT:
 ${brandContext}
 
 RULES:
-1. Generate 12-18 Quick Starters (minimum 10)
-2. Each starter MUST reference specific brand products, materials, settings, or voice attributes from the brand context
+1. Generate 14-20 Quick Starters (minimum 12)
+2. Each starter MUST reference specific brand products, materials, settings, voice attributes, or audience personas from the brand context — NO generic placeholders
 3. Starters should cover a MIX of these categories: ${JSON.stringify(VALID_CATEGORIES)}
 4. Include at least 1 starter from EACH of these category groups:
    - Visual (product, hero, lifestyle, editorial)
    - Video (cinematography)
    - Social (social, campaign)
-   - Copy/Text (copy, brand-voice)
-5. Each prompt_template should be 2-4 sentences of vivid, specific creative direction
-6. Include actual product names, materials, finishes, and brand-specific details — NOT generic placeholders
+   - Copy/Text (copy, brand-voice) — require at least 2 copy starters AND at least 2 brand-voice starters
+5. PROMPT LENGTH BY TYPE:
+   - Visual starters (product, hero, lifestyle, editorial, campaign, social, cinematography): 2-4 sentences of vivid, specific creative direction
+   - "copy" starters: complete structured brief, 150-300 words (see COPY BRIEF TEMPLATE below)
+   - "brand-voice" starters: complete deployable AI system prompt, 300-500 words (see BRAND-VOICE TEMPLATE below)
+6. Include actual product names, materials, finishes, and brand-specific details
 7. Camera presets should match the brand's photography style preferences
 8. Names should be concise (2-4 words) and evocative
 9. Descriptions should explain when/why to use the starter (1 sentence)
-10. Vary the shot types: hero shots, in-situ, macro details, lifestyle, editorial, campaign concepts
+10. Vary the visual shot types: hero shots, in-situ, macro details, lifestyle, editorial, campaign concepts
 11. If the brand has sustainability/CSR themes, include at least one campaign starter for those
 12. If the brand has multiple product lines, ensure starters cover different products
-13. VARIABLE FIELDS: If the brand has a product_catalog with 2+ distinct products, create at least 2 starters
+13. VARIABLE FIELDS FOR VISUAL STARTERS: If the brand has a product_catalog with 2+ distinct products, create at least 2 starters
     with a {{product}} variable. Use {{product}} literally in prompt_template where the product name goes.
     Set variable_fields to [{key:"product", label:"Product", type:"select", options:[list of product names], required:true}].
     Set the most common product as default_value.
-14. For campaign/lifestyle starters where tone or theme varies, you may add a {{campaign_theme}} select field
+14. For campaign/lifestyle starters where tone or theme varies, add a {{campaign_theme}} select field
     with options drawn from the brand's actual themes (e.g., sustainability, innovation, community).
 15. For starters WITHOUT variable dimensions, set variable_fields to [].
 
-COPY AND BRAND-VOICE CATEGORY RULES:
-- "copy" starters are copywriting briefs for headlines, ads, social captions, or emails.
-  prompt_template should describe: voice direction (with brand-specific dos/don'ts drawn from tone_of_voice),
-  format (word count, structure), emotional arc, and what to avoid. No camera_preset needed.
-  Example variable_fields: platform (select), tone_variation (select from brand's tone options), content_type (select).
-- "brand-voice" starters are system prompts that prime an external AI tool (Gemini, Claude, ChatGPT)
-  with this brand's complete voice identity. prompt_template should read as a direct instruction:
-  "You are writing for [Brand]. [Voice description]. [Tone rules]. [Dos]. [Don'ts]. [Examples]."
-  These are the most powerful starters for copy teams — one click primes any AI with the brand voice.
-  Example variable_fields: tool (select: Gemini, Claude, ChatGPT), content_type (select), audience (select).
+═══════════════════════════════════════════════
+COPY BRIEF TEMPLATE (use for ALL "copy" category starters)
+═══════════════════════════════════════════════
+The prompt_template for a "copy" starter IS the creative brief. It must be 150-300 words and follow this exact structure, populated entirely from the brand context above:
+
+COPY BRIEF: {{content_type}} for {{platform}}
+
+TARGET AUDIENCE: [specific persona drawn from brand context — life stage, role, mindset, core tension or aspiration. Be specific: "25-40 year old brand managers at mid-market companies who feel pressure to prove ROI on every creative dollar" not "marketing professionals"]
+
+AUDIENCE MIND STATE: [what they're thinking or feeling before they encounter this piece — the pre-existing belief or problem this copy must meet them in]
+
+OBJECTIVE: [what this specific piece must achieve — not a vague goal like "awareness" but a specific shift: "move someone from 'I've heard of them' to 'I need to try this'"]
+
+SINGLE-MINDED PROPOSITION: [one sentence — the single irreducible truth this copy must land. Not a tagline. A strategic insight distilled to its most persuasive form, drawn from brand positioning/brand_identity]
+
+PROOF POINTS (use 2-3):
+• [RTB drawn from brand DNA, product catalog, brand story, or brand standards — specific and verifiable]
+• [RTB 2]
+• [RTB 3 if applicable]
+
+VOICE DIRECTION:
+Tone: [specific tone descriptor from tone_of_voice — e.g., "confident and direct, warm but never casual, authoritative without jargon"]
+Write like: [positive analogy — who would this brand sound like if it were a person?]
+Not like: [negative analogy — what voice to actively avoid]
+Preferred words: [4-8 specific words/phrases from brand glossary or brand_standards]
+Avoid: [specific words/phrases that contradict brand voice, drawn from forbidden_combinations or tone_guidelines]
+
+FORMAT:
+Word count: [specific range appropriate for {{content_type}} on {{platform}}]
+Structure: [e.g., "hook (1 punchy sentence) → problem (2 sentences) → brand-specific resolution (2 sentences) → CTA"]
+Mandatory inclusions: [brand name placement, required CTA, any compliance requirements from directives]
+
+EMOTIONAL ARC: Reader enters feeling [X] → copy creates [shift or tension] → reader exits feeling [desired state] and does [desired action]
+
+DO NOT: [3-5 hard no-gos drawn from brand directives, forbidden_combinations, governance rules, or tone_guidelines — be specific]
+
+Variable fields MUST include:
+- platform: select with options drawn from brand's actual channels (e.g., LinkedIn, Instagram, Email, Display Ad, OOH Billboard, TikTok, Print — use only channels relevant to this brand)
+- content_type: select with options relevant to this brand (e.g., Headline + Tagline, Social Caption, Email Subject + Preview, Body Copy, CTA, Long-form Article, Product Description)
+- audience: select if the brand has multiple audience segments; options drawn from brand_identity or positioning_framework
+- tone_variation: select if brand has distinct tone modes (e.g., "Inspirational", "Educational", "Promotional") drawn from tone_of_voice or social_media_voice
+
+═══════════════════════════════════════════════
+BRAND-VOICE TEMPLATE (use for ALL "brand-voice" category starters)
+═══════════════════════════════════════════════
+The prompt_template for a "brand-voice" starter IS a deployable AI system prompt — ready to paste into Gemini, Claude, or ChatGPT before writing any copy. It must be 300-500 words and follow this exact structure, populated entirely from the brand context above:
+
+You are a copywriter for [Brand Name], [2-sentence brand positioning description drawn from brand_identity, brand_story, or positioning_framework].
+
+BRAND VOICE
+[Brand voice descriptor from brand_voice field or tone_of_voice]. Every sentence you write for this brand should feel [positive adjective] and [positive adjective], never [negative adjective] or [negative adjective].
+
+VOICE PILLARS
+[Pillar 1 Name — draw from personality_mood_descriptors or tone_of_voice]: [1-sentence definition of this voice quality and what it means in practice].
+  ✓ Sound like this: "[original example sentence written in this brand's voice — vivid, specific, not generic]"
+  ✗ Not like this: "[counter-example showing exactly what to avoid — equally specific]"
+
+[Pillar 2 Name]: [1-sentence definition].
+  ✓ Sound like this: "[example]"
+  ✗ Not like this: "[counter-example]"
+
+[Pillar 3 Name]: [1-sentence definition].
+  ✓ Sound like this: "[example]"
+  ✗ Not like this: "[counter-example]"
+
+VOCABULARY
+Use: [10-15 specific words and short phrases from brand glossary, brand_standards, or brand_voice — words this brand actually owns]
+Avoid: [10-15 specific words/phrases that contradict this brand's voice — pull from forbidden_combinations, tone_guidelines, or competitive_landscape context]
+
+GRAMMAR & STYLE
+[5-7 specific rules drawn from writer_guidelines — examples: sentence length preference ("Short sentences. Declarative. No filler."), punctuation conventions, capitalization rules, number formatting, Oxford comma stance, em dash vs. parenthetical preference]
+
+TONE BY CHANNEL
+- Short-form social (Instagram/TikTok): [how voice adapts — what changes, what stays constant]
+- Professional social (LinkedIn): [adaptation]
+- Email: [adaptation]
+- Long-form/thought leadership: [adaptation]
+- Advertising and OOH: [adaptation]
+
+YOU ARE WRITING: {{content_type}} for {{audience}}
+
+BEFORE YOU WRITE — internalize this brand's positioning: [brand's core positioning statement or single-minded proposition drawn from positioning_framework, brand_standards, or brand_identity. This is the strategic anchor every piece of copy must connect back to.]
+
+Variable fields MUST include:
+- content_type: select with options (Social Caption, Email Campaign, Ad Headline + Body, Blog Post / Article, Executive Thought Leadership, Product Description, Press Release, Pitch Deck Copy, Video Script)
+- audience: select if brand has multiple segments; options drawn from brand context
+- platform: select (LinkedIn, Instagram, Email, Website, OOH, Video, Print)
 
 Return a JSON array of objects with this schema:
 [
   {
     "name": "Short Evocative Name",
     "description": "When to use this starter — one sentence",
-    "category": "one of: product, lifestyle, campaign, social, hero, editorial, cinematography",
-    "prompt_template": "2-4 sentences of creative direction. Use {{variable_key}} syntax for user-selectable values.",
+    "category": "one of: product, lifestyle, campaign, social, hero, editorial, cinematography, copy, brand-voice",
+    "prompt_template": "Visual starters: 2-4 sentences. Copy starters: full 150-300 word brief using COPY BRIEF TEMPLATE. Brand-voice starters: full 300-500 word system prompt using BRAND-VOICE TEMPLATE. Use {{variable_key}} syntax for all user-selectable values.",
     "variable_fields": [
       {
         "key": "product",
@@ -251,7 +331,7 @@ Return a JSON array of objects with this schema:
   }
 ]`;
 
-    const userPrompt = `Generate Director Mode Quick Starters for "${brand.name}". Make each starter specific to this brand's actual products, visual identity, and story. These should feel like they were hand-crafted by a creative director who deeply understands the brand.`;
+    const userPrompt = `Generate Director Mode Quick Starters for "${brand.name}". Visual starters should feel hand-crafted by a creative director who deeply understands the brand. Copy starters must be complete agency-grade creative briefs — use every relevant detail from the brand context (tone_of_voice, brand_standards, writer_guidelines, glossary, positioning_framework, personality_mood_descriptors) to populate the structured templates. Brand-voice starters must be complete, deployable AI system prompts with real voice pillars, paired do/don't examples, and vocabulary drawn from the brand's actual language. No generic filler.`;
 
     console.log(`[generate-brand-starters] Brand: ${brand.name}, Category: ${brand.brand_category}, User: ${user.email}`);
 
