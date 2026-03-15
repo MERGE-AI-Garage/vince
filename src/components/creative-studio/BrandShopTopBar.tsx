@@ -177,7 +177,7 @@ export function BrandShopTopBar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p className="text-xs">AI Library</p>
+              <p className="text-xs">Prompt Library</p>
             </TooltipContent>
           </Tooltip>
 
@@ -224,7 +224,7 @@ export function BrandShopTopBar({
               <Button
                 variant={vinceActive ? 'secondary' : 'ghost'}
                 size="icon"
-                className={cn('h-7 w-7', vinceActive && 'text-purple-500')}
+                className={cn('h-7 w-7', vinceActive && 'text-[#1ED75F]')}
                 onClick={onToggleVince}
                 data-tour="brand-agent-toggle"
               >

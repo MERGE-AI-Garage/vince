@@ -55,13 +55,14 @@ The info pane (opens by default) shows a **Synthid Watermark Detection** section
 
 - **Manually uploaded images** — no SynthID data is set on upload. The field stays `null`, and the panel does not render.
 - **Video generations** — `generate-creative-video` does not insert to the `media` table directly; videos appear in `creative_studio_generations` only.
-- **Backfill of historical images** — images generated before this change (2026-03-14) have `null` values. The UI handles this gracefully (panel hidden when `synthid_detected === null`).
+- **Backfill of historical images** — images generated before 2026-03-14 have `null` values. Images generated 2026-03-14 through early 2026-03-15 were missing from the media table entirely due to a schema/deploy sequencing issue (see [incident doc](2026-03-15-incident-media-registration.md)); those 7 images were backfilled on 2026-03-15. The UI handles null gracefully (panel hidden when `synthid_detected === null`).
 
 ---
 
 ## Implementation Notes
 
 - `supabase/functions/_shared/media-registration.ts` — `RegisterMediaImageParams` interface has optional `modelUsed?: string`; when provided, SynthID fields are spread into the insert.
-- `generate-creative-image/index.ts` (~line 1469) — fields spread directly into the media insert alongside `ai_provenance`.
-- `brand-prompt-agent/index.ts` (~line 1292) — fields added to the `generateHeadshotScene` media insert.
-- All five functions deployed 2026-03-14 to project `foolpmhiedplyftbiocb`.
+- `generate-creative-image/index.ts` (~line 1493) — fields spread directly into the media insert alongside `ai_provenance`.
+- `brand-prompt-agent/index.ts` (~line 1293) — fields added to the `generateHeadshotScene` media insert; also sets `folder_id` to `/AI Generated/Studio` (added 2026-03-15).
+- Schema migration `supabase/migrations/20260315_add_synthid_columns_to_media.sql` adds the four columns — applied 2026-03-15 (columns were missing on initial deploy).
+- All five functions deployed to project `foolpmhiedplyftbiocb`.

@@ -87,8 +87,6 @@ import { PromptsTab } from '@/components/vince-control-panel/PromptsTab';
 import { BrandIntelTab } from '@/components/vince-control-panel/BrandIntelTab';
 import { ConversationsTab } from '@/components/agent-conversations/ConversationsTab';
 import { toast } from 'sonner';
-import { GoogleLogo, MergeLogo } from '@/components/ai-pulse/vendorLogos';
-import { TabHeroHeader } from '@/components/creative-studio/TabHeroHeader';
 import { ExtensionTab } from '@/components/creative-studio/ExtensionTab';
 import { WelcomeImagesTab } from '@/components/creative-studio/WelcomeImagesTab';
 import { cn } from '@/lib/utils';
@@ -479,15 +477,15 @@ export default function CreativeStudioAdmin() {
         actions={
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              className="text-white/60 hover:text-white/90 hover:bg-white/[0.06]"
               onClick={startAdminTour}
             >
               <HelpCircle className="h-4 w-4 mr-2" />
               Admin Tour
             </Button>
-            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20" asChild>
+            <Button variant="ghost" size="sm" className="text-white/60 hover:text-white/90 hover:bg-white/[0.06]" asChild>
               <a href="/creative-studio" target="_blank">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open Studio
@@ -579,29 +577,22 @@ export default function CreativeStudioAdmin() {
           {/* Brands Tab */}
           <TabsContent value="brands">
             <div className="space-y-6">
-              <TabHeroHeader
-                gradientLight="from-[#0D1B16] via-[#133B34] to-[#1a4f40]"
-                gradientDark="dark:from-[#0D1B16] dark:via-[#133B34] dark:to-[#1a4f40]"
-                forceLightText
-                watermark={<Palette className="w-full h-full" />}
-                watermarkSmall={<MergeLogo className="w-full h-full" />}
-                badgeIcon={<Palette className="w-4 h-4 text-white/80" />}
-                badgeLabel="Brand Management"
-                title="Brands"
-                subtitle="Manage every brand's visual identity, creative DNA, and style guidelines in one place. Each brand configured here becomes available across Creative Studio, the Chrome Extension, and the Vince mobile app — consistently applied to every generation."
-                actions={
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => refetchBrands()} className="bg-white/10 border border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Refresh
-                    </Button>
-                    <Button size="sm" onClick={() => handleOpenBrandEditor()} className="gap-2 bg-white/10 border border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
-                      <Plus className="h-4 w-4" />
-                      Add Brand
-                    </Button>
-                  </div>
-                }
-              />
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <h2 className="font-fraunces text-lg font-semibold text-white">Brands</h2>
+                  <p className="text-xs text-white/45 mt-0.5 font-epilogue">Visual identity, creative DNA, and style guidelines</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => refetchBrands()} className="text-white/60 hover:text-white/90 hover:bg-white/[0.06]">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                  <Button size="sm" onClick={() => handleOpenBrandEditor()} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Brand
+                  </Button>
+                </div>
+              </div>
 
               {brandsLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -672,7 +663,7 @@ export default function CreativeStudioAdmin() {
                         className={cn(
                           'flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150',
                           isSelected
-                            ? 'bg-purple-600 text-white shadow-sm'
+                            ? 'bg-[#00856C] text-white shadow-sm'
                             : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
                         )}
                       >
@@ -706,35 +697,12 @@ export default function CreativeStudioAdmin() {
 
           {/* Welcome Page Tab */}
           <TabsContent value="welcome">
-            <div className="space-y-6">
-              <TabHeroHeader
-                gradientLight="from-[#e6f4ea] via-[#d4ede0] to-[#c2e6d6]"
-                gradientDark="dark:from-[#0D1B16] dark:via-[#132B22] dark:to-[#1a3a2e]"
-                watermark={<Image className="w-full h-full" />}
-                watermarkSmall={<MergeLogo className="w-full h-full" />}
-                badgeIcon={<Image className="w-4 h-4 text-gray-700 dark:text-white/80" />}
-                badgeLabel="Welcome Page"
-                title="Welcome Page Images"
-                subtitle="Manage the hero imagery and capability card visuals displayed on the Creative Studio welcome screen. Generate new images with Gemini's vision models, or upload custom assets — these are the first visuals users see when they log in."
-              />
-              <WelcomeImagesTab />
-            </div>
+            <WelcomeImagesTab />
           </TabsContent>
 
           {/* Settings Tab */}
           <TabsContent value="settings">
             <div className="space-y-6">
-              <TabHeroHeader
-                gradientLight="from-[#f0f0f1] via-[#e6e6e7] to-[#dadadc]"
-                gradientDark="dark:from-[#1a1a1b] dark:via-[#1f1f20] dark:to-[#252526]"
-                watermark={<Settings className="w-full h-full" />}
-                watermarkSmall={<MergeLogo className="w-full h-full" />}
-                badgeIcon={<Settings className="w-4 h-4 text-gray-700 dark:text-white/80" />}
-                badgeLabel="Configuration"
-                title="Settings"
-                subtitle="Platform-wide configuration: cost limits, AI models, camera presets, user quotas, analytics, and monitoring. Changes here affect every user and every brand in the system."
-              />
-
               <Tabs value={settingsSection} onValueChange={setSettingsSection}>
                 <div className="flex justify-center">
                   <TabsList>

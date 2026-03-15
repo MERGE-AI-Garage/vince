@@ -77,17 +77,6 @@ export function BrandDNADialog({ brand, open, onOpenChange, onNavigate }: BrandD
   // Header image from source_metadata
   const headerImageUrl = (profile?.source_metadata as Record<string, unknown>)?.header_image_url as string | undefined;
 
-  // Extract image URLs from website analyses
-  const brandImages = (analyses || [])
-    .filter(a => a.source_type === 'website')
-    .flatMap(a => {
-      const extraction = (a.analysis_data as Record<string, unknown>)?._extraction as Record<string, unknown> | undefined;
-      return (extraction?.image_urls as string[]) || [];
-    })
-    .filter((url, i, arr) => arr.indexOf(url) === i)
-    .slice(0, 12);
-
-  const hasImages = brandImages.length > 0;
 
   const handleSetHeaderImage = async (url: string | null) => {
     const currentMeta = (profile?.source_metadata as Record<string, unknown>) || {};
@@ -107,40 +96,6 @@ export function BrandDNADialog({ brand, open, onOpenChange, onNavigate }: BrandD
   // Detect text color for branded header
   const headerTextLight = !isLightColor(brand.primary_color);
 
-  // Build section list for reuse across grid layouts
-  const sections = profile ? (
-    <>
-      {profile.color_profile && Object.keys(profile.color_profile).length > 0 && (
-        <BentoCard title="Colors" icon={Palette} iconColor="text-pink-500">
-          <ColorProfileDisplay data={profile.color_profile} />
-        </BentoCard>
-      )}
-
-      {profile.typography && Object.keys(profile.typography).length > 0 && (
-        <BentoCard title="Typography" icon={Type} iconColor="text-cyan-600">
-          <TypographyDisplay data={profile.typography} />
-        </BentoCard>
-      )}
-
-      {profile.brand_identity && Object.keys(profile.brand_identity).length > 0 && (
-        <BentoCard title="Brand Identity" icon={Sparkles} iconColor="text-amber-500">
-          <BrandIdentityDisplay data={profile.brand_identity} hideTagline />
-        </BentoCard>
-      )}
-
-      {profile.tone_of_voice && Object.keys(profile.tone_of_voice).length > 0 && (
-        <BentoCard title="Tone of Voice" icon={MessageSquare} iconColor="text-orange-500">
-          <ToneOfVoiceDisplay data={profile.tone_of_voice} />
-        </BentoCard>
-      )}
-
-      {profile.visual_dna && Object.keys(profile.visual_dna).length > 0 && (
-        <BentoCard title="Visual DNA" icon={Eye} iconColor="text-purple-500">
-          <VisualDNADisplay data={profile.visual_dna} />
-        </BentoCard>
-      )}
-    </>
-  ) : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -269,72 +224,15 @@ export function BrandDNADialog({ brand, open, onOpenChange, onNavigate }: BrandD
           className="max-h-[calc(88vh-160px)]"
           style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div
-                className="animate-spin rounded-full h-6 w-6 border-b-2"
-                style={{ borderColor: brand.primary_color }}
-              />
-            </div>
-          ) : !profile ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
-              >
-                <Sparkles className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-              <p className="font-medium text-foreground">No brand profile yet</p>
-              <p className="text-sm mt-1 text-muted-foreground">
-                Build a brand profile from Brand Intelligence in the admin.
-              </p>
-            </div>
-          ) : (
-            <div className="px-6 py-4">
-              {/* Bento grid: left 2/3 text sections + right 1/3 images & snapshot */}
-              {hasImages ? (
-                <div className="grid grid-cols-[2fr_1fr] gap-3">
-                  <div className="grid grid-cols-2 gap-3 auto-rows-min content-start">
-                    {sections}
-                  </div>
-                  <div className="space-y-3">
-                    <BentoCard title="Brand Imagery" icon={ImageIcon} iconColor="text-purple-500">
-                      <ImageGrid
-                        images={brandImages}
-                        headerImageUrl={headerImageUrl}
-                        onSetHeaderImage={handleSetHeaderImage}
-                      />
-                    </BentoCard>
-                    <CorporateDNAPreviewCard
-                      brand={brand}
-                      profile={profile as unknown as Record<string, unknown>}
-                      stats={stats}
-                      onNavigate={onNavigate}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3 auto-rows-min">
-                  {sections}
-                  <CorporateDNAPreviewCard
-                    brand={brand}
-                    profile={profile as unknown as Record<string, unknown>}
-                    stats={stats}
-                    onNavigate={onNavigate}
-                  />
-                </div>
-              )}
-
-              {/* Footer meta */}
-              {profile.updated_at && (
-                <div className="mt-4 pt-2 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <BrandDNAViewContent
+            brand={brand}
+            profile={profile}
+            isLoading={isLoading}
+            stats={stats}
+            analyses={analyses}
+            onSetHeaderImage={handleSetHeaderImage}
+            onNavigate={onNavigate}
+          />
         </ScrollArea>
       </DialogContent>
     </Dialog>
@@ -529,6 +427,137 @@ function ImageLightbox({
           <X className="w-4 h-4" />
         </button>
       </div>
+    </div>
+  );
+}
+
+// ── Brand DNA view content (used by unified BrandIntelligenceDialog) ─────────
+
+export function BrandDNAViewContent({
+  brand,
+  profile,
+  isLoading,
+  stats,
+  analyses,
+  onSetHeaderImage,
+  onNavigate,
+}: {
+  brand: CreativeStudioBrand;
+  profile: import('@/types/creative-studio').BrandVisualProfile | null | undefined;
+  isLoading: boolean;
+  stats: { promptCount: number; directiveCount: number; imagesAnalyzed: number; confidenceScore: number } | undefined;
+  analyses: { source_type: string; analysis_data: unknown }[] | undefined;
+  onSetHeaderImage: (url: string | null) => void;
+  onNavigate?: (view: BrandDialogView) => void;
+}) {
+  const headerImageUrl = (profile?.source_metadata as Record<string, unknown>)?.header_image_url as string | undefined;
+
+  const brandImages = (analyses || [])
+    .filter(a => a.source_type === 'website')
+    .flatMap(a => {
+      const extraction = (a.analysis_data as Record<string, unknown>)?._extraction as Record<string, unknown> | undefined;
+      return (extraction?.image_urls as string[]) || [];
+    })
+    .filter((url, i, arr) => arr.indexOf(url) === i)
+    .slice(0, 12);
+  const hasImages = brandImages.length > 0;
+
+  const sections = profile ? (
+    <>
+      {profile.color_profile && Object.keys(profile.color_profile).length > 0 && (
+        <BentoCard title="Colors" icon={Palette} iconColor="text-pink-500">
+          <ColorProfileDisplay data={profile.color_profile} />
+        </BentoCard>
+      )}
+      {profile.typography && Object.keys(profile.typography).length > 0 && (
+        <BentoCard title="Typography" icon={Type} iconColor="text-cyan-600">
+          <TypographyDisplay data={profile.typography} />
+        </BentoCard>
+      )}
+      {profile.brand_identity && Object.keys(profile.brand_identity).length > 0 && (
+        <BentoCard title="Brand Identity" icon={Sparkles} iconColor="text-amber-500">
+          <BrandIdentityDisplay data={profile.brand_identity} hideTagline />
+        </BentoCard>
+      )}
+      {profile.tone_of_voice && Object.keys(profile.tone_of_voice).length > 0 && (
+        <BentoCard title="Tone of Voice" icon={MessageSquare} iconColor="text-orange-500">
+          <ToneOfVoiceDisplay data={profile.tone_of_voice} />
+        </BentoCard>
+      )}
+      {profile.visual_dna && Object.keys(profile.visual_dna).length > 0 && (
+        <BentoCard title="Visual DNA" icon={Eye} iconColor="text-purple-500">
+          <VisualDNADisplay data={profile.visual_dna} />
+        </BentoCard>
+      )}
+    </>
+  ) : null;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: brand.primary_color }} />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+          style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
+        >
+          <Sparkles className="h-8 w-8 text-muted-foreground/50" />
+        </div>
+        <p className="font-medium text-foreground">No brand profile yet</p>
+        <p className="text-sm mt-1 text-muted-foreground">
+          Build a brand profile from Brand Intelligence in the admin.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 py-4">
+      {hasImages ? (
+        <div className="grid grid-cols-[2fr_1fr] gap-3">
+          <div className="grid grid-cols-2 gap-3 auto-rows-min content-start">
+            {sections}
+          </div>
+          <div className="space-y-3">
+            <BentoCard title="Brand Imagery" icon={ImageIcon} iconColor="text-purple-500">
+              <ImageGrid
+                images={brandImages}
+                headerImageUrl={headerImageUrl}
+                onSetHeaderImage={onSetHeaderImage}
+              />
+            </BentoCard>
+            <CorporateDNAPreviewCard
+              brand={brand}
+              profile={profile as unknown as Record<string, unknown>}
+              stats={stats}
+              onNavigate={onNavigate}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 auto-rows-min">
+          {sections}
+          <CorporateDNAPreviewCard
+            brand={brand}
+            profile={profile as unknown as Record<string, unknown>}
+            stats={stats}
+            onNavigate={onNavigate}
+          />
+        </div>
+      )}
+      {profile.updated_at && (
+        <div className="mt-4 pt-2 border-t border-border">
+          <p className="text-[10px] text-muted-foreground text-center">
+            Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

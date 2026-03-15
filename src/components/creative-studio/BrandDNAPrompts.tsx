@@ -50,6 +50,21 @@ const PROMPT_LABELS: Record<string, {
     description: 'Specialized image analysis for food and restaurant brands (plating, lighting, cuisine style).',
     trigger: 'Auto-selected when the brand category matches food or restaurant.',
   },
+  'brand-image-analysis-financial': {
+    label: 'Image Analysis — Financial Services',
+    description: 'Specialized image analysis for financial services brands (trust signals, authority cues, emotional register).',
+    trigger: 'Auto-selected when the brand category matches financial services.',
+  },
+  'brand-image-analysis-outdoor-apparel': {
+    label: 'Image Analysis — Outdoor & Apparel',
+    description: 'Specialized image analysis for outdoor and apparel brands (environment, activity intensity, gear prominence).',
+    trigger: 'Auto-selected when the brand category matches outdoor & apparel.',
+  },
+  'brand-image-analysis-technology': {
+    label: 'Image Analysis — Technology',
+    description: 'Specialized image analysis for technology brands (product clarity, UI visibility, minimalism profile).',
+    trigger: 'Auto-selected when the brand category matches technology.',
+  },
   'brand-profile-synthesis': {
     label: 'Profile Synthesis',
     description: 'Sent to Gemini to synthesize a unified brand DNA profile from website, image, and document analyses.',

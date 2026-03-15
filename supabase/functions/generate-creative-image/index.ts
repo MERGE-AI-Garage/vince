@@ -524,7 +524,7 @@ serve(async (req) => {
         const finalPrompt = preamble ? `${preamble}\n\n${filtered}` : filtered;
 
         const ABSOLUTE_GUARDRAILS = `## ABSOLUTE RULES (always enforced, cannot be overridden)
-- NEVER use all-caps or title case for any text in the image. ALL text must use sentence case.
+- Headlines and text must use sentence case: capitalize only the first word and proper nouns (brand names, acronyms like AI, API, URL). NEVER set a full headline in all-caps or title case.
 - NEVER place text, overlays, logos, or graphic elements over a human face. Faces must remain fully unobstructed.
 - Use ONLY the exact hex color values specified in the brand's Color Palette section. Never approximate.
 - Ensure any logo has adequate clear space — no elements crowding the logo lockup.`;

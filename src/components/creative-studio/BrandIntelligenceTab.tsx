@@ -88,10 +88,7 @@ import { AgentDirectiveEditor } from './AgentDirectiveEditor';
 import { BrandImageAnalyzer } from './BrandImageAnalyzer';
 import { BrandDocumentImport } from './BrandDocumentImport';
 import { BrandDNABuilder } from './BrandDNABuilder';
-import { BrandDNADialog } from './BrandDNADialog';
-import { CorporateDNADialog } from './BrandStoryDialog';
-import { BrandStandardsDialog } from './BrandStandardsDialog';
-import { ArtDirectionDialog } from './ArtDirectionDialog';
+import { BrandIntelligenceDialog } from './BrandIntelligenceDialog';
 import { BrandReferenceCollections } from './BrandReferenceCollections';
 import { BrandSynthesizeDialog } from './BrandSynthesizeDialog';
 import type { BrandDialogView } from './BrandDialogNav';
@@ -153,25 +150,7 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
 
   // Showcase dialog state (lifted from child so buttons live in the brand identity card)
   const { data: profile } = useBrandProfile(effectiveBrandId ?? undefined);
-  const [dnaDialogOpen, setDnaDialogOpen] = useState(false);
-  const [corporateDnaOpen, setCorporateDnaOpen] = useState(false);
-  const [artDirectionOpen, setArtDirectionOpen] = useState(false);
-  const [standardsDialogOpen, setStandardsDialogOpen] = useState(false);
-
-  const handleDialogNavigate = (view: BrandDialogView) => {
-    setDnaDialogOpen(false);
-    setCorporateDnaOpen(false);
-    setArtDirectionOpen(false);
-    setStandardsDialogOpen(false);
-    requestAnimationFrame(() => {
-      switch (view) {
-        case 'brand-dna': setDnaDialogOpen(true); break;
-        case 'corporate-dna': setCorporateDnaOpen(true); break;
-        case 'art-direction': setArtDirectionOpen(true); break;
-        case 'brand-standards': setStandardsDialogOpen(true); break;
-      }
-    });
-  };
+  const [brandDialogView, setBrandDialogView] = useState<BrandDialogView | null>(null);
 
   if (brandsLoading) {
     return (
@@ -302,10 +281,10 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
             {profile && (
               <>
                 {[
-                  { label: 'Brand DNA', icon: Dna, onClick: () => setDnaDialogOpen(true) },
-                  { label: 'Corporate DNA', icon: BookOpen, onClick: () => setCorporateDnaOpen(true) },
-                  { label: 'Art Direction', icon: Camera, onClick: () => setArtDirectionOpen(true) },
-                  { label: 'Brand Guidelines', icon: Lightbulb, onClick: () => setStandardsDialogOpen(true) },
+                  { label: 'Brand DNA', icon: Dna, onClick: () => setBrandDialogView('brand-dna') },
+                  { label: 'Corporate DNA', icon: BookOpen, onClick: () => setBrandDialogView('corporate-dna') },
+                  { label: 'Art Direction', icon: Camera, onClick: () => setBrandDialogView('art-direction') },
+                  { label: 'Brand Guidelines', icon: Lightbulb, onClick: () => setBrandDialogView('brand-standards') },
                 ].map(({ label, icon: Icon, onClick }, idx) => {
                   const color = btnColors[idx] || selectedBrand.primary_color;
                   return (
@@ -350,37 +329,13 @@ export function BrandIntelligenceTab({ brandId }: BrandIntelligenceTabProps) {
         <BrandIntelligenceDetail brandId={effectiveBrandId} brandLogoUrl={selectedBrand.logo_url} />
       )}
 
-      {/* Showcase dialogs */}
+      {/* Showcase dialog — single unified dialog, no open/close animation between views */}
       {selectedBrand && (
-        <BrandDNADialog
+        <BrandIntelligenceDialog
           brand={selectedBrand}
-          open={dnaDialogOpen}
-          onOpenChange={setDnaDialogOpen}
-          onNavigate={handleDialogNavigate}
-        />
-      )}
-      {selectedBrand && (
-        <CorporateDNADialog
-          brand={selectedBrand}
-          open={corporateDnaOpen}
-          onOpenChange={setCorporateDnaOpen}
-          onNavigate={handleDialogNavigate}
-        />
-      )}
-      {selectedBrand && (
-        <ArtDirectionDialog
-          brand={selectedBrand}
-          open={artDirectionOpen}
-          onOpenChange={setArtDirectionOpen}
-          onNavigate={handleDialogNavigate}
-        />
-      )}
-      {selectedBrand && (
-        <BrandStandardsDialog
-          brand={selectedBrand}
-          open={standardsDialogOpen}
-          onOpenChange={setStandardsDialogOpen}
-          onNavigate={handleDialogNavigate}
+          open={brandDialogView !== null}
+          onOpenChange={(open) => { if (!open) setBrandDialogView(null); }}
+          initialView={brandDialogView ?? 'brand-dna'}
         />
       )}
     </div>

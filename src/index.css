@@ -11,7 +11,7 @@
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 97%;
     --card-foreground: 222.2 84% 4.9%;
-    --primary: 142 76% 36%;
+    --primary: 165 100% 26%;
     --primary-foreground: 0 0% 100%;
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
@@ -72,21 +72,33 @@
   }
 
   .creative-studio {
-    --background: 40 6% 99%;
+    /* Warm ash background — cards appear as frosted glass against this */
+    --background: 40 7% 87%;
     --foreground: 160 20% 8%;
-    --card: 42 8% 96%;
+    --card: 0 0% 98%;
     --card-foreground: 160 20% 8%;
-    --secondary: 44 6% 88%;
+    --secondary: 40 6% 92%;
     --secondary-foreground: 160 20% 8%;
-    --muted: 44 7% 90%;
-    --muted-foreground: 160 8% 35%;
-    --accent: 142 76% 36%;
-    --accent-foreground: 160 20% 8%;
-    --popover: 40 6% 99%;
+    --muted: 40 6% 92%;
+    --muted-foreground: 160 8% 40%;
+    --accent: 165 100% 26%;
+    --accent-foreground: 0 0% 100%;
+    --primary: 165 100% 26%;
+    --primary-foreground: 0 0% 100%;
+    --popover: 0 0% 99%;
     --popover-foreground: 160 20% 8%;
-    --input: 45 8% 80%;
-    --input-bg: 40 6% 99%;
-    --border: 45 6% 82%;
+    --input: 40 6% 82%;
+    --input-bg: 0 0% 100%;
+    --border: 40 5% 78%;
+
+    /* Studio surface system — light mode */
+    --cs-surface-0: 40 7% 87%;
+    --cs-surface-1: 40 6% 91%;
+    --cs-surface-2: 0 0% 98%;
+    --cs-surface-3: 40 8% 83%;
+    --cs-border-subtle: 40 5% 76%;
+    --cs-border-mid: 40 5% 66%;
+    --cs-text-primary: 160 20% 10%;
   }
 
   .dark {
@@ -98,10 +110,14 @@
     --muted-foreground: 150 10% 65%;
     --border: 165 16% 20%;
     --input: 165 18% 22%;
+    --input-bg: 165 18% 22%;
     --popover: 165 30% 10%;
     --popover-foreground: 140 10% 92%;
     --secondary: 165 14% 16%;
     --secondary-foreground: 140 10% 92%;
+    --primary: 165 100% 26%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 142 100% 50%;
     --accent-foreground: 140 10% 92%;
 
     --elevation-1: 0 1px 3px 0 rgba(0, 0, 0, 0.24), 0 1px 2px 0 rgba(0, 0, 0, 0.36);
@@ -110,12 +126,12 @@
 
     --sidebar-background: 165 48% 12%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 142 76% 36%;
+    --sidebar-primary: 165 100% 26%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 165 48% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 165 30% 20%;
-    --sidebar-ring: 142 76% 36%;
+    --sidebar-ring: 165 100% 26%;
 
     --cs-surface-0: 165 35% 7%;
     --cs-surface-1: 165 30% 10%;
@@ -123,6 +139,37 @@
     --cs-surface-3: 165 35% 5%;
     --cs-border-subtle: 165 20% 18%;
     --cs-border-mid: 165 18% 25%;
+    --cs-text-primary: 0 0% 90%;
+  }
+
+  /* Studio dark mode: higher specificity than .creative-studio alone — re-applies dark
+     emerald vars to body when html has .dark and body has .creative-studio */
+  .dark .creative-studio {
+    --background: 165 35% 7%;
+    --foreground: 140 10% 92%;
+    --card: 165 30% 10%;
+    --card-foreground: 140 10% 92%;
+    --muted: 165 14% 14%;
+    --muted-foreground: 150 10% 65%;
+    --border: 165 16% 20%;
+    --input: 165 18% 22%;
+    --input-bg: 165 18% 22%;
+    --popover: 165 30% 10%;
+    --popover-foreground: 140 10% 92%;
+    --secondary: 165 14% 16%;
+    --secondary-foreground: 140 10% 92%;
+    --primary: 165 100% 26%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 142 100% 50%;
+    --accent-foreground: 140 10% 92%;
+
+    --cs-surface-0: 165 35% 7%;
+    --cs-surface-1: 165 30% 10%;
+    --cs-surface-2: 165 25% 13%;
+    --cs-surface-3: 165 35% 5%;
+    --cs-border-subtle: 165 20% 18%;
+    --cs-border-mid: 165 18% 25%;
+    --cs-text-primary: 0 0% 90%;
   }
 
 }
@@ -156,15 +203,19 @@
 
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   }
 
   .dark .glass {
     background: rgba(19, 59, 52, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: none;
   }
 
   .card-elevated {

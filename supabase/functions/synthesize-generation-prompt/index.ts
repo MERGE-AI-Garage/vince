@@ -34,7 +34,7 @@ Specify mandatory brand colors with EXACT hex values. Write as hard requirements
 
 ## Typography
 Describe the brand's typographic style and preferred fonts. CRITICAL RULES that must appear verbatim:
-- If the brand specifies sentence case, write: "CRITICAL: NEVER use all-caps or title case for any text in the image. Every headline, label, and overlay MUST use sentence case. All-caps is a brand violation."
+- If the brand specifies sentence case, write: "CRITICAL: Headlines and body text must use sentence case — capitalize only the first word and proper nouns (brand names, acronyms like AI, API, URL). NEVER capitalize every word (title case) or set entire headlines in all-caps. 'AI enablement for your business' is correct. 'AI Enablement For Your Business' and 'AI ENABLEMENT' are both brand violations."
 - If the brand specifies specific fonts, name them explicitly as required.
 - Keep any text overlays minimal (1-3 words maximum)
 - Prefer bold, clean sans-serif letterforms for legibility

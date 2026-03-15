@@ -38,6 +38,23 @@ import { ConversationDetailDialog } from './ConversationDetailDialog';
 
 const PAGE_SIZE = 25;
 
+const SOURCE_STYLES: Record<string, string> = {
+  web:       'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  extension: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  ios:       'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  unknown:   'bg-muted text-muted-foreground border-border',
+};
+
+function SourceBadge({ source, mode }: { source: string; mode: string | null }) {
+  const label = mode === 'voice' ? `${source} voice` : source;
+  const style = SOURCE_STYLES[source] ?? SOURCE_STYLES.unknown;
+  return (
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${style}`}>
+      {label}
+    </span>
+  );
+}
+
 interface ConversationsTabProps {
   agent: string;
   agentLabel: string;
@@ -181,6 +198,7 @@ export function ConversationsTab({ agent, agentLabel }: ConversationsTabProps) {
                 </TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Preview</TableHead>
+                <TableHead className="text-center">Source</TableHead>
                 <TableHead className="text-center">Messages</TableHead>
                 <TableHead className="text-center">Tool Calls</TableHead>
               </TableRow>
@@ -188,13 +206,13 @@ export function ConversationsTab({ agent, agentLabel }: ConversationsTabProps) {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Loading conversations...
                   </TableCell>
                 </TableRow>
               ) : conversations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     <MessagesSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
                     <p className="text-muted-foreground">No conversations found.</p>
                   </TableCell>
@@ -217,6 +235,9 @@ export function ConversationsTab({ agent, agentLabel }: ConversationsTabProps) {
                     </TableCell>
                     <TableCell className="text-sm max-w-[300px] truncate text-muted-foreground">
                       {getPreview(conv)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <SourceBadge source={conv.source} mode={conv.mode} />
                     </TableCell>
                     <TableCell className="text-center text-sm">
                       <span className="inline-flex items-center gap-1">

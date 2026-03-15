@@ -17,7 +17,7 @@ import {
 import { useBrandProfile } from '@/hooks/useCreativeStudioBrandIntelligence';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { BrandLogo } from '@/types/creative-studio';
+import type { BrandLogo, BrandVisualProfile } from '@/types/creative-studio';
 import type { CreativeStudioBrand } from '@/types/creative-studio';
 import type { LucideIcon } from 'lucide-react';
 import { BrandDialogNav, type BrandDialogView } from './BrandDialogNav';
@@ -703,6 +703,146 @@ function GlossaryCard({ data }: { data: GlossaryEntry[] }) {
   );
 }
 
+// ── Brand Standards view content (used by unified BrandIntelligenceDialog) ───
+
+export function BrandStandardsViewContent({
+  brand,
+  profile,
+  isLoading,
+}: {
+  brand: CreativeStudioBrand;
+  profile: BrandVisualProfile | null | undefined;
+  isLoading: boolean;
+}) {
+  const standards = profile?.brand_standards as BrandStandards | null | undefined;
+
+  const populatedCount = standards
+    ? [
+        standards.color_system,
+        standards.typography_system,
+        standards.logo_system,
+        standards.vertical_positioning,
+        standards.writer_guidelines,
+        standards.social_media_voice,
+        standards.competitive_landscape,
+      ].filter(s => hasSectionData(s as Record<string, unknown> | unknown[] | null)).length
+    : 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: brand.primary_color }} />
+      </div>
+    );
+  }
+
+  if (!standards) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+          style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
+        >
+          <BookOpen className="h-8 w-8 text-muted-foreground/50" />
+        </div>
+        <p className="font-medium text-foreground">No brand standards yet</p>
+        <p className="text-sm mt-1 text-muted-foreground text-center max-w-md">
+          Import official brand style guides and standards manuals
+          to build the prescriptive standards profile.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 py-4">
+      <div className="grid grid-cols-[2fr_1fr] gap-3 items-start">
+        <div className="grid grid-cols-2 gap-3">
+          {hasSectionData(standards.logo_system as Record<string, unknown> | null) ? (
+            <LogoSystemCard data={standards.logo_system!} brandId={brand.id} />
+          ) : (
+            <BentoCard title="Logo System" icon={ImageIcon} iconColor="text-pink-500">
+              <EmptyHint text="Import brand identity guide to populate logo specifications." />
+            </BentoCard>
+          )}
+
+          {hasSectionData(standards.vertical_positioning as Record<string, unknown> | null) ? (
+            <VerticalPositioningCard data={standards.vertical_positioning!} />
+          ) : (
+            <BentoCard title="Vertical Positioning" icon={Globe} iconColor="text-blue-500">
+              <EmptyHint text="Import brand positioning documents to populate vertical strategy." />
+            </BentoCard>
+          )}
+
+          {hasSectionData(standards.writer_guidelines as Record<string, unknown> | null) ? (
+            <WriterGuidelinesCard data={standards.writer_guidelines!} />
+          ) : (
+            <BentoCard title="Writer Guidelines" icon={Pencil} iconColor="text-orange-500">
+              <EmptyHint text="Import brand voice or editorial guidelines to populate." />
+            </BentoCard>
+          )}
+
+          {hasSectionData(standards.social_media_voice as Record<string, unknown> | null) ? (
+            <SocialMediaVoiceCard data={standards.social_media_voice!} />
+          ) : (
+            <BentoCard title="Social Media Voice" icon={Share2} iconColor="text-purple-500">
+              <EmptyHint text="Import social media guidelines to populate voice and tone." />
+            </BentoCard>
+          )}
+
+          {hasSectionData(standards.competitive_landscape as Record<string, unknown> | null) ? (
+            <CompetitiveLandscapeCard data={standards.competitive_landscape!} />
+          ) : (
+            <BentoCard title="Competitive Landscape" icon={Target} iconColor="text-red-500">
+              <EmptyHint text="Import competitive analysis or brand positioning docs to populate." />
+            </BentoCard>
+          )}
+
+          {standards.glossary && standards.glossary.length > 0 ? (
+            <GlossaryCard data={standards.glossary} />
+          ) : (
+            <BentoCard title="Glossary" icon={BookOpen} iconColor="text-amber-500">
+              <EmptyHint text="Import brand style guide to populate preferred terminology." />
+            </BentoCard>
+          )}
+        </div>
+
+        <div className="sticky top-0 space-y-3">
+          {hasSectionData(standards.color_system as Record<string, unknown> | null) ? (
+            <ColorSystemCard data={standards.color_system!} />
+          ) : (
+            <BentoCard title="Color System" icon={Palette} iconColor="text-purple-500">
+              <EmptyHint text="Import brand style guide to populate color specifications." />
+            </BentoCard>
+          )}
+
+          {hasSectionData(standards.typography_system as Record<string, unknown> | null) ? (
+            <TypographySystemCard data={standards.typography_system!} />
+          ) : (
+            <BentoCard title="Typography System" icon={Type} iconColor="text-cyan-500">
+              <EmptyHint text="Import brand style guide to populate typography specifications." />
+            </BentoCard>
+          )}
+
+          <StandardsSnapshotCard
+            brand={brand}
+            populatedCount={populatedCount}
+            profile={profile as unknown as Record<string, unknown>}
+          />
+        </div>
+      </div>
+
+      {profile?.updated_at && (
+        <div className="mt-4 pt-2 border-t border-border">
+          <p className="text-[10px] text-muted-foreground text-center">
+            Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Sidebar snapshot ────────────────────────────────────────────────────────
 
 function StandardsSnapshotCard({
@@ -945,126 +1085,7 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
           className="h-[calc(88vh-130px)]"
           style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div
-                className="animate-spin rounded-full h-6 w-6 border-b-2"
-                style={{ borderColor: brand.primary_color }}
-              />
-            </div>
-          ) : !standards ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
-              >
-                <BookOpen className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-              <p className="font-medium text-foreground">No brand standards yet</p>
-              <p className="text-sm mt-1 text-muted-foreground text-center max-w-md">
-                Import official brand style guides and standards manuals
-                to build the prescriptive standards profile.
-              </p>
-            </div>
-          ) : (
-            <div className="px-6 py-4">
-              {/* Two-zone layout: sections + sidebar */}
-              <div className="grid grid-cols-[2fr_1fr] gap-3 items-start">
-                {/* Left: sections grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Logo System */}
-                  {hasSectionData(standards.logo_system as Record<string, unknown> | null) ? (
-                    <LogoSystemCard data={standards.logo_system!} brandId={brand.id} />
-                  ) : (
-                    <BentoCard title="Logo System" icon={ImageIcon} iconColor="text-pink-500">
-                      <EmptyHint text="Import brand identity guide to populate logo specifications." />
-                    </BentoCard>
-                  )}
-
-                  {/* Vertical Positioning */}
-                  {hasSectionData(standards.vertical_positioning as Record<string, unknown> | null) ? (
-                    <VerticalPositioningCard data={standards.vertical_positioning!} />
-                  ) : (
-                    <BentoCard title="Vertical Positioning" icon={Globe} iconColor="text-blue-500">
-                      <EmptyHint text="Import brand positioning documents to populate vertical strategy." />
-                    </BentoCard>
-                  )}
-
-                  {/* Writer Guidelines */}
-                  {hasSectionData(standards.writer_guidelines as Record<string, unknown> | null) ? (
-                    <WriterGuidelinesCard data={standards.writer_guidelines!} />
-                  ) : (
-                    <BentoCard title="Writer Guidelines" icon={Pencil} iconColor="text-orange-500">
-                      <EmptyHint text="Import brand voice or editorial guidelines to populate." />
-                    </BentoCard>
-                  )}
-
-                  {/* Social Media Voice */}
-                  {hasSectionData(standards.social_media_voice as Record<string, unknown> | null) ? (
-                    <SocialMediaVoiceCard data={standards.social_media_voice!} />
-                  ) : (
-                    <BentoCard title="Social Media Voice" icon={Share2} iconColor="text-purple-500">
-                      <EmptyHint text="Import social media guidelines to populate voice and tone." />
-                    </BentoCard>
-                  )}
-
-                  {/* Competitive Landscape */}
-                  {hasSectionData(standards.competitive_landscape as Record<string, unknown> | null) ? (
-                    <CompetitiveLandscapeCard data={standards.competitive_landscape!} />
-                  ) : (
-                    <BentoCard title="Competitive Landscape" icon={Target} iconColor="text-red-500">
-                      <EmptyHint text="Import competitive analysis or brand positioning docs to populate." />
-                    </BentoCard>
-                  )}
-
-                  {/* Glossary */}
-                  {standards.glossary && standards.glossary.length > 0 ? (
-                    <GlossaryCard data={standards.glossary} />
-                  ) : (
-                    <BentoCard title="Glossary" icon={BookOpen} iconColor="text-amber-500">
-                      <EmptyHint text="Import brand style guide to populate preferred terminology." />
-                    </BentoCard>
-                  )}
-                </div>
-
-                {/* Right: Visual identity sidebar */}
-                <div className="sticky top-0 space-y-3">
-                  {/* Color System */}
-                  {hasSectionData(standards.color_system as Record<string, unknown> | null) ? (
-                    <ColorSystemCard data={standards.color_system!} />
-                  ) : (
-                    <BentoCard title="Color System" icon={Palette} iconColor="text-purple-500">
-                      <EmptyHint text="Import brand style guide to populate color specifications." />
-                    </BentoCard>
-                  )}
-
-                  {/* Typography System */}
-                  {hasSectionData(standards.typography_system as Record<string, unknown> | null) ? (
-                    <TypographySystemCard data={standards.typography_system!} />
-                  ) : (
-                    <BentoCard title="Typography System" icon={Type} iconColor="text-cyan-500">
-                      <EmptyHint text="Import brand style guide to populate typography specifications." />
-                    </BentoCard>
-                  )}
-
-                  <StandardsSnapshotCard
-                    brand={brand}
-                    populatedCount={populatedCount}
-                    profile={profile as unknown as Record<string, unknown>}
-                  />
-                </div>
-              </div>
-
-              {/* Footer meta */}
-              {profile?.updated_at && (
-                <div className="mt-4 pt-2 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <BrandStandardsViewContent brand={brand} profile={profile} isLoading={isLoading} />
         </ScrollArea>
       </DialogContent>
     </Dialog>

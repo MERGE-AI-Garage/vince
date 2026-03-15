@@ -4,8 +4,8 @@
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ImagePlus, Film, Scissors, ZoomIn,
-  Package, Shirt, MessagesSquare, Camera,
+  ImagePlus, Film, Scissors,
+  MessagesSquare, Camera,
   Sparkles, Dna, AudioLines, Bot,
   LayoutTemplate, Shield, Palette,
   Upload, ArrowRight, Box,
@@ -123,36 +123,6 @@ const CAPABILITIES: readonly Capability[] = [
     tryIt: 'Upload a product photo, select "Background Swap" and describe a new setting — the product stays, the scene changes.',
   },
   {
-    key: 'upscaling',
-    icon: ZoomIn,
-    title: 'Upscaling',
-    desc: '2x and 4x AI-powered upscaling with detail enhancement',
-    learnMore: 'Increase image resolution using AI that adds genuine detail — not just interpolation. Sharpens textures, refines edges, and enhances clarity while preserving the character of the original. Ideal for making social-size assets print-ready.',
-    models: ['Imagen 4 Upscale'],
-    strengths: ['2x and 4x enhancement', 'Real detail synthesis', 'Texture sharpening', 'Preserves image character'],
-    tryIt: 'Generate an image at standard resolution, then upscale it 4x to see how much detail the AI can recover.',
-  },
-  {
-    key: 'product_recontext',
-    icon: Package,
-    title: 'Product Recontext',
-    desc: 'Place products in AI-generated scenes with natural lighting',
-    learnMore: 'Upload a product photograph and describe a new environment. The AI composites the product into the scene with matched lighting, realistic shadows, and natural reflections — preserving every detail of the original product.',
-    models: ['Product Recontext (Imagen)'],
-    strengths: ['Preserves product details', 'Natural lighting match', 'Realistic shadows', 'Scene-aware composition'],
-    tryIt: 'Upload a product on a white background and describe "rustic kitchen countertop, morning light" to see natural scene placement.',
-  },
-  {
-    key: 'virtual_tryon',
-    icon: Shirt,
-    title: 'Virtual Try-On',
-    desc: 'AI clothing try-on with realistic draping and fit',
-    learnMore: 'Visualize how clothing items look on models without a physical photo shoot. Upload a garment flat-lay and a model photo — the AI generates realistic draping, fit, and fabric behavior across different body types and poses.',
-    models: ['Virtual Try-On (Imagen)'],
-    strengths: ['Realistic fabric draping', 'Multiple body types', 'Accurate fit rendering', 'Reduces shoot costs'],
-    tryIt: 'Upload a garment image and a model photo to see AI-generated try-on with natural fabric behavior.',
-  },
-  {
     key: 'conversational_editing',
     icon: MessagesSquare,
     title: 'Conversational Editing',
@@ -162,44 +132,32 @@ const CAPABILITIES: readonly Capability[] = [
     strengths: ['Multi-turn memory', 'Iterative refinement', 'Natural language edits', 'Context preservation'],
     tryIt: 'Generate any image, then type follow-up requests like "move the subject left" or "change the color palette to autumn tones."',
   },
-  {
-    key: 'camera_controls',
-    icon: Camera,
-    title: 'Camera Controls',
-    desc: 'Cinematic presets — aperture, focal length, film stock, lighting',
-    learnMore: 'Apply real-world camera and lens parameters to AI generations. Choose aperture (depth of field), focal length (wide vs telephoto), film stock emulation, and lighting setups. Great for learning how photographic settings shape visual output.',
-    models: ['All image models'],
-    strengths: ['Aperture & bokeh control', 'Focal length presets', 'Film stock emulation', 'Lighting setup recipes'],
-    tryIt: 'Try the same prompt with "85mm f/1.4 portrait lens" vs "24mm wide angle" to see how focal length changes the composition.',
-  },
 ];
 
 // ── Model badges ────────────────────────────────────────────────────────────
 
 const MODEL_BADGES = [
-  'Nano Banana 2 🍌',
-  'Nano Banana Pro 🍌',
+  'Nano Banana 2',
+  'Nano Banana Pro',
   'Gemini 3 Pro',
-  'Imagen 3',
   'Imagen 4',
-  'Imagen Upscale',
+  'Veo 3.1',
   'Veo 2',
-  'Veo 3',
 ] as const;
 
 function ModelBadges({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-center gap-1 shrink-0 flex-wrap justify-end', className)}>
+    <div className={cn('flex items-center gap-1 shrink-0 flex-wrap', className)}>
       {MODEL_BADGES.map((label) => {
-        const isBanana = label.includes('🍌');
+        const isBanana = label.startsWith('Nano Banana');
         return (
           <span
             key={label}
             className={cn(
               'inline-flex items-center px-2 py-0.5 rounded-full font-epilogue text-[9px] font-medium',
               isBanana
-                ? 'bg-yellow-500/[0.12] border border-yellow-400/20 text-yellow-300/70'
-                : 'bg-white/[0.08] border border-white/[0.08] text-white/50',
+                ? 'bg-yellow-500/[0.10] border border-yellow-400/15 text-yellow-300/60'
+                : 'bg-white/[0.06] border border-white/[0.08] text-white/40',
             )}
           >
             {label}
@@ -288,87 +246,47 @@ function SystemWelcome({
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center px-6 py-6">
-        {/* Hero banner — CSS only */}
+      <div className="relative z-10 flex flex-col items-center px-6 pt-6 pb-4">
+
+        {/* Page header — bare text, no card */}
         <motion.div
           variants={itemVariants}
-          className="w-full max-w-4xl rounded-2xl overflow-hidden mb-6"
+          className="w-full max-w-4xl flex items-end justify-between mb-5"
         >
-          <div className="relative h-56 bg-[#0D1B16] flex flex-col items-center justify-center overflow-hidden">
-            <div
-              className="absolute -top-1/3 -left-1/4 w-3/4 h-3/4 rounded-full opacity-[0.16] blur-3xl"
-              style={{ background: 'radial-gradient(circle, #00856C, transparent)' }}
-            />
-            <div
-              className="absolute -bottom-1/3 -right-1/4 w-3/4 h-3/4 rounded-full opacity-[0.10] blur-3xl"
-              style={{ background: 'radial-gradient(circle, #1ED75F, transparent)' }}
-            />
-            <div className="relative z-10 flex flex-col items-center text-center px-8">
-              <h2 className="font-fraunces text-5xl font-semibold text-white tracking-tight mb-2">
-                Vince
-              </h2>
-              <p className="font-epilogue text-sm text-white/45 max-w-xs leading-relaxed">
-                Brand-aware AI image and video generation across eight Google models
-              </p>
-            </div>
-            <div className="absolute bottom-4 right-6">
-              <ModelBadges />
-            </div>
+          <div>
+            <h2 className="font-fraunces text-3xl font-semibold text-white tracking-tight leading-none mb-1">
+              Vince
+            </h2>
+            <p className="font-epilogue text-xs text-white/40">
+              Brand-aware AI creative production
+            </p>
           </div>
-        </motion.div>
-
-        {/* Getting started — visible above the fold */}
-        <motion.div variants={itemVariants} className="text-center space-y-3 max-w-lg mx-auto mb-8">
-          <p className="font-epilogue text-xs font-medium text-white/50 uppercase tracking-wider">
-            Get started
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 font-epilogue text-xs text-white/50">
-            <span className="inline-flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">1</span>
-              Select a brand above
-            </span>
-            <span className="hidden sm:inline text-white/10">/</span>
-            <span className="inline-flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">2</span>
-              Type a prompt below
-            </span>
-            <span className="hidden sm:inline text-white/10">/</span>
-            <span className="inline-flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-white/[0.08] text-white/60 text-[10px] font-bold flex items-center justify-center">3</span>
-              Upload an image
-            </span>
-          </div>
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Button
-              variant="ghost"
+          <div className="flex items-center gap-2 pb-0.5">
+            <button
               onClick={onUploadClick}
-              className="gap-2 rounded-full bg-white/[0.06] border border-white/[0.12] text-white/70 hover:bg-white/[0.10] hover:text-white"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.12] text-white/70 hover:bg-white/[0.14] hover:text-white transition-colors font-epilogue text-xs"
             >
-              <Upload className="w-4 h-4" />
-              Upload Image to Edit
-            </Button>
+              <Upload className="w-3 h-3" />
+              Upload to Edit
+            </button>
             {onDemoClick && (
-              <Button
-                variant="ghost"
+              <button
                 onClick={onDemoClick}
-                className="gap-2 rounded-full bg-white/[0.04] border border-white/[0.08] text-white/50 hover:bg-white/[0.07] hover:text-white/80"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1ED75F]/10 border border-[#1ED75F]/20 text-[#1ED75F]/80 hover:bg-[#1ED75F]/20 hover:text-[#1ED75F] transition-colors font-epilogue text-xs"
               >
-                <Wand2 className="w-4 h-4" />
+                <Wand2 className="w-3 h-3" />
                 Platform Demo
-              </Button>
+              </button>
             )}
           </div>
-          <p className="font-epilogue text-[10px] text-white/30">
-            {navigator.platform.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter to generate
-          </p>
         </motion.div>
 
-        {/* Capability cards — dark glass */}
+        {/* Capability cards */}
         <motion.div
           variants={containerVariants}
-          className="max-w-4xl w-full mb-8"
+          className="max-w-4xl w-full mb-4"
         >
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {CAPABILITIES.map((cap) => (
               <HoverCard key={cap.title} openDelay={300} closeDelay={100}>
                 <HoverCardTrigger asChild>
@@ -380,17 +298,17 @@ function SystemWelcome({
                     )}
                   >
                     {welcomeImages?.[cap.key] ? (
-                      <div className="w-full h-32 overflow-hidden">
-                        <img src={welcomeImages[cap.key]} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover/cap:scale-105" />
+                      <div className="w-full h-28 overflow-hidden">
+                        <img src={welcomeImages[cap.key]} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover/cap:scale-105" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mt-4 mx-4 mb-0 bg-[#00856C]/15 text-[#00D26A]">
-                        <cap.icon className="w-5 h-5" />
+                      <div className="w-full h-28 flex items-center justify-center bg-white/[0.03]">
+                        <cap.icon className="w-6 h-6 text-white/20" />
                       </div>
                     )}
-                    <div className="p-4 pt-3">
-                      <h3 className="font-epilogue text-xs font-semibold text-white/90 mb-1">{cap.title}</h3>
-                      <p className="font-epilogue text-[10px] text-white/40 leading-relaxed">{cap.desc}</p>
+                    <div className="px-3 py-2.5">
+                      <h3 className="font-epilogue text-[11px] font-semibold text-white/85 mb-0.5">{cap.title}</h3>
+                      <p className="font-epilogue text-[10px] text-white/35 leading-snug line-clamp-2">{cap.desc}</p>
                     </div>
                   </motion.div>
                 </HoverCardTrigger>
@@ -434,20 +352,26 @@ function SystemWelcome({
           </div>
         </motion.div>
 
+        {/* Powered-by model line */}
+        <motion.div variants={itemVariants} className="max-w-4xl w-full flex items-center justify-center gap-2 mb-5">
+          <span className="font-epilogue text-[10px] text-white/20 uppercase tracking-wider">Powered by</span>
+          <ModelBadges />
+        </motion.div>
+
         {/* Chrome Extension CTA */}
         <motion.div
           variants={itemVariants}
-          className="max-w-4xl w-full mb-8 relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#133B34]/[0.60] to-[#0D1B16]/[0.60] border border-[#00856C]/20 backdrop-blur-sm"
+          className="max-w-4xl w-full mb-4 relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#133B34]/[0.60] to-[#0D1B16]/[0.60] border border-[#00856C]/20 backdrop-blur-sm"
         >
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 px-6 py-5">
-            <div className="w-12 h-12 rounded-xl bg-[#1ED75F]/10 flex items-center justify-center shrink-0">
-              <Chrome className="w-6 h-6 text-[#1ED75F]" />
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 px-6 py-3">
+            <div className="w-9 h-9 rounded-xl bg-[#1ED75F]/10 flex items-center justify-center shrink-0">
+              <Chrome className="w-5 h-5 text-[#1ED75F]" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-fraunces text-base font-semibold text-white mb-1">
+              <h3 className="font-fraunces text-sm font-semibold text-white mb-0.5">
                 AI Brand Guidelines Chrome Extension
               </h3>
-              <p className="font-epilogue text-xs text-white/50 leading-relaxed mb-3">
+              <p className="font-epilogue text-xs text-white/50 leading-relaxed mb-2">
                 Brand intelligence in a sidebar — next to ChatGPT, Gemini, Claude, Midjourney, and more.
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -601,17 +525,26 @@ function BrandWelcome({
             </div>
 
             {/* Bottom content */}
-            <div className="absolute bottom-0 inset-x-0 px-6 pb-4 pt-8 bg-gradient-to-t from-black/80 to-transparent">
-              <h2 className="font-fraunces text-xl font-semibold text-white tracking-tight">
-                Creating with {brand.name}
-              </h2>
-              {brand.brand_voice && (
-                <p className="font-epilogue text-[11px] text-white/50 leading-relaxed italic mt-0.5 line-clamp-1">
-                  &ldquo;{brand.brand_voice.length > 120
-                    ? brand.brand_voice.slice(0, 120) + '...'
-                    : brand.brand_voice}&rdquo;
-                </p>
-              )}
+            <div className="absolute bottom-0 inset-x-0 px-6 pb-4 pt-8 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-between gap-4">
+              <div className="min-w-0">
+                <h2 className="font-fraunces text-xl font-semibold text-white tracking-tight">
+                  Creating with {brand.name}
+                </h2>
+                {brand.brand_voice && (
+                  <p className="font-epilogue text-[11px] text-white/50 leading-relaxed italic mt-0.5 line-clamp-1">
+                    &ldquo;{brand.brand_voice.length > 120
+                      ? brand.brand_voice.slice(0, 120) + '...'
+                      : brand.brand_voice}&rdquo;
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={onUploadClick}
+                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.12] border border-white/[0.20] text-white/80 hover:bg-white/[0.20] hover:text-white transition-colors font-epilogue text-xs backdrop-blur-sm"
+              >
+                <Upload className="w-3 h-3" />
+                Upload Reference
+              </button>
             </div>
           </div>
 
@@ -762,7 +695,7 @@ function BrandWelcome({
           </motion.div>
         </motion.div>
 
-        {/* Tool cards — header-banner style */}
+        {/* Tool cards */}
         <motion.div
           variants={containerVariants}
           className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-4xl mb-8"
@@ -773,16 +706,16 @@ function BrandWelcome({
             className={cn('group/card rounded-xl cursor-pointer overflow-hidden', GLASS, GLASS_HOVER)}
             onClick={() => setBrandVoiceOpen(true)}
           >
-            <div className="h-14 relative overflow-hidden">
+            <div className="h-24 relative overflow-hidden">
               {brand.card_images?.generation_prompt ? (
-                <img src={brand.card_images.generation_prompt} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={brand.card_images.generation_prompt} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
               ) : (
                 <div
                   className="h-full flex items-center justify-center relative"
-                  style={{ background: `linear-gradient(135deg, #7C3AED60, #7C3AED25)` }}
+                  style={{ background: `linear-gradient(135deg, #7C3AED50, #7C3AED18)` }}
                 >
-                  <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 30% 50%, #A78BFA, transparent 60%)' }} />
-                  {generationPrompt ? <Wand2 className="w-6 h-6 text-purple-300 relative z-10" /> : <AudioLines className="w-6 h-6 text-purple-300 relative z-10" />}
+                  <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at 30% 50%, #A78BFA, transparent 60%)' }} />
+                  {generationPrompt ? <Wand2 className="w-8 h-8 text-purple-300/70 relative z-10" /> : <AudioLines className="w-8 h-8 text-purple-300/70 relative z-10" />}
                 </div>
               )}
             </div>
@@ -790,10 +723,10 @@ function BrandWelcome({
               <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">
                 {generationPrompt ? 'Generation Prompt' : 'Brand Voice'}
               </h3>
-              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
+              <p className="font-epilogue text-[11px] text-white/50 leading-relaxed">
                 {generationPrompt
-                  ? `${GENERATION_PROMPT_SECTIONS.filter(s => generationPrompt.section_toggles[s.key]).length} sections directing identity, style, color & typography`
-                  : `Brand context automatically injected into every generation`}
+                  ? `${GENERATION_PROMPT_SECTIONS.filter(s => generationPrompt.section_toggles[s.key]).length} active sections`
+                  : `Auto-injected into every generation`}
               </p>
             </div>
           </motion.div>
@@ -804,23 +737,23 @@ function BrandWelcome({
             className={cn('group/card rounded-xl cursor-pointer overflow-hidden', GLASS, GLASS_HOVER)}
             onClick={onOpenArtDirection}
           >
-            <div className="h-14 relative overflow-hidden">
+            <div className="h-24 relative overflow-hidden">
               {brand.card_images?.art_direction ? (
-                <img src={brand.card_images.art_direction} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={brand.card_images.art_direction} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
               ) : (
                 <div
                   className="h-full flex items-center justify-center relative"
-                  style={{ background: `linear-gradient(135deg, #05966960, #05966925)` }}
+                  style={{ background: `linear-gradient(135deg, #05966950, #05966918)` }}
                 >
-                  <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 60% 40%, #6EE7B7, transparent 60%)' }} />
-                  <Camera className="w-6 h-6 text-emerald-300 relative z-10" />
+                  <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at 60% 40%, #6EE7B7, transparent 60%)' }} />
+                  <Camera className="w-8 h-8 text-emerald-300/70 relative z-10" />
                 </div>
               )}
             </div>
             <div className="p-4">
               <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Art Direction</h3>
-              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
-                Shot types, composition rules, and visual production standards
+              <p className="font-epilogue text-[11px] text-white/50 leading-relaxed">
+                Shot types, composition & visual standards
               </p>
             </div>
           </motion.div>
@@ -831,25 +764,25 @@ function BrandWelcome({
             className={cn('group/card rounded-xl cursor-pointer overflow-hidden', GLASS, GLASS_HOVER)}
             onClick={onOpenPromptLibrary}
           >
-            <div className="h-14 relative overflow-hidden">
+            <div className="h-24 relative overflow-hidden">
               {brand.card_images?.templates ? (
-                <img src={brand.card_images.templates} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={brand.card_images.templates} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
               ) : (
                 <div
                   className="h-full flex items-center justify-center relative"
-                  style={{ background: `linear-gradient(135deg, #D9770660, #D9770625)` }}
+                  style={{ background: `linear-gradient(135deg, #D9770650, #D9770618)` }}
                 >
-                  <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 50% 30%, #FCD34D, transparent 60%)' }} />
-                  <LayoutTemplate className="w-6 h-6 text-amber-300 relative z-10" />
+                  <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at 50% 30%, #FCD34D, transparent 60%)' }} />
+                  <LayoutTemplate className="w-8 h-8 text-amber-300/70 relative z-10" />
                 </div>
               )}
             </div>
             <div className="p-4">
               <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Templates</h3>
-              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
+              <p className="font-epilogue text-[11px] text-white/50 leading-relaxed">
                 {brandStats && brandStats.promptCount > 0
-                  ? `${brandStats.promptCount} saved generation configurations`
-                  : 'Reusable configurations for consistent campaign output'}
+                  ? `${brandStats.promptCount} saved configurations`
+                  : `Reusable generation configurations`}
               </p>
             </div>
           </motion.div>
@@ -860,23 +793,23 @@ function BrandWelcome({
             className={cn('group/card rounded-xl cursor-pointer overflow-hidden', GLASS, GLASS_HOVER)}
             onClick={onOpenBrandAgent}
           >
-            <div className="h-14 relative overflow-hidden">
+            <div className="h-24 relative overflow-hidden">
               {brand.card_images?.brand_agent ? (
-                <img src={brand.card_images.brand_agent} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={brand.card_images.brand_agent} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
               ) : (
                 <div
                   className="h-full flex items-center justify-center relative"
-                  style={{ background: `linear-gradient(135deg, #2563EB60, #2563EB25)` }}
+                  style={{ background: `linear-gradient(135deg, #2563EB50, #2563EB18)` }}
                 >
-                  <div className="absolute inset-0 opacity-30" style={{ background: 'radial-gradient(circle at 40% 60%, #60A5FA, transparent 60%)' }} />
-                  <Bot className="w-6 h-6 text-blue-300 relative z-10" />
+                  <div className="absolute inset-0 opacity-40" style={{ background: 'radial-gradient(circle at 40% 60%, #60A5FA, transparent 60%)' }} />
+                  <Bot className="w-8 h-8 text-blue-300/70 relative z-10" />
                 </div>
               )}
             </div>
             <div className="p-4">
-              <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Brand Agent</h3>
-              <p className="font-epilogue text-[11px] text-white/60 leading-relaxed">
-                Interprets briefs and composes on-brand prompts with model selection
+              <h3 className="font-epilogue text-sm font-semibold text-white/90 mb-1">Creative Director</h3>
+              <p className="font-epilogue text-[11px] text-white/50 leading-relaxed">
+                Brief campaigns by voice or text — copy and images together
               </p>
             </div>
           </motion.div>
@@ -908,30 +841,6 @@ function BrandWelcome({
           </motion.div>
         )}
 
-        {/* CTA */}
-        <motion.div variants={itemVariants} className="text-center space-y-3 max-w-lg mx-auto mb-8">
-          <p className="font-epilogue text-xs font-medium text-white/70">
-            Describe what you want to create
-          </p>
-          <p className="font-epilogue text-[11px] text-white/40 leading-relaxed">
-            {generationPrompt
-              ? `${brand.name}'s generation prompt is automatically applied — guiding identity, style, color, and typography.`
-              : `${brand.name}'s brand voice is automatically applied to guide tone and style.`}
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <Button
-              variant="ghost"
-              onClick={onUploadClick}
-              className="gap-2 rounded-full bg-white/[0.06] border border-white/[0.12] text-white/70 hover:bg-white/[0.10] hover:text-white"
-            >
-              <Upload className="w-4 h-4" />
-              Upload Reference
-            </Button>
-            <p className="font-epilogue text-[10px] text-white/30">
-              {navigator.platform.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter to generate
-            </p>
-          </div>
-        </motion.div>
       </div>
 
       {/* Generation Prompt / Brand Voice Dialog */}

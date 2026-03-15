@@ -74,6 +74,7 @@ export async function fetchRecentConversations(limit = 25): Promise<Conversation
     .select('id, messages, updated_at')
     .eq('user_id', user.id)
     .contains('metadata', { assistant: 'vince' })
+    .not('messages', 'eq', '[]')
     .order('updated_at', { ascending: false })
     .limit(limit);
 

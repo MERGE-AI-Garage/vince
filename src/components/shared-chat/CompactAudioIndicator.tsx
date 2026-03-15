@@ -70,7 +70,7 @@ export const CompactAudioIndicator: React.FC<CompactAudioIndicatorProps> = ({
   // Color: purple for model, cyan for user, muted when idle
   let barColor: string;
   if (isModelSpeaking) {
-    barColor = isLight ? 'bg-purple-600' : 'bg-purple-400';
+    barColor = isLight ? 'bg-[#00856C]' : 'bg-[#1ED75F]';
   } else if (isUserSpeaking) {
     barColor = isLight ? 'bg-cyan-600' : 'bg-cyan-400';
   } else {

@@ -216,3 +216,128 @@ Per-deliverable `.txt` files contain:
 - Conversation tab only works for campaigns where `conversation_id` was passed to `generate-creative-package` at call time. Pre-update campaigns have no conversation link.
 - Analysis tab competitor comparison is text-only — does not fetch/render the competitor URL visually.
 - `useMyGenerations(200)` — capped at 200 campaigns. Pagination not yet implemented.
+
+---
+
+## Patch: 2026-03-15 — image display fix + info panel enrichment
+
+### Bug: headshot-scene campaigns showed copy but no images
+
+Campaigns generated via the `pre_generated_image_url` path (e.g. person-in-scene pipeline) were not rendering images in the Campaign tab detail view. The copy blocks displayed correctly but the image slots were empty.
+
+**Root cause:** The `pre_generated_image_url` code path in `generate-creative-package` stores image parts as `{ type: 'image', image_url: '...' }`, while the standard interleaved path stores them as `{ type: 'image', content: '...' }`. The `groupParts` function in `CreativePackageDisplay` only checked `part.content` and `part.image_base64` — never `part.image_url`.
+
+**Fix:** Added `image_url` as a fallback in `groupParts` and added `image_url?: string` to the `PackagePart` interface:
+
+```ts
+// CreativePackageDisplay.tsx — groupParts()
+const imageUrl = part.content || part.image_url || (part.image_base64
+  ? `data:${part.mime_type || 'image/png'};base64,${part.image_base64}`
+  : undefined);
+```
+
+The `copy_blocks` data shape for the `pre_generated_image_url` path is:
+```json
+[
+  { "type": "text", "content": "..." },
+  { "type": "image", "image_url": "https://...supabase.../headshot-scenes/..." }
+]
+```
+
+### Enhancement: per-image info dialog now shows media library metadata
+
+Campaign images are registered in the `media` table at generation time via `registerMediaImage`. The per-image info dialog (triggered by the ℹ button on image hover) now fetches the corresponding media row by URL and surfaces:
+
+- **AI Watermark** — SynthID detection badge + confidence % (shown only when `synthid_detected = true`)
+- **Dimensions** — pixel dimensions (`width × height`) if stored
+- **Tags** — `auto_tags` array as pill badges
+
+The lookup is a single `maybeSingle()` query on `media.url`. If no media record is found (e.g. for older campaigns), the section is hidden entirely.
+
+**Files changed:**
+
+| File | Change |
+|------|--------|
+| `src/components/creative-studio/CreativePackageDisplay.tsx` | Added `image_url?: string` to `PackagePart`; added `part.image_url` fallback in `groupParts` |
+| `src/components/creative-studio/CampaignsTab.tsx` | Added `MediaRecord` interface, `mediaRecord` state, `useEffect` to fetch media row on dialog open, media metadata section in info dialog |
+
+---
+
+## Patch: 2026-03-15 — deliverable format specs in metadata panel
+
+### Problem
+
+The Deliverables section in `CampaignMetadataPanel` showed only deliverable names (e.g., "OOH — Billboard", "Print Ad — Full Page") with no format context. There was no way to know the aspect ratio, canonical pixel dimensions, or format category for each deliverable without digging into the template definitions in the edge function source.
+
+This matters for practical handoff: a creative director or production team looking at a campaign archive needs to know whether a "Print Ad" is a 3:4 magazine page or a horizontal direct mail card, and what pixel dimensions to request from production. The name alone doesn't answer that.
+
+The root cause was that deliverable specs — aspect ratios, dimensions, template keys — were defined in `DELIVERABLE_TEMPLATES` in the edge function but **never persisted**. Once a generation was stored, the format spec information was gone. Only the extracted deliverable name made it into the database.
+
+### Solution
+
+Each deliverable row in the metadata panel now shows:
+
+```
+01  Print Ad — Full Page
+    3:4 · 1200×1600 · Print
+02  OOH — Billboard
+    16:9 · 1920×1080 · OOH
+```
+
+Ratio, dimensions, and category are rendered as small monospace/muted text beneath the name. The category (Print, OOH, Social, Display, Email) gives a fast visual grouping — useful when a campaign spans multiple format families.
+
+### Data approach
+
+The design goal was to show specs for **all** campaigns — including the entire historical archive — without a backfill migration. Two-layer approach:
+
+**Layer 1 — Stored specs for new generations:** `generate-creative-package` now writes `deliverable_specs` into the generation's `metadata` JSONB column at insert time. This is authoritative going forward:
+
+```json
+"deliverable_specs": [
+  { "key": "print_full_page", "name": "Print Ad — Full Page", "aspect_ratio": "3:4" },
+  { "key": "print_ooh_billboard", "name": "OOH — Billboard", "aspect_ratio": "16:9" }
+]
+```
+
+The `key` is the `DeliverableType` enum value from `DELIVERABLE_TEMPLATES` (e.g. `"print_ooh_billboard"`). No schema migration needed — `metadata` is already JSONB.
+
+**Layer 2 — Name-fragment lookup for historical campaigns:** Rather than migrating existing records, a client-side lookup table covers all historical generations by matching substrings in the deliverable name (e.g. `"billboard"` → OOH/16:9, `"transit"` → OOH/2:3, `"linkedin"` → Social/4:3). The stored `key` takes precedence when present; name matching is the fallback.
+
+```ts
+function lookupFormatSpec(name: string, key?: string | null): FormatSpec | null {
+  if (key && SPEC_BY_KEY[key]) return SPEC_BY_KEY[key];
+  const lower = name.toLowerCase();
+  for (const [fragment, spec] of SPEC_BY_NAME) {
+    if (lower.includes(fragment)) return spec;
+  }
+  return null;
+}
+```
+
+Name matching works reliably for the current archive because deliverable names are derived from the LLM's section headers ("OOH — Billboard", "Print Ad — Full Page") which consistently include the format name. If a deliverable has a fully custom name with no recognizable fragment, the spec row is simply hidden — no broken UI.
+
+### All 14 format specs
+
+| Key | Ratio | Dims | Category |
+|-----|-------|------|----------|
+| `linkedin_post` | 4:3 | 1200×900 | Social |
+| `product_shot_with_text` | 1:1 | 1080×1080 | Social |
+| `social_story` | 9:16 | 1080×1920 | Social |
+| `display_banner` | 16:9 | 1920×1080 | Display |
+| `email_header` | 3:4 | 600×800 | Email |
+| `tiktok_reel` | 9:16 | 1080×1920 | Social |
+| `instagram_feed_portrait` | 4:5 | 1080×1350 | Social |
+| `print_full_page` | 3:4 | 1200×1600 | Print |
+| `print_ooh_billboard` | 16:9 | 1920×1080 | OOH |
+| `print_ooh_transit` | 2:3 | 800×1200 | OOH |
+| `print_direct_mail` | 4:3 | 1200×900 | Print |
+| `print_collateral` | 3:4 | 1200×1600 | Print |
+| `banner_leaderboard` | 8:1 | 728×90 | Display |
+| `banner_skyscraper` | 1:4 | 160×600 | Display |
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `supabase/functions/generate-creative-package/index.ts` | Added `key` field to `resolvedDeliverables`; added `deliverable_specs` array to `metadata` insert |
+| `src/components/creative-studio/CampaignsTab.tsx` | Added `FormatSpec` interface, `SPEC_BY_KEY`, `SPEC_BY_NAME`, and `lookupFormatSpec`; updated deliverable list rendering to show ratio/dims/category beneath each name |

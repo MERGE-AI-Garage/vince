@@ -81,31 +81,31 @@ const DELIVERABLE_TEMPLATES: Record<DeliverableType, DeliverableTemplate> = {
   print_full_page: {
     name: 'Print Ad — Full Page',
     default_aspect_ratio: '3:4',
-    image_instructions: `Full-page magazine advertisement composition. Professional studio photography aesthetic. Single dominant visual with generous white space for headline placement. CMYK-safe color palette — avoid neon or oversaturated hues that don't reproduce in print. Rich shadow and highlight detail, tonal range suitable for offset printing. No text overlaid — leave a clear zone for headline at the top and body copy at the bottom third. Ultra-high detail, large-format print production quality.`,
+    image_instructions: `Full-page magazine advertisement composition. Professional studio photography aesthetic. Single dominant visual with generous white space for headline placement. Accurate, vibrant colors — avoid neon or oversaturated hues. Rich shadow and highlight detail with full tonal range. No text overlaid — leave a clear zone for headline at the top and body copy at the bottom third. Ultra-high detail, premium editorial quality.`,
     copy_instructions: `Write full-page magazine ad copy:\n- **Headline**: 5–7 words (powerful, provocative, or poetic — the single most important line)\n- **Subheadline**: 12–18 words (deepens the headline, adds intrigue or context)\n- **Body Copy**: 3–4 sentences (50–80 words) — authoritative, aspirational, benefit-driven brand voice. This is the space to tell the story.\n- **Tagline**: existing brand tagline or a campaign-specific line (3–6 words)\n- **CTA**: 3–5 words\n- **Art Director's Note**: 1–2 sentences on the creative strategy — why this headline and visual combination is the right choice for this brand and brief\nReturn this as the text block BEFORE the image.`,
   },
   print_ooh_billboard: {
     name: 'OOH — Billboard',
     default_aspect_ratio: '16:9',
-    image_instructions: `Outdoor billboard advertisement designed to be read at 60mph from 300 feet. Bold, high-contrast composition with a single dominant visual — no clutter. Maximum three words of text rendered in the design, extremely large and legible. High-brightness colors, strong silhouettes, and deep contrast. CMYK-safe color palette. Ultra-high detail for large-format outdoor printing. The composition must work at massive scale: nothing small, nothing subtle.`,
+    image_instructions: `Outdoor billboard advertisement designed to be read at 60mph from 300 feet. Bold, high-contrast composition with a single dominant visual — no clutter. Maximum three words of text rendered in the design, extremely large and legible. High-brightness colors, strong silhouettes, and deep contrast. Accurate brand colors. Ultra-high detail, massive-scale clarity. The composition must work at enormous scale: nothing small, nothing subtle.`,
     copy_instructions: `Write billboard copy:\n- **Primary Headline**: 3–5 words maximum (must be read and understood in under 3 seconds at highway speed)\n- **Tagline/CTA**: 2–3 words\n- **Campaign Rationale**: 2–3 sentences explaining why this specific message and this level of brevity is the right creative choice for outdoor — what makes it land at scale\nReturn this as the text block BEFORE the image.`,
   },
   print_ooh_transit: {
     name: 'OOH — Transit Shelter',
     default_aspect_ratio: '2:3',
-    image_instructions: `Transit shelter advertisement in vertical format, viewed by pedestrians at street level from 5–10 feet away. Strong vertical visual hierarchy: bold visual filling the top half, clear message zone in the bottom half. High contrast for daylight and nighttime readability. CMYK-safe color palette with print-production detail. The composition should feel direct and human — this is street-level communication, not broadcasting from a distance.`,
+    image_instructions: `Transit shelter advertisement in vertical format, viewed by pedestrians at street level from 5–10 feet away. Strong vertical visual hierarchy: bold visual filling the top half, clear message zone in the bottom half. High contrast for daylight and nighttime readability. Accurate brand colors, crisp detail. The composition should feel direct and human — this is street-level communication, not broadcasting from a distance.`,
     copy_instructions: `Write transit shelter ad copy:\n- **Headline**: 5–8 words (direct, human, conversational — this is street-level)\n- **Supporting Line**: 12–18 words (adds context, offer, or emotional hook)\n- **CTA**: 3–5 words\n- **Campaign Context**: 2–3 sentences on the audience this is speaking to and why this message resonates with pedestrian transit riders\nReturn this as the text block BEFORE the image.`,
   },
   print_direct_mail: {
     name: 'Direct Mail',
     default_aspect_ratio: '4:3',
-    image_instructions: `Direct mail postcard front in horizontal format. Immediate visual impact — this piece must stand out in a stack of mail. Warm, inviting composition with a product or lifestyle hero as the dominant visual. Leave a clear zone for headline overlay text in the upper or lower third. High-quality print aesthetic, CMYK-safe, suitable for offset or digital print production.`,
+    image_instructions: `Direct mail postcard front in horizontal format. Immediate visual impact — this piece must stand out in a stack of mail. Warm, inviting composition with a product or lifestyle hero as the dominant visual. Leave a clear zone for headline overlay text in the upper or lower third. High-quality, crisp visual aesthetic with accurate brand colors.`,
     copy_instructions: `Write complete direct mail copy:\n- **Outer Headline** (front of card): 5–7 attention-grabbing words — must make the recipient stop discarding\n- **Offer Statement**: 15–25 words — clear value, specific offer or benefit, urgency if appropriate\n- **Body Copy** (back of card): 3–4 sentences (60–90 words) — conversational, personal, benefit-forward\n- **CTA**: 4–6 words with urgency or specificity\n- **P.S. Line**: 1 sentence reinforcing the offer (direct mail P.S. lines are often the second-most-read element)\nReturn this as the text block BEFORE the image.`,
   },
   print_collateral: {
     name: 'Collateral — Sell Sheet',
     default_aspect_ratio: '3:4',
-    image_instructions: `Corporate collateral cover — brochure, sell sheet, or folder insert. Clean, professional composition. Brand colors are dominant throughout. Subtle texture or gradient background adds depth without clutter. Clear space for document title text in the top third and brand logo in the bottom right. Premium print quality, CMYK-safe, rich tonal detail suitable for offset printing.`,
+    image_instructions: `Corporate collateral cover — brochure, sell sheet, or folder insert. Clean, professional composition. Brand colors are dominant throughout. Subtle texture or gradient background adds depth without clutter. Clear space for document title text in the top third and brand logo in the bottom right. Premium quality, accurate brand colors, rich visual detail.`,
     copy_instructions: `Write complete sell sheet / collateral copy:\n- **Document Title**: 3–5 words (the name of this piece)\n- **Value Proposition**: 10–15 words (the single strongest reason a prospect should care)\n- **Section Headlines** (3): three 4–6 word section titles covering the key messages (e.g., product features, proof points, next steps)\n- **Intro Paragraph**: 3–4 sentences (50–70 words) — confident, professional, establishes credibility\n- **Key Benefits**: 3 bulleted benefit statements (10–15 words each)\n- **Contact/CTA**: closing line with call to action\nReturn this as the text block BEFORE the image.`,
   },
   banner_leaderboard: {
@@ -210,7 +210,7 @@ serve(async (req) => {
     // Fetch brand visual profile if it exists
     const { data: profile } = await supabase
       .from('creative_studio_brand_profiles')
-      .select('visual_dna, photography_style, color_profile, composition_rules, brand_identity, tone_of_voice')
+      .select('visual_dna, photography_style, color_profile, composition_rules, brand_identity, tone_of_voice, brand_standards, typography')
       .eq('brand_id', brand_id)
       .maybeSingle();
 
@@ -244,7 +244,16 @@ serve(async (req) => {
     const baseInstruction = system_context
       ? `${system_context}\n\n${brandContext}`
       : `You are Vince, an expert AI creative director for Vince. You generate complete creative packages — combining strategic copy with brand-aligned imagery in a single response.\n\n${brandContext}\n\nFor each deliverable, write the headline and body copy FIRST, then generate the corresponding image immediately after. The images must reflect the brand's visual identity, color palette, and photography style.\n\nCRITICAL: Every image you generate must be a FULLY DESIGNED MARKETING ASSET — not a photograph or portrait. Each image must have text rendered directly on it (headlines, CTAs), the brand logo placed in the composition, and brand color treatments applied. Think: finished ad creative, not a photo shoot. If a subject reference is provided, incorporate them INTO the designed layout as a visual element within the composition — the subject does not replace the design.`;
-    const fullSystemInstruction = `${baseInstruction}${memoryRules}`;
+    const universalGuardrails = `
+
+UNIVERSAL OUTPUT RULES — ALWAYS ENFORCE:
+- Headlines and body text must use sentence case: capitalize only the first word and proper nouns (e.g. "AI empowerment for your business" NOT "AI Empowerment For Your Business")
+- NEVER render hex color codes (#XXXXXX), RGB values, CMYK percentages, or PMS numbers as visible text or design elements in any image
+- NEVER include technical production specs (CMYK, offset printing, DPI, bleed, resolution, print quality) in any copy block, bullet points, or image text
+- NEVER use placeholder text — every copy field must contain real, finished marketing language appropriate for the brand and brief
+- Body copy must consist of complete, grammatically correct English sentences — never generate garbled, nonsensical, or incomplete text`;
+
+    const fullSystemInstruction = `${baseInstruction}${memoryRules}${universalGuardrails}`;
 
     // Default to 3 standard deliverables when none are specified
     const effectiveDeliverables = (deliverables && deliverables.length > 0) ? deliverables : [
@@ -258,6 +267,7 @@ serve(async (req) => {
       if (d.deliverable_type && DELIVERABLE_TEMPLATES[d.deliverable_type]) {
         const tmpl = DELIVERABLE_TEMPLATES[d.deliverable_type];
         return {
+          key: d.deliverable_type as string,
           name: d.name || tmpl.name,
           description: d.description
             ? `${d.description}\n\nImage: ${tmpl.image_instructions}\nCopy: ${tmpl.copy_instructions}`
@@ -265,7 +275,7 @@ serve(async (req) => {
           aspect_ratio: d.aspect_ratio || tmpl.default_aspect_ratio,
         };
       }
-      return d as { name: string; description: string; aspect_ratio: string };
+      return { key: null as string | null, name: d.name as string, description: d.description as string, aspect_ratio: d.aspect_ratio as string };
     });
 
     // Build the deliverables prompt
@@ -483,7 +493,12 @@ serve(async (req) => {
       generation_time_ms: latencyMs,
       estimated_cost_usd: 0,
       parameters: { deliverable_count: resolvedDeliverables.length },
-      metadata: { package: true, deliverable_names: finalDeliverableNames, ...(conversation_id ? { conversation_id } : {}) },
+      metadata: {
+        package: true,
+        deliverable_names: finalDeliverableNames,
+        deliverable_specs: resolvedDeliverables.map(d => ({ key: d.key, name: d.name, aspect_ratio: d.aspect_ratio })),
+        ...(conversation_id ? { conversation_id } : {}),
+      },
       copy_blocks: parts,
     });
     if (insertError) console.error('[generate-creative-package] Generation record insert failed:', insertError.code, insertError.message, { user_id: userId, brand_id });
@@ -619,6 +634,19 @@ function buildBrandContext(brand: Record<string, unknown>, profile: Record<strin
     if (profile.tone_of_voice && typeof profile.tone_of_voice === 'object') {
       const tone = profile.tone_of_voice as Record<string, unknown>;
       if (tone.personality) lines.push(`Tone: ${tone.personality}`);
+    }
+
+    if (profile.brand_standards && typeof profile.brand_standards === 'object') {
+      const standards = profile.brand_standards as Record<string, unknown>;
+      const typo = standards.typography_system as Record<string, unknown> | undefined;
+      if (typo?.rules && Array.isArray(typo.rules) && typo.rules.length > 0) {
+        const rules = (typo.rules as Array<{ text?: string } | string>)
+          .map(r => (typeof r === 'string' ? r : r.text))
+          .filter(Boolean);
+        if (rules.length > 0) {
+          lines.push(`\nBrand Typography Rules:\n${rules.map(r => `- ${r}`).join('\n')}`);
+        }
+      }
     }
   }
 

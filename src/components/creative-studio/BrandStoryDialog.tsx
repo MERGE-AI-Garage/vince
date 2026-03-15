@@ -366,193 +366,212 @@ export function CorporateDNADialog({ brand, open, onOpenChange, onNavigate }: Co
           className="h-[calc(88vh-130px)]"
           style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div
-                className="animate-spin rounded-full h-6 w-6 border-b-2"
-                style={{ borderColor: brand.primary_color }}
-              />
-            </div>
-          ) : !story ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
-              >
-                <BookOpen className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-              <p className="font-medium text-foreground">No corporate DNA profile yet</p>
-              <p className="text-sm mt-1 text-muted-foreground text-center max-w-md">
-                Run website analysis or import corporate documents (CSR reports, annual reports, pitch decks)
-                to build the corporate identity profile.
-              </p>
-            </div>
-          ) : (
-            <div className="px-6 py-4">
-              {/* Two-zone layout: sections + sidebar */}
-              <div className="grid grid-cols-[2fr_1fr] gap-3 items-start">
-                {/* Left: sections grid */}
-                <div className="space-y-3">
-                  {/* Narrative summary — featured card */}
-                  {story.narrative_summary && (
-                    <div
-                      className="rounded-xl p-4"
-                      style={{
-                        backgroundColor: 'hsl(var(--cs-surface-1))',
-                        border: '1px solid hsl(var(--cs-border-subtle))',
-                      }}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
-                        <h3 className="text-sm font-semibold font-product-sans text-muted-foreground uppercase tracking-wider">
-                          Narrative Summary
-                        </h3>
-                      </div>
-                      <p className="text-sm text-foreground/80 leading-relaxed italic">
-                        {story.narrative_summary}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* 6-section bento grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Sustainability */}
-                    <BentoCard icon={Leaf} iconColor="text-green-600" title="Sustainability">
-                      {hasSectionData(story.sustainability as Record<string, unknown> | null) ? (
-                        <div className="space-y-2">
-                          <Field label="Environmental" value={story.sustainability?.environmental} />
-                          <Field label="Social" value={story.sustainability?.social} />
-                          <Field label="Governance" value={story.sustainability?.governance} />
-                          <BadgeList label="Goals" items={story.sustainability?.goals} />
-                        </div>
-                      ) : (
-                        <EmptyHint text="Analyze website or import CSR / sustainability reports to populate." />
-                      )}
-                    </BentoCard>
-
-                    {/* Innovation */}
-                    <BentoCard icon={Lightbulb} iconColor="text-yellow-500" title="Innovation">
-                      {hasSectionData(story.innovation as Record<string, unknown> | null) ? (
-                        <div className="space-y-2">
-                          <Field label="Approach" value={story.innovation?.approach} />
-                          <Field label="Technology" value={story.innovation?.technology} />
-                          <BadgeList label="Differentiators" items={story.innovation?.differentiators} />
-                        </div>
-                      ) : (
-                        <EmptyHint text="Analyze website or import pitch decks to populate." />
-                      )}
-                    </BentoCard>
-
-                    {/* Culture */}
-                    <BentoCard icon={Heart} iconColor="text-rose-500" title="Culture">
-                      {hasSectionData(story.culture as Record<string, unknown> | null) ? (
-                        <div className="space-y-2">
-                          <Field label="Values in Practice" value={story.culture?.values_in_practice} />
-                          <Field label="Employee Experience" value={story.culture?.employee_experience} />
-                          <Field label="DEI" value={story.culture?.dei} />
-                        </div>
-                      ) : (
-                        <EmptyHint text="Import DEI reports or corporate brochures to populate." />
-                      )}
-                    </BentoCard>
-
-                    {/* Community */}
-                    <BentoCard icon={Users} iconColor="text-teal-500" title="Community">
-                      {hasSectionData(story.community as Record<string, unknown> | null) ? (
-                        <div className="space-y-2">
-                          <Field label="Programs" value={story.community?.programs} />
-                          <Field label="Impact" value={story.community?.impact_metrics} />
-                          <BadgeList label="Partnerships" items={story.community?.partnerships} />
-                        </div>
-                      ) : (
-                        <EmptyHint text="Analyze website or import CSR / annual reports to populate." />
-                      )}
-                    </BentoCard>
-
-                    {/* Customer Focus */}
-                    <BentoCard icon={Star} iconColor="text-orange-500" title="Customer Focus">
-                      {hasSectionData(story.customer_focus as Record<string, unknown> | null) ? (
-                        <div className="space-y-2">
-                          <Field label="Promise" value={story.customer_focus?.promise} />
-                          <Field label="Experience" value={story.customer_focus?.experience} />
-                          <BadgeList label="Themes" items={story.customer_focus?.testimonial_themes} />
-                        </div>
-                      ) : (
-                        <EmptyHint text="Analyze website or import pitch decks to populate." />
-                      )}
-                    </BentoCard>
-
-                    {/* Competitive Position */}
-                    <BentoCard icon={Trophy} iconColor="text-indigo-500" title="Competitive Position">
-                      {hasSectionData(story.competitive_position as Record<string, unknown> | null) ? (
-                        <div className="space-y-2">
-                          <Field label="Market Position" value={story.competitive_position?.market_position} />
-                          <BadgeList label="Key Differentiators" items={story.competitive_position?.key_differentiators} />
-                          <BadgeList label="Awards" items={story.competitive_position?.awards} />
-                        </div>
-                      ) : (
-                        <EmptyHint text="Analyze website or import investor presentations to populate." />
-                      )}
-                    </BentoCard>
-                  </div>
-                </div>
-
-                {/* Right: Identity + Heritage sidebar */}
-                <div className="sticky top-0 space-y-3">
-                  {/* Mission & Vision */}
-                  <BentoCard icon={Target} iconColor="text-blue-500" title="Mission & Vision">
-                    {hasSectionData(story.mission_vision as Record<string, unknown> | null) ? (
-                      <div className="space-y-2">
-                        <Field label="Mission" value={story.mission_vision?.mission} />
-                        <Field label="Vision" value={story.mission_vision?.vision} />
-                        <Field label="Purpose" value={story.mission_vision?.purpose} />
-                      </div>
-                    ) : (
-                      <EmptyHint text="Analyze website or import corporate documents to populate." />
-                    )}
-                  </BentoCard>
-
-                  {/* Heritage */}
-                  <BentoCard icon={History} iconColor="text-amber-600" title="Heritage">
-                    {hasSectionData(story.heritage as Record<string, unknown> | null) ? (
-                      <div className="space-y-2">
-                        <Field label="Founding Story" value={story.heritage?.founding_story} />
-                        <Field label="Legacy" value={story.heritage?.legacy} />
-                      </div>
-                    ) : (
-                      <EmptyHint text="Analyze website or import corporate documents to populate." />
-                    )}
-                  </BentoCard>
-
-                  {/* Milestones timeline */}
-                  {story.heritage?.milestones && story.heritage.milestones.length > 0 && (
-                    <BentoCard icon={History} iconColor="text-amber-600" title="Milestones">
-                      <Timeline items={story.heritage.milestones} />
-                    </BentoCard>
-                  )}
-
-                  <CorporateSnapshotCard
-                    brand={brand}
-                    populatedCount={populatedCount}
-                    documentAnalyses={documentAnalyses}
-                    profile={profile as unknown as Record<string, unknown>}
-                  />
-                </div>
-              </div>
-
-              {/* Footer meta */}
-              {profile?.updated_at && (
-                <div className="mt-4 pt-2 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <CorporateDNAViewContent
+            brand={brand}
+            profile={profile}
+            isLoading={isLoading}
+            analyses={analyses}
+            onNavigate={onNavigate}
+          />
         </ScrollArea>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ── Corporate DNA view content (used by unified BrandIntelligenceDialog) ─────
+
+export function CorporateDNAViewContent({
+  brand,
+  profile,
+  isLoading,
+  analyses,
+  onNavigate,
+}: {
+  brand: CreativeStudioBrand;
+  profile: BrandVisualProfile | null | undefined;
+  isLoading: boolean;
+  analyses: { source_type: string; source_image_url?: string | null; analyzed_at?: string | null; tags?: string[] | null }[] | undefined;
+  onNavigate?: (view: BrandDialogView) => void;
+}) {
+  const story = profile?.brand_story as BrandStory | null | undefined;
+  const documentAnalyses = (analyses || []).filter(a => a.source_type === 'document');
+
+  const populatedCount = story && !isLegacyFlat(story as Record<string, unknown>)
+    ? [
+        story.mission_vision, story.heritage, story.sustainability, story.innovation,
+        story.culture, story.community, story.customer_focus, story.competitive_position,
+      ].filter(s => hasSectionData(s as Record<string, unknown> | null)).length
+    : 0;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: brand.primary_color }} />
+      </div>
+    );
+  }
+
+  if (!story) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+          style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
+        >
+          <BookOpen className="h-8 w-8 text-muted-foreground/50" />
+        </div>
+        <p className="font-medium text-foreground">No corporate DNA profile yet</p>
+        <p className="text-sm mt-1 text-muted-foreground text-center max-w-md">
+          Run website analysis or import corporate documents (CSR reports, annual reports, pitch decks)
+          to build the corporate identity profile.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 py-4">
+      <div className="grid grid-cols-[2fr_1fr] gap-3 items-start">
+        <div className="space-y-3">
+          {story.narrative_summary && (
+            <div
+              className="rounded-xl p-4"
+              style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
+                <h3 className="text-sm font-semibold font-product-sans text-muted-foreground uppercase tracking-wider">
+                  Narrative Summary
+                </h3>
+              </div>
+              <p className="text-sm text-foreground/80 leading-relaxed italic">{story.narrative_summary}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <BentoCard icon={Leaf} iconColor="text-green-600" title="Sustainability">
+              {hasSectionData(story.sustainability as Record<string, unknown> | null) ? (
+                <div className="space-y-2">
+                  <Field label="Environmental" value={story.sustainability?.environmental} />
+                  <Field label="Social" value={story.sustainability?.social} />
+                  <Field label="Governance" value={story.sustainability?.governance} />
+                  <BadgeList label="Goals" items={story.sustainability?.goals} />
+                </div>
+              ) : (
+                <EmptyHint text="Analyze website or import CSR / sustainability reports to populate." />
+              )}
+            </BentoCard>
+
+            <BentoCard icon={Lightbulb} iconColor="text-yellow-500" title="Innovation">
+              {hasSectionData(story.innovation as Record<string, unknown> | null) ? (
+                <div className="space-y-2">
+                  <Field label="Approach" value={story.innovation?.approach} />
+                  <Field label="Technology" value={story.innovation?.technology} />
+                  <BadgeList label="Differentiators" items={story.innovation?.differentiators} />
+                </div>
+              ) : (
+                <EmptyHint text="Analyze website or import pitch decks to populate." />
+              )}
+            </BentoCard>
+
+            <BentoCard icon={Heart} iconColor="text-rose-500" title="Culture">
+              {hasSectionData(story.culture as Record<string, unknown> | null) ? (
+                <div className="space-y-2">
+                  <Field label="Values in Practice" value={story.culture?.values_in_practice} />
+                  <Field label="Employee Experience" value={story.culture?.employee_experience} />
+                  <Field label="DEI" value={story.culture?.dei} />
+                </div>
+              ) : (
+                <EmptyHint text="Import DEI reports or corporate brochures to populate." />
+              )}
+            </BentoCard>
+
+            <BentoCard icon={Users} iconColor="text-teal-500" title="Community">
+              {hasSectionData(story.community as Record<string, unknown> | null) ? (
+                <div className="space-y-2">
+                  <Field label="Programs" value={story.community?.programs} />
+                  <Field label="Impact" value={story.community?.impact_metrics} />
+                  <BadgeList label="Partnerships" items={story.community?.partnerships} />
+                </div>
+              ) : (
+                <EmptyHint text="Analyze website or import CSR / annual reports to populate." />
+              )}
+            </BentoCard>
+
+            <BentoCard icon={Star} iconColor="text-orange-500" title="Customer Focus">
+              {hasSectionData(story.customer_focus as Record<string, unknown> | null) ? (
+                <div className="space-y-2">
+                  <Field label="Promise" value={story.customer_focus?.promise} />
+                  <Field label="Experience" value={story.customer_focus?.experience} />
+                  <BadgeList label="Themes" items={story.customer_focus?.testimonial_themes} />
+                </div>
+              ) : (
+                <EmptyHint text="Analyze website or import pitch decks to populate." />
+              )}
+            </BentoCard>
+
+            <BentoCard icon={Trophy} iconColor="text-indigo-500" title="Competitive Position">
+              {hasSectionData(story.competitive_position as Record<string, unknown> | null) ? (
+                <div className="space-y-2">
+                  <Field label="Market Position" value={story.competitive_position?.market_position} />
+                  <BadgeList label="Key Differentiators" items={story.competitive_position?.key_differentiators} />
+                  <BadgeList label="Awards" items={story.competitive_position?.awards} />
+                </div>
+              ) : (
+                <EmptyHint text="Analyze website or import investor presentations to populate." />
+              )}
+            </BentoCard>
+          </div>
+        </div>
+
+        <div className="sticky top-0 space-y-3">
+          <BentoCard icon={Target} iconColor="text-blue-500" title="Mission & Vision">
+            {hasSectionData(story.mission_vision as Record<string, unknown> | null) ? (
+              <div className="space-y-2">
+                <Field label="Mission" value={story.mission_vision?.mission} />
+                <Field label="Vision" value={story.mission_vision?.vision} />
+                <Field label="Purpose" value={story.mission_vision?.purpose} />
+              </div>
+            ) : (
+              <EmptyHint text="Analyze website or import corporate documents to populate." />
+            )}
+          </BentoCard>
+
+          <BentoCard icon={History} iconColor="text-amber-600" title="Heritage">
+            {hasSectionData(story.heritage as Record<string, unknown> | null) ? (
+              <div className="space-y-2">
+                <Field label="Founding Story" value={story.heritage?.founding_story} />
+                <Field label="Legacy" value={story.heritage?.legacy} />
+              </div>
+            ) : (
+              <EmptyHint text="Analyze website or import corporate documents to populate." />
+            )}
+          </BentoCard>
+
+          {story.heritage?.milestones && story.heritage.milestones.length > 0 && (
+            <BentoCard icon={History} iconColor="text-amber-600" title="Milestones">
+              <Timeline items={story.heritage.milestones} />
+            </BentoCard>
+          )}
+
+          <CorporateSnapshotCard
+            brand={brand}
+            populatedCount={populatedCount}
+            documentAnalyses={documentAnalyses}
+            profile={profile as unknown as Record<string, unknown>}
+          />
+        </div>
+      </div>
+
+      {profile?.updated_at && (
+        <div className="mt-4 pt-2 border-t border-border">
+          <p className="text-[10px] text-muted-foreground text-center">
+            Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 

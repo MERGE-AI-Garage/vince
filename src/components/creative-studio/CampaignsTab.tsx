@@ -78,6 +78,55 @@ function resolveDeliverableNames(copyBlocks: PackagePart[], storedNames: string[
   return names.length > 0 ? names : storedNames;
 }
 
+// ── Deliverable format specs ─────────────────────────────────────────────────
+
+interface FormatSpec { ratio: string; dims: string; category: string; }
+
+const SPEC_BY_KEY: Record<string, FormatSpec> = {
+  linkedin_post:           { ratio: '4:3',  dims: '1200×900',  category: 'Social' },
+  product_shot_with_text:  { ratio: '1:1',  dims: '1080×1080', category: 'Social' },
+  social_story:            { ratio: '9:16', dims: '1080×1920', category: 'Social' },
+  display_banner:          { ratio: '16:9', dims: '1920×1080', category: 'Display' },
+  email_header:            { ratio: '3:4',  dims: '600×800',   category: 'Email' },
+  tiktok_reel:             { ratio: '9:16', dims: '1080×1920', category: 'Social' },
+  instagram_feed_portrait: { ratio: '4:5',  dims: '1080×1350', category: 'Social' },
+  print_full_page:         { ratio: '3:4',  dims: '1200×1600', category: 'Print' },
+  print_ooh_billboard:     { ratio: '16:9', dims: '1920×1080', category: 'OOH' },
+  print_ooh_transit:       { ratio: '2:3',  dims: '800×1200',  category: 'OOH' },
+  print_direct_mail:       { ratio: '4:3',  dims: '1200×900',  category: 'Print' },
+  print_collateral:        { ratio: '3:4',  dims: '1200×1600', category: 'Print' },
+  banner_leaderboard:      { ratio: '8:1',  dims: '728×90',    category: 'Display' },
+  banner_skyscraper:       { ratio: '1:4',  dims: '160×600',   category: 'Display' },
+};
+
+const SPEC_BY_NAME: Array<[string, FormatSpec]> = [
+  ['linkedin',      { ratio: '4:3',  dims: '1200×900',  category: 'Social' }],
+  ['product shot',  { ratio: '1:1',  dims: '1080×1080', category: 'Social' }],
+  ['story',         { ratio: '9:16', dims: '1080×1920', category: 'Social' }],
+  ['tiktok',        { ratio: '9:16', dims: '1080×1920', category: 'Social' }],
+  ['reels',         { ratio: '9:16', dims: '1080×1920', category: 'Social' }],
+  ['instagram',     { ratio: '4:5',  dims: '1080×1350', category: 'Social' }],
+  ['email',         { ratio: '3:4',  dims: '600×800',   category: 'Email' }],
+  ['billboard',     { ratio: '16:9', dims: '1920×1080', category: 'OOH' }],
+  ['transit',       { ratio: '2:3',  dims: '800×1200',  category: 'OOH' }],
+  ['direct mail',   { ratio: '4:3',  dims: '1200×900',  category: 'Print' }],
+  ['sell sheet',    { ratio: '3:4',  dims: '1200×1600', category: 'Print' }],
+  ['collateral',    { ratio: '3:4',  dims: '1200×1600', category: 'Print' }],
+  ['leaderboard',   { ratio: '8:1',  dims: '728×90',    category: 'Display' }],
+  ['skyscraper',    { ratio: '1:4',  dims: '160×600',   category: 'Display' }],
+  ['display',       { ratio: '16:9', dims: '1920×1080', category: 'Display' }],
+  ['print',         { ratio: '3:4',  dims: '1200×1600', category: 'Print' }],
+];
+
+function lookupFormatSpec(name: string, key?: string | null): FormatSpec | null {
+  if (key && SPEC_BY_KEY[key]) return SPEC_BY_KEY[key];
+  const lower = name.toLowerCase();
+  for (const [fragment, spec] of SPEC_BY_NAME) {
+    if (lower.includes(fragment)) return spec;
+  }
+  return null;
+}
+
 interface DeliverableGroup {
   name: string;
   text?: string;
@@ -289,12 +338,27 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
           <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Deliverables</span>
         </div>
         <div className="space-y-1.5">
-          {resolvedNames.map((name, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="text-[9px] font-mono text-muted-foreground/40 w-4 shrink-0">{String(i + 1).padStart(2, '0')}</span>
-              <span className="text-xs text-foreground/80">{name}</span>
-            </div>
-          ))}
+          {resolvedNames.map((name, i) => {
+            const storedSpecs = gen.metadata?.deliverable_specs as Array<{ key: string; name: string; aspect_ratio: string }> | undefined;
+            const spec = lookupFormatSpec(name, storedSpecs?.[i]?.key);
+            return (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-[9px] font-mono text-muted-foreground/40 w-4 shrink-0 mt-0.5">{String(i + 1).padStart(2, '0')}</span>
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-xs text-foreground/80">{name}</span>
+                  {spec && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[9px] font-mono text-muted-foreground/50">{spec.ratio}</span>
+                      <span className="text-[9px] text-muted-foreground/30">·</span>
+                      <span className="text-[9px] font-mono text-muted-foreground/50">{spec.dims}</span>
+                      <span className="text-[9px] text-muted-foreground/30">·</span>
+                      <span className="text-[9px] text-muted-foreground/50">{spec.category}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -416,7 +480,7 @@ function AnalysisPanel({ gen, resolvedNames }: { gen: GenerationWithDetails; res
       const { data, error } = await supabase.functions.invoke('brand-prompt-agent', {
         body: {
           brand_id: gen.brand_id,
-          user_message: `Please analyze these campaign deliverables for brand standards compliance. For each image, evaluate: brand color usage, visual consistency, messaging alignment, typography (flag any all-caps or title case headlines — sentence case is required), and overall brand fit. Also flag any instance where text, overlays, or graphic elements cover or obscure a human face — this is always a brand violation. Provide a score out of 100 and specific actionable feedback for each deliverable.\n\nDeliverables:\n${imageList}\n\nBrief: ${gen.prompt_text || '(no brief)'}`,
+          user_message: `Please analyze these campaign deliverables for brand standards compliance. For each image, evaluate: brand color usage, visual consistency, messaging alignment, typography, and overall brand fit. Also flag any instance where text, overlays, or graphic elements cover or obscure a human face — this is always a brand violation.\n\nFor typography: flag headlines set entirely in all-caps or in title case (every word capitalized). Correct usage is sentence case — only the first word and proper nouns (brand names, acronyms like AI, API, URL) are capitalized. "AI enablement for your business" is correct. "AI ENABLEMENT" and "AI Enablement For Your Business" are violations.\n\nProvide a score out of 100 and specific actionable feedback for each deliverable.\n\nDeliverables:\n${imageList}\n\nBrief: ${gen.prompt_text || '(no brief)'}`,
         },
       });
       if (error) throw error;
@@ -756,9 +820,19 @@ interface ImageInfoState {
   imageUrl: string;
 }
 
+interface MediaRecord {
+  auto_tags: string[] | null;
+  synthid_detected: boolean | null;
+  synthid_confidence: number | null;
+  synthid_generated_by: string | null;
+  width: number | null;
+  height: number | null;
+}
+
 function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: () => void }) {
   const [zipping, setZipping] = useState(false);
   const [imageInfo, setImageInfo] = useState<ImageInfoState | null>(null);
+  const [mediaRecord, setMediaRecord] = useState<MediaRecord | null>(null);
   const storedNames = (gen.metadata?.deliverable_names as string[] | undefined) || [];
   const copyBlocks = (gen.copy_blocks as PackagePart[] | undefined) || [];
   const hasCopy = copyBlocks.some(p => p.type === 'text');
@@ -767,6 +841,16 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
   const brief = gen.prompt_text || '';
   const conversationId = gen.metadata?.conversation_id as string | undefined;
   const userName = gen.user?.full_name;
+
+  useEffect(() => {
+    if (!imageInfo) { setMediaRecord(null); return; }
+    supabase
+      .from('media')
+      .select('auto_tags, synthid_detected, synthid_confidence, synthid_generated_by, width, height')
+      .eq('url', imageInfo.imageUrl)
+      .maybeSingle()
+      .then(({ data }) => setMediaRecord(data ?? null));
+  }, [imageInfo]);
 
   const getCopyForIndex = (idx: number): string | undefined => {
     let imageCount = 0;
@@ -955,6 +1039,36 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
                 <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Image URL</p>
                 <p className="text-[10px] font-mono text-muted-foreground/60 break-all leading-relaxed bg-muted/20 rounded p-2">{imageInfo.imageUrl}</p>
               </div>
+              {/* Media library metadata */}
+              {mediaRecord && (mediaRecord.synthid_detected || (mediaRecord.auto_tags && mediaRecord.auto_tags.length > 0) || (mediaRecord.width && mediaRecord.height)) && (
+                <div className="space-y-2 border-t border-border/20 pt-3">
+                  {mediaRecord.synthid_detected && (
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400">AI Watermark</span>
+                      {mediaRecord.synthid_confidence != null && (
+                        <span className="text-[10px] text-muted-foreground/60 font-mono ml-auto">{Math.round(mediaRecord.synthid_confidence * 100)}% confidence</span>
+                      )}
+                    </div>
+                  )}
+                  {mediaRecord.width && mediaRecord.height && (
+                    <div className="space-y-0.5">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Dimensions</p>
+                      <p className="text-xs font-mono text-foreground/85">{mediaRecord.width} × {mediaRecord.height}</p>
+                    </div>
+                  )}
+                  {mediaRecord.auto_tags && mediaRecord.auto_tags.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Tags</p>
+                      <div className="flex flex-wrap gap-1">
+                        {mediaRecord.auto_tags.map(tag => (
+                          <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/20 text-muted-foreground/60">{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               {copyText && (
                 <div className="space-y-1">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Copy</p>

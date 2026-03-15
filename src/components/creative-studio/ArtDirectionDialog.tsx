@@ -384,6 +384,85 @@ function ArtDirectionSnapshot({
   );
 }
 
+// ── Art Direction view content (used by unified BrandIntelligenceDialog) ─────
+
+export function ArtDirectionViewContent({
+  brand,
+  profile,
+  isLoading,
+}: {
+  brand: CreativeStudioBrand;
+  profile: BrandVisualProfile | null | undefined;
+  isLoading: boolean;
+}) {
+  const hasPhotography = !!profile?.photography_style && Object.values(profile.photography_style).some(Boolean);
+  const hasComposition = !!profile?.composition_rules && Object.values(profile.composition_rules).some(v =>
+    Array.isArray(v) ? v.length > 0 : !!v
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: brand.primary_color }} />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+          style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
+        >
+          <Camera className="h-8 w-8 text-muted-foreground/50" />
+        </div>
+        <p className="font-medium text-foreground">No art direction profile yet</p>
+        <p className="text-sm mt-1 text-muted-foreground text-center max-w-md">
+          Analyze brand imagery or scan a product page to build the art direction profile.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 py-4">
+      <div className="grid grid-cols-[2fr_1fr] gap-3 items-start">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            {hasPhotography && (
+              <BentoCard title="Photography" icon={Camera} iconColor="text-sky-500">
+                <PhotographySection data={profile.photography_style} />
+              </BentoCard>
+            )}
+            {hasComposition && (
+              <BentoCard title="Composition" icon={LayoutGrid} iconColor="text-violet-500">
+                <CompositionSection data={profile.composition_rules} />
+              </BentoCard>
+            )}
+          </div>
+          <BentoCard title="Product Catalog" icon={Package} iconColor="text-emerald-500">
+            <ProductCatalogSection data={profile.product_catalog} />
+          </BentoCard>
+        </div>
+        <div className="space-y-3">
+          <ArtDirectionOverview profile={profile} />
+          <VisualPrinciples profile={profile} />
+          <VisualDosDonts profile={profile} />
+          <ArtDirectionSnapshot profile={profile} />
+        </div>
+      </div>
+      {profile.updated_at && (
+        <div className="mt-4 pt-2 border-t border-border">
+          <p className="text-[10px] text-muted-foreground text-center">
+            Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main dialog ──────────────────────────────────────────────────────────────
 
 interface ArtDirectionDialogProps {
@@ -398,11 +477,6 @@ export function ArtDirectionDialog({ brand, open, onOpenChange, onNavigate }: Ar
   const headerTextLight = !isLightColor(brand.primary_color);
 
   const headerImageUrl = (profile?.source_metadata as Record<string, unknown>)?.header_image_url as string | undefined;
-
-  const hasPhotography = !!profile?.photography_style && Object.values(profile.photography_style).some(Boolean);
-  const hasComposition = !!profile?.composition_rules && Object.values(profile.composition_rules).some(v =>
-    Array.isArray(v) ? v.length > 0 : !!v
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -515,69 +589,7 @@ export function ArtDirectionDialog({ brand, open, onOpenChange, onNavigate }: Ar
           className="h-[calc(88vh-130px)]"
           style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
         >
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <div
-                className="animate-spin rounded-full h-6 w-6 border-b-2"
-                style={{ borderColor: brand.primary_color }}
-              />
-            </div>
-          ) : !profile ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground px-6">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                style={{ backgroundColor: 'hsl(var(--cs-surface-1))', border: '1px solid hsl(var(--cs-border-subtle))' }}
-              >
-                <Camera className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-              <p className="font-medium text-foreground">No art direction profile yet</p>
-              <p className="text-sm mt-1 text-muted-foreground text-center max-w-md">
-                Analyze brand imagery or scan a product page to build the art direction profile.
-              </p>
-            </div>
-          ) : (
-            <div className="px-6 py-4">
-              <div className="grid grid-cols-[2fr_1fr] gap-3 items-start">
-                {/* Left: Photography, Composition, Product Catalog */}
-                <div className="space-y-3">
-                  {/* Photography + Composition side by side */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {hasPhotography && (
-                      <BentoCard title="Photography" icon={Camera} iconColor="text-sky-500">
-                        <PhotographySection data={profile.photography_style} />
-                      </BentoCard>
-                    )}
-                    {hasComposition && (
-                      <BentoCard title="Composition" icon={LayoutGrid} iconColor="text-violet-500">
-                        <CompositionSection data={profile.composition_rules} />
-                      </BentoCard>
-                    )}
-                  </div>
-
-                  {/* Product Catalog — always shown so user knows to scan */}
-                  <BentoCard title="Product Catalog" icon={Package} iconColor="text-emerald-500">
-                    <ProductCatalogSection data={profile.product_catalog} />
-                  </BentoCard>
-                </div>
-
-                {/* Right: Overview, Principles, Do/Don'ts, Snapshot */}
-                <div className="space-y-3">
-                  <ArtDirectionOverview profile={profile} />
-                  <VisualPrinciples profile={profile} />
-                  <VisualDosDonts profile={profile} />
-                  <ArtDirectionSnapshot profile={profile} />
-                </div>
-              </div>
-
-              {profile.updated_at && (
-                <div className="mt-4 pt-2 border-t border-border">
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Last updated {new Date(profile.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+          <ArtDirectionViewContent brand={brand} profile={profile} isLoading={isLoading} />
         </ScrollArea>
       </DialogContent>
     </Dialog>

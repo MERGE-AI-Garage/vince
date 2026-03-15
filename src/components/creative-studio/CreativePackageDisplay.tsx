@@ -12,6 +12,7 @@ export interface PackagePart {
   content?: string;
   image_base64?: string;
   mime_type?: string;
+  image_url?: string;
 }
 
 interface DeliverableGroup {
@@ -124,7 +125,7 @@ function groupParts(parts: PackagePart[], deliverableNames: string[]): Deliverab
       }
       pendingText = cleanCopyText(part.content);
     } else if (part.type === 'image') {
-      const imageUrl = part.content || (part.image_base64
+      const imageUrl = part.content || part.image_url || (part.image_base64
         ? `data:${part.mime_type || 'image/png'};base64,${part.image_base64}`
         : undefined);
 

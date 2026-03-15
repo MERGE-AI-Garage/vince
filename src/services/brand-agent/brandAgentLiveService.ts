@@ -1001,6 +1001,13 @@ export const connectVinceLiveSession = async (
     };
 
   } catch (error) {
+    // Always release hardware resources on failure so the next attempt can acquire them
+    forceCleanup();
+
+    // Let mic-specific errors propagate so the caller can show targeted messages
+    if (error instanceof Error && (error.name === 'NotAllowedError' || error.name === 'NotReadableError')) {
+      throw error;
+    }
     console.error('[Vince Live] Connection failed:', error);
     callbacks.onError(error instanceof Error ? error : new Error(String(error)));
     return null;

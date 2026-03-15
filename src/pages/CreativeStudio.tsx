@@ -21,10 +21,7 @@ import { BrandAgentApp } from '@/components/creative-studio/BrandAgentApp';
 import { PromptLibraryPanel } from '@/components/creative-studio/PromptLibraryPanel';
 import { SaveAsTemplateDialog } from '@/components/creative-studio/SaveAsTemplateDialog';
 import { BrandShopTopBar } from '@/components/creative-studio/BrandShopTopBar';
-import { BrandDNADialog } from '@/components/creative-studio/BrandDNADialog';
-import { CorporateDNADialog } from '@/components/creative-studio/BrandStoryDialog';
-import { BrandStandardsDialog } from '@/components/creative-studio/BrandStandardsDialog';
-import { ArtDirectionDialog } from '@/components/creative-studio/ArtDirectionDialog';
+import { BrandIntelligenceDialog } from '@/components/creative-studio/BrandIntelligenceDialog';
 import { AIGuidelinesDialog } from '@/components/creative-studio/AIGuidelinesDialog';
 import type { BrandDialogView } from '@/components/creative-studio/BrandDialogNav';
 import { BrandShopPromptBar, type GenerationMode } from '@/components/creative-studio/BrandShopPromptBar';
@@ -89,11 +86,10 @@ export default function CreativeStudio() {
     return () => document.body.classList.remove('creative-studio');
   }, []);
 
-  // Apply Creative Studio theme on mount (without persisting to global storage), restore on unmount
+  // Studio always opens in dark mode — light mode not yet supported (WelcomeScreen is dark-only)
   useEffect(() => {
-    const studioTheme = (localStorage.getItem('creative-studio-theme') || 'dark') as 'light' | 'dark';
-    if (theme !== studioTheme) {
-      setTheme(studioTheme, { skipPersist: true });
+    if (theme !== 'dark') {
+      setTheme('dark', { skipPersist: true });
     }
     return () => {
       const globalTheme = (localStorage.getItem('brand-lens-theme') || 'dark') as 'light' | 'dark';
@@ -107,26 +103,8 @@ export default function CreativeStudio() {
   const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>('vince');
   const [promptLibraryOpen, setPromptLibraryOpen] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
-  const [brandDNAOpen, setBrandDNAOpen] = useState(false);
-  const [corporateDNAOpen, setCorporateDNAOpen] = useState(false);
-  const [standardsDialogOpen, setStandardsDialogOpen] = useState(false);
-  const [artDirectionOpen, setArtDirectionOpen] = useState(false);
+  const [brandDialogView, setBrandDialogView] = useState<BrandDialogView | null>(null);
   const [guidelinesOpen, setGuidelinesOpen] = useState(false);
-
-  const handleBrandDialogNavigate = (view: BrandDialogView) => {
-    setBrandDNAOpen(false);
-    setCorporateDNAOpen(false);
-    setStandardsDialogOpen(false);
-    setArtDirectionOpen(false);
-    requestAnimationFrame(() => {
-      switch (view) {
-        case 'brand-dna': setBrandDNAOpen(true); break;
-        case 'corporate-dna': setCorporateDNAOpen(true); break;
-        case 'brand-standards': setStandardsDialogOpen(true); break;
-        case 'art-direction': setArtDirectionOpen(true); break;
-      }
-    });
-  };
   const [showLibrary, setShowLibrary] = useState(false);
   const [historyDrawerOpen, setHistoryDrawerOpen] = useState(true);
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(true);
@@ -990,9 +968,9 @@ export default function CreativeStudio() {
         onOpenPromptLibrary={() => setPromptLibraryOpen(true)}
         onToggleVince={handleToggleVince}
         vinceActive={rightSidebarMode === 'vince'}
-        onOpenBrandDNA={() => setBrandDNAOpen(true)}
-        onOpenCorporateDNA={() => setCorporateDNAOpen(true)}
-        onOpenBrandStandards={() => setStandardsDialogOpen(true)}
+        onOpenBrandDNA={() => setBrandDialogView('brand-dna')}
+        onOpenCorporateDNA={() => setBrandDialogView('corporate-dna')}
+        onOpenBrandStandards={() => setBrandDialogView('brand-standards')}
         onOpenGuidelines={() => setGuidelinesOpen(true)}
         onOpenMediaLibrary={() => setShowLibrary(true)}
         onStartTour={startTour}
@@ -1063,8 +1041,8 @@ export default function CreativeStudio() {
                 <EditorCanvas
                   selectedBrand={selectedBrand}
                   brandStats={selectedBrandStats}
-                  onOpenBrandDNA={() => setBrandDNAOpen(true)}
-                  onOpenArtDirection={() => setArtDirectionOpen(true)}
+                  onOpenBrandDNA={() => setBrandDialogView('brand-dna')}
+                  onOpenArtDirection={() => setBrandDialogView('art-direction')}
                   onOpenPromptLibrary={() => setPromptLibraryOpen(true)}
                   onOpenBrandAgent={handleToggleVince}
                   onOpenGuidelines={() => setGuidelinesOpen(true)}
@@ -1394,43 +1372,13 @@ export default function CreativeStudio() {
         stagedImages={stagedImages}
       />
 
-      {/* Brand DNA Dialog */}
+      {/* Brand intelligence — single unified dialog, no open/close animation between views */}
       {selectedBrand && (
-        <BrandDNADialog
+        <BrandIntelligenceDialog
           brand={selectedBrand}
-          open={brandDNAOpen}
-          onOpenChange={setBrandDNAOpen}
-          onNavigate={handleBrandDialogNavigate}
-        />
-      )}
-
-      {/* Corporate DNA Dialog */}
-      {selectedBrand && (
-        <CorporateDNADialog
-          brand={selectedBrand}
-          open={corporateDNAOpen}
-          onOpenChange={setCorporateDNAOpen}
-          onNavigate={handleBrandDialogNavigate}
-        />
-      )}
-
-      {/* Art Direction Dialog */}
-      {selectedBrand && (
-        <ArtDirectionDialog
-          brand={selectedBrand}
-          open={artDirectionOpen}
-          onOpenChange={setArtDirectionOpen}
-          onNavigate={handleBrandDialogNavigate}
-        />
-      )}
-
-      {/* Brand Standards Dialog */}
-      {selectedBrand && (
-        <BrandStandardsDialog
-          brand={selectedBrand}
-          open={standardsDialogOpen}
-          onOpenChange={setStandardsDialogOpen}
-          onNavigate={handleBrandDialogNavigate}
+          open={brandDialogView !== null}
+          onOpenChange={(open) => { if (!open) setBrandDialogView(null); }}
+          initialView={brandDialogView ?? 'brand-dna'}
         />
       )}
 
@@ -1463,6 +1411,8 @@ export default function CreativeStudio() {
               latencyMs={historyPackageGen.generation_time_ms || 0}
               brief={historyPackageGen.prompt_text}
               deliverableNames={historyPackageGen.metadata?.deliverable_names as string[] | undefined}
+              brandName={historyPackageGen.brand?.name ?? ''}
+              model={historyPackageGen.model_used ?? ''}
               onLoadToCanvas={setCurrentImage}
             />
           )}

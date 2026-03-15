@@ -286,7 +286,8 @@ export function EditorCanvas({
   return (
     <div
       className={cn(
-        'flex-1 rounded-xl border flex items-center justify-center relative overflow-hidden transition-all duration-300',
+        'flex-1 rounded-xl border flex items-center justify-center relative transition-all duration-300',
+        currentImage ? 'overflow-hidden' : 'overflow-y-auto',
         isDragOver
           ? 'border-primary bg-primary/5 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.3)]'
           : currentImage

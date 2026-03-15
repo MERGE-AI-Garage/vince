@@ -581,7 +581,7 @@ interface ToolCall {
 async function executeTool(
   toolName: string,
   parameters: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
   geminiApiKey?: string,
 ): Promise<unknown> {
@@ -685,7 +685,7 @@ async function listCameraOptions(
 
 async function recallBrandGuidelines(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
   geminiApiKey?: string,
 ): Promise<unknown> {
@@ -716,7 +716,7 @@ async function recallBrandGuidelines(
 
 async function savePromptTemplate(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const { data, error } = await supabase
@@ -767,7 +767,7 @@ async function searchPromptLibrary(
 
 async function analyzeBrandImage(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -874,7 +874,7 @@ async function checkGenerationQuota(
 
 async function listBrandReferences(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   let query = supabase
@@ -928,7 +928,7 @@ async function listBrandReferences(
 
 async function generateImage(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -986,7 +986,7 @@ async function generateImage(
 
 async function editImage(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1043,7 +1043,7 @@ async function editImage(
 
 async function listGenerations(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const limit = Math.min((params.limit as number) || 10, 20);
@@ -1111,7 +1111,7 @@ async function checkJobStatus(
 }
 
 async function listGuardrails(
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const { data, error } = await supabase
@@ -1156,7 +1156,7 @@ async function setGuardrailActive(
 
 async function generateHeadshotScene(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -1277,7 +1277,13 @@ REQUIREMENTS:
     completed_at: new Date().toISOString(),
   });
 
-  // Register in media library
+  // Register in media library — place in /AI Generated/Studio folder
+  const { data: studioFolder } = await supabase
+    .from('media_folders')
+    .select('id')
+    .eq('path', '/AI Generated/Studio')
+    .maybeSingle();
+
   await supabase.from('media').insert({
     filename,
     title: `Headshot Scene — ${sceneDescription.slice(0, 60)}`,
@@ -1287,6 +1293,7 @@ REQUIREMENTS:
     mime_type: mimeType,
     file_type: 'image',
     size_bytes: imageBuffer.byteLength,
+    folder_id: studioFolder?.id ?? null,
     created_by: context.user_id,
     auto_tags: ['headshot', 'ai-generated', 'person'],
     ai_provenance: { model: 'gemini-3.1-flash-image-preview', brand_id: context.brand_id },
@@ -1305,7 +1312,7 @@ REQUIREMENTS:
 
 async function generateCreativePackage(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1324,7 +1331,7 @@ async function generateCreativePackage(
       reference_image_urls: params.reference_image_urls || undefined,
       pre_generated_image_url: params.pre_generated_image_url || undefined,
       user_id: context.user_id,
-      conversation_id: (context as Record<string, unknown>).conversation_id || undefined,
+      conversation_id: context.conversation_id || undefined,
     }),
   });
 
@@ -1351,7 +1358,7 @@ async function generateCreativePackage(
 
 async function analyzeCompetitorContent(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1397,7 +1404,7 @@ async function analyzeCompetitorContent(
 
 async function analyzeSelfDemo(
   params: Record<string, unknown>,
-  _context: { brand_id: string; user_id: string },
+  _context: { brand_id: string; user_id: string; conversation_id?: string },
   _supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1440,7 +1447,7 @@ async function analyzeSelfDemo(
 
 async function generateVideo(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   _supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1490,7 +1497,7 @@ async function generateVideo(
 
 async function createBrand(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const name = params.name as string;
@@ -1543,7 +1550,7 @@ async function createBrand(
 
 async function analyzeBrandWebsite(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   // Always prefer the brand's stored website_url over what Gemini passes
@@ -1597,7 +1604,7 @@ async function analyzeBrandWebsite(
 
 async function importBrandDocument(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const documentUrl = params.document_url as string;
@@ -1657,7 +1664,7 @@ async function importBrandDocument(
 
 async function generateBrandHeader(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   // Fetch brand data for the prompt
@@ -1735,7 +1742,7 @@ async function generateBrandHeader(
 
 async function generateBrandCards(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1774,7 +1781,7 @@ async function generateBrandCards(
 
 async function generateBrandGuardrails(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1842,7 +1849,7 @@ async function generateBrandGuardrails(
 }
 
 async function synthesizeBrandProfile(
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -1881,7 +1888,7 @@ async function synthesizeBrandProfile(
 
 async function generateBrandPlaybook(
   params: Record<string, unknown>,
-  context: { brand_id: string; user_id: string },
+  context: { brand_id: string; user_id: string; conversation_id?: string },
   supabase: ReturnType<typeof createClient>,
 ) {
   const steps: string[] = [];
@@ -2400,19 +2407,24 @@ serve(async (req) => {
       models = modelsResult.data || [];
     }
 
+    // Ensure we always have a conversation ID — auto-generate if client didn't provide one
+    const effectiveConversationId = conversation_id ?? crypto.randomUUID();
+
     // Load conversation history
     let messages: ChatMessage[] = [];
     let toolCallsCount = 0;
+    let existingMetadata: Record<string, unknown> = {};
     if (conversation_id) {
       const { data: conversation } = await supabase
         .from('chatbot_conversations')
-        .select('messages, tool_calls_count')
+        .select('messages, tool_calls_count, metadata')
         .eq('id', conversation_id)
         .single();
 
       if (conversation) {
         messages = (conversation.messages as ChatMessage[]) || [];
         toolCallsCount = conversation.tool_calls_count || 0;
+        existingMetadata = (conversation.metadata as Record<string, unknown>) || {};
       }
     }
 
@@ -2521,7 +2533,7 @@ serve(async (req) => {
         const toolResult = await executeTool(
           toolName,
           parameters,
-          { brand_id, user_id: user.id, conversation_id } as { brand_id: string; user_id: string },
+          { brand_id, user_id: user.id, conversation_id: effectiveConversationId },
           supabase,
           geminiApiKey,
         );
@@ -2672,27 +2684,23 @@ serve(async (req) => {
     };
     messages.push(assistantMessage);
 
-    // Persist conversation — upsert to handle cases where client-side creation failed
-    if (conversation_id) {
-      console.log(`[Vince] Saving ${messages.length} messages to conversation ${conversation_id}`);
-      const { error: saveError } = await supabase
-        .from('chatbot_conversations')
-        .upsert({
-          id: conversation_id,
-          user_id: user.id,
-          messages,
-          tool_calls_count: toolCallsCount,
-          metadata: { assistant: 'vince' },
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
+    // Persist conversation
+    console.log(`[Vince] Saving ${messages.length} messages to conversation ${effectiveConversationId}${conversation_id ? '' : ' (auto-generated)'}`);
+    const { error: saveError } = await supabase
+      .from('chatbot_conversations')
+      .upsert({
+        id: effectiveConversationId,
+        user_id: user.id,
+        messages,
+        tool_calls_count: toolCallsCount,
+        metadata: { ...existingMetadata, assistant: 'vince' },
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' });
 
-      if (saveError) {
-        console.error(`[Vince] Conversation save failed:`, saveError.message);
-      } else {
-        console.log(`[Vince] Conversation saved successfully`);
-      }
+    if (saveError) {
+      console.error(`[Vince] Conversation save failed:`, saveError.message);
     } else {
-      console.warn('[Vince] No conversation_id — messages not persisted');
+      console.log(`[Vince] Conversation saved successfully`);
     }
 
     // Audit log

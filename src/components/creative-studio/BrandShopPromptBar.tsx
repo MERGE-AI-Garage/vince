@@ -160,7 +160,7 @@ export function BrandShopPromptBar({
                     className={cn(
                       'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all',
                       generationType === mode
-                        ? 'bg-primary text-primary-foreground shadow-sm shadow-purple-900/20'
+                        ? 'bg-primary text-primary-foreground shadow-sm shadow-black/20'
                         : 'text-muted-foreground hover:text-foreground hover:bg-card border border-transparent hover:border-border/50 hover:shadow-sm'
                     )}
                   >
@@ -250,7 +250,7 @@ export function BrandShopPromptBar({
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 {vinceActive && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-purple-500 rounded-full" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#1ED75F] rounded-full" />
                 )}
               </Button>
             </TooltipTrigger>
@@ -315,7 +315,7 @@ export function BrandShopPromptBar({
 
           {/* Generate button */}
           {currentOperation === 'generating' ? (
-            <span className="relative inline-flex shrink-0 rounded-full p-px text-sm font-bold leading-6 text-purple-400">
+            <span className="relative inline-flex shrink-0 rounded-full p-px text-sm font-bold leading-6 text-[#1ED75F]/70">
               <span className="relative flex items-center gap-2 z-10 rounded-full bg-card dark:bg-[#0D1B16] py-2 px-5 ring-1 ring-border/60 dark:ring-white/10">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <div className="flex flex-col items-start">
@@ -351,7 +351,7 @@ export function BrandShopPromptBar({
             <button
               onClick={onGenerate}
               disabled={isGenerating}
-              className="inline-flex items-center gap-2 shrink-0 h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-md shadow-purple-900/25 hover:shadow-lg hover:shadow-purple-900/30 hover:brightness-110 active:brightness-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 shrink-0 h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-md shadow-black/25 hover:shadow-lg hover:shadow-black/30 hover:brightness-110 active:brightness-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-4 h-4" />
               {generateLabel}

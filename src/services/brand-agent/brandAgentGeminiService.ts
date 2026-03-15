@@ -425,14 +425,17 @@ export async function sendMessageToBrandAgent(
 /**
  * Create a Brand Agent conversation record
  */
-export async function createBrandAgentConversation(userId: string): Promise<string> {
+export async function createBrandAgentConversation(
+  userId: string,
+  source: 'web' | 'extension' | 'ios' = 'web',
+): Promise<string> {
   const { data, error } = await supabase
     .from('chatbot_conversations')
     .insert({
       user_id: userId,
       messages: [],
       tool_calls_count: 0,
-      metadata: { assistant: 'vince' },
+      metadata: { assistant: 'vince', source },
     })
     .select('id')
     .single();
@@ -452,6 +455,7 @@ export async function saveVoiceConversation(
     brand_id?: string | null;
     brand_name?: string;
     tool_calls_count?: number;
+    source?: 'web' | 'extension' | 'ios';
   },
 ): Promise<void> {
   try {
@@ -472,6 +476,7 @@ export async function saveVoiceConversation(
           mode: 'voice',
           brand_id: metadata.brand_id,
           brand_name: metadata.brand_name,
+          ...(metadata.source ? { source: metadata.source } : {}),
         },
       })
       .eq('id', conversationId);

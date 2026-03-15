@@ -277,7 +277,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 disabled={isLoading}
                 className={`flex-shrink-0 flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden ${
                   compact
-                    ? 'h-9 w-9 rounded-lg bg-purple-600 hover:bg-purple-700 text-white'
+                    ? 'h-9 w-9 rounded-lg bg-[#00856C] hover:bg-[#006B55] text-white'
                     : 'h-12 w-12 rounded-xl bg-primary/50 hover:bg-primary text-accent hover:text-white border border-primary/30'
                 }`}
                 title="Start Voice Conversation"
@@ -299,7 +299,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 rows={compact ? 2 : 1}
                 className={`w-full resize-none disabled:opacity-50 transition-colors ${
                   compact
-                    ? 'bg-background text-foreground placeholder-muted-foreground/50 rounded-lg border border-border focus:border-purple-500 focus:ring-1 focus:ring-purple-500 focus:outline-none py-2 px-3 text-sm min-h-[52px] max-h-[120px]'
+                    ? 'bg-background text-foreground placeholder-muted-foreground/50 rounded-lg border border-border focus:border-[#00856C] focus:ring-1 focus:ring-[#00856C] focus:outline-none py-2 px-3 text-sm min-h-[52px] max-h-[120px]'
                     : `bg-primary/30 text-muted placeholder-muted/30 rounded-xl border border-primary/30 focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none py-3 px-4 min-h-[48px] max-h-[150px] ${canDictate ? 'pr-12' : ''}`
                 }`}
               />
@@ -331,7 +331,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                     ? `h-9 w-9 rounded-lg ${
                         isLoading
                           ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white hover:scale-105 active:scale-95'
+                          : 'bg-[#00856C] hover:bg-[#006B55] text-white hover:scale-105 active:scale-95'
                       }`
                     : `h-12 w-12 rounded-xl ${
                         isLoading
@@ -353,7 +353,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
             <button
               onClick={onStartVoice}
               disabled={isLoading}
-              className="w-full mt-3 py-2.5 px-4 rounded-full bg-gradient-to-r from-purple-700 to-purple-600 hover:from-purple-600 hover:to-purple-500 text-white font-medium text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-900/20"
+              className="w-full mt-3 py-2.5 px-4 rounded-full bg-gradient-to-r from-[#00856C] to-[#006B55] hover:from-[#007A60] hover:to-[#00856C] text-white font-medium text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#00856C]/20"
             >
               <AudioLines className="w-4 h-4" />
               {voiceButtonLabel}

@@ -92,6 +92,9 @@ export function WelcomeImagesTab() {
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
   const [editingPromptText, setEditingPromptText] = useState('');
   const [versionHistoryPromptId, setVersionHistoryPromptId] = useState<string | null>(null);
+  const [enhancingPromptId, setEnhancingPromptId] = useState<string | null>(null);
+  const [enhancedPromptId, setEnhancedPromptId] = useState<string | null>(null);
+  const [enhancedPromptText, setEnhancedPromptText] = useState('');
 
   // Sets panel state
   const [setsExpanded, setSetsExpanded] = useState(false);
@@ -271,6 +274,32 @@ export function WelcomeImagesTab() {
     } catch (err: any) {
       toast.error(err.message || 'Failed to save prompt');
     }
+  };
+
+  const handleEnhancePrompt = async (p: StudioWelcomeImagePrompt) => {
+    setEnhancingPromptId(p.id);
+    setEnhancedPromptId(null);
+    setEnhancedPromptText('');
+    try {
+      const { data, error } = await supabase.functions.invoke('enhance-image-prompt', {
+        body: { prompt: p.prompt, label: p.label, image_key: p.image_key },
+      });
+      if (error) throw error;
+      if (!data?.enhanced_prompt) throw new Error('No enhanced prompt returned');
+      setEnhancedPromptId(p.id);
+      setEnhancedPromptText(data.enhanced_prompt);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to enhance prompt');
+    } finally {
+      setEnhancingPromptId(null);
+    }
+  };
+
+  const handleAcceptEnhanced = (p: StudioWelcomeImagePrompt) => {
+    setEditingPromptId(p.id);
+    setEditingPromptText(enhancedPromptText);
+    setEnhancedPromptId(null);
+    setEnhancedPromptText('');
   };
 
   if (isLoading) {
@@ -538,6 +567,19 @@ export function WelcomeImagesTab() {
                     >
                       <History className="h-3 w-3" />Versions
                     </Button>
+                    <Button
+                      variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1"
+                      onClick={() => handleEnhancePrompt(p)}
+                      disabled={enhancingPromptId === p.id}
+                      title="Enhance with Gemini"
+                    >
+                      {enhancingPromptId === p.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3 w-3" />
+                      )}
+                      Enhance
+                    </Button>
                     {editingPromptId === p.id ? (
                       <>
                         <Button
@@ -580,6 +622,57 @@ export function WelcomeImagesTab() {
                   <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
                     {p.prompt}
                   </p>
+                )}
+
+                {/* Enhanced prompt suggestion */}
+                {enhancedPromptId === p.id && (
+                  <div className="mt-2 rounded-md border border-purple-200 bg-purple-50/50 dark:border-purple-800/40 dark:bg-purple-950/20 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" />Enhanced suggestion
+                      </span>
+                      <Button
+                        variant="ghost" size="sm" className="h-5 w-5 p-0 text-muted-foreground"
+                        onClick={() => { setEnhancedPromptId(null); setEnhancedPromptText(''); }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={enhancedPromptText}
+                      onChange={e => setEnhancedPromptText(e.target.value)}
+                      className="text-xs min-h-[80px] resize-y font-mono"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm" className="h-6 px-2 text-xs"
+                        onClick={() => handleAcceptEnhanced(p)}
+                      >
+                        Accept &amp; Edit
+                      </Button>
+                      <Button
+                        variant="outline" size="sm" className="h-6 px-2 text-xs"
+                        onClick={async () => {
+                          try {
+                            await updatePrompt.mutateAsync({
+                              id: p.id,
+                              prompt: enhancedPromptText,
+                              aspect_ratio: p.aspect_ratio,
+                              changeSummary: 'AI enhanced',
+                            });
+                            setEnhancedPromptId(null);
+                            setEnhancedPromptText('');
+                            toast.success(`${p.label} prompt saved`);
+                          } catch (err: any) {
+                            toast.error(err.message || 'Failed to save');
+                          }
+                        }}
+                        disabled={updatePrompt.isPending}
+                      >
+                        {updatePrompt.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Save Directly'}
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             ))}

@@ -1,4 +1,4 @@
-// ABOUTME: Root component for the Vince mobile app (iOS)
+// ABOUTME: Root component for the Vince mobile app (iOS and Android)
 // ABOUTME: Full-screen Vince chat/voice interface with brand picker, mobile-optimized layout
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -197,6 +197,7 @@ function VinceHome() {
         <BrandAgentApp
           brandId={selectedBrandId}
           brandName={selectedBrand?.name || 'Vince'}
+          source="mobile"
           onBrandCreated={handleBrandCreated}
         />
       </div>

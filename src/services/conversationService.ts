@@ -21,6 +21,8 @@ export interface ConversationRecord {
   message_count: number;
   user_name: string;
   user_email: string;
+  source: string;
+  mode: string | null;
 }
 
 export interface FetchConversationsOptions {
@@ -96,6 +98,8 @@ export async function fetchConversations(options: FetchConversationsOptions): Pr
       user_name: [row.profiles?.first_name, row.profiles?.last_name]
         .filter(Boolean).join(' ') || 'Unknown',
       user_email: row.profiles?.email || '',
+      source: (row.metadata?.source as string) || 'unknown',
+      mode: (row.metadata?.mode as string) || null,
     };
   });
 

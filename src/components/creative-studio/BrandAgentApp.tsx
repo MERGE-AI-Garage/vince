@@ -92,6 +92,7 @@ function formatToolAction(action: ToolAction): string {
 interface BrandAgentAppProps {
   brandId: string | null;
   brandName: string;
+  source?: 'web' | 'ios';
   onApplyPrompt?: (prompt: string) => void;
   onApplyCameraPreset?: (preset: CameraPreset) => void;
   onApplyModel?: (modelId: string) => void;
@@ -199,6 +200,7 @@ interface AgentResponse {
 export function BrandAgentApp({
   brandId,
   brandName,
+  source = 'web',
   onApplyPrompt,
   onApplyCameraPreset,
   onApplyModel,
@@ -440,7 +442,7 @@ export function BrandAgentApp({
       let activeConversationId = conversationId;
       if (!activeConversationId && userId) {
         try {
-          activeConversationId = await createBrandAgentConversation(userId);
+          activeConversationId = await createBrandAgentConversation(userId, source);
           setConversationId(activeConversationId);
           conversationIdRef.current = activeConversationId;
         } catch (convError) {
@@ -650,7 +652,7 @@ export function BrandAgentApp({
       m.content.length > 0 &&
       !m.isError &&
       !m.isStreaming &&
-      !['Reconnecting voice...', 'Voice session ended.', 'Voice mode unavailable. Using chat instead.', 'Voice connection lost. Chat mode active.'].includes(m.content)
+      !['Reconnecting voice...', 'Voice session ended.', 'Voice mode unavailable. Using chat instead.', 'Voice connection lost. Chat mode active.', 'Microphone access needed. Tap the mic button to try again.', 'Could not open microphone. Tap the mic button to try again.'].includes(m.content)
     );
     if (substantiveMessages.length === 0) return;
     const dbMessages = substantiveMessages.map(m => ({
@@ -662,6 +664,7 @@ export function BrandAgentApp({
       brand_id: brandCtx?.brand?.id ?? null,
       brand_name: brandCtx?.brand?.name,
       tool_calls_count: voiceToolCallsRef.current,
+      source,
     });
   };
 
@@ -910,10 +913,16 @@ export function BrandAgentApp({
     } catch (error) {
       console.error('[Vince] Voice connection failed:', error);
       setIsVoiceMode(false);
+      const errName = error instanceof Error ? error.name : '';
+      const content = errName === 'NotAllowedError'
+        ? 'Microphone access needed. Tap the mic button to try again.'
+        : errName === 'NotReadableError'
+          ? 'Could not open microphone. Tap the mic button to try again.'
+          : 'Voice mode failed to start. Chat is available.';
       setMessages(prev => [...prev, {
         id: uuidv4(),
         role: 'model',
-        content: 'Voice mode failed to start. Chat is available.',
+        content,
         timestamp: new Date(),
       }]);
     }
@@ -931,7 +940,7 @@ export function BrandAgentApp({
     // Ensure we have a conversation record (created at init, but create now if missing)
     if (!conversationIdRef.current && userId) {
       try {
-        const newId = await createBrandAgentConversation(userId);
+        const newId = await createBrandAgentConversation(userId, source);
         setConversationId(newId);
         conversationIdRef.current = newId;
       } catch {
@@ -1072,7 +1081,7 @@ export function BrandAgentApp({
       {/* Header with brand context, upload, and voice toggle */}
       <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-[10px] gap-1 border-purple-500/30 text-purple-400">
+          <Badge variant="outline" className="text-[10px] gap-1 border-[#00856C]/30 text-[#1ED75F]/70">
             <Camera className="w-2.5 h-2.5" />
             {brandName || 'No Brand'}
           </Badge>
@@ -1086,7 +1095,7 @@ export function BrandAgentApp({
           <Button
             variant="ghost"
             size="icon"
-            className={`h-7 w-7 ${showCampaignsPicker ? 'text-purple-500 bg-purple-50' : 'text-muted-foreground hover:text-purple-500 hover:bg-purple-50'}`}
+            className={`h-7 w-7 ${showCampaignsPicker ? 'text-[#00856C] bg-[#00856C]/10' : 'text-muted-foreground hover:text-[#00856C] hover:bg-[#00856C]/10'}`}
             onClick={showCampaignsPicker ? () => setShowCampaignsPicker(false) : handleOpenCampaigns}
             aria-label="Campaign archive"
             title="Campaign archive"
@@ -1096,7 +1105,7 @@ export function BrandAgentApp({
           <Button
             variant="ghost"
             size="icon"
-            className={`h-7 w-7 ${showHistoryPicker ? 'text-purple-500 bg-purple-50' : 'text-muted-foreground hover:text-purple-500 hover:bg-purple-50'}`}
+            className={`h-7 w-7 ${showHistoryPicker ? 'text-[#00856C] bg-[#00856C]/10' : 'text-muted-foreground hover:text-[#00856C] hover:bg-[#00856C]/10'}`}
             onClick={showHistoryPicker ? () => setShowHistoryPicker(false) : handleOpenHistory}
             aria-label="Chat history"
             title="Chat history"
@@ -1107,7 +1116,7 @@ export function BrandAgentApp({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-purple-500 hover:text-purple-600 hover:bg-purple-50"
+              className="h-7 w-7 text-[#00856C] hover:text-[#007A60] hover:bg-[#00856C]/10"
               onClick={() => fileInputRef.current?.click()}
               aria-label="Upload image"
             >
@@ -1118,7 +1127,7 @@ export function BrandAgentApp({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-purple-500 hover:text-purple-600 hover:bg-purple-50"
+              className="h-7 w-7 text-[#00856C] hover:text-[#007A60] hover:bg-[#00856C]/10"
               onClick={handleStartVoice}
               aria-label="Start voice conversation"
             >
@@ -1249,7 +1258,7 @@ export function BrandAgentApp({
             <Button
               variant="outline"
               size="sm"
-              className="h-6 text-[10px] gap-1 text-purple-500 border-purple-500/30 hover:bg-purple-50"
+              className="h-6 text-[10px] gap-1 text-[#00856C] border-[#00856C]/30 hover:bg-[#00856C]/10"
               onClick={() => {
                 setConversationId(null);
                 conversationIdRef.current = null;
@@ -1303,7 +1312,7 @@ export function BrandAgentApp({
                     />
                   ))}
                   {conv.hasCreativePackage && (
-                    <span className="text-[9px] font-semibold text-purple-500 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5">
+                    <span className="text-[9px] font-semibold text-[#00856C] bg-[#00856C]/10 border border-[#00856C]/25 rounded px-1.5 py-0.5">
                       Package
                     </span>
                   )}
@@ -1359,7 +1368,7 @@ export function BrandAgentApp({
                       />
                     ))}
                     {deliverableNames.length > 0 && (
-                      <span className="text-[9px] font-semibold text-purple-500 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5 ml-1">
+                      <span className="text-[9px] font-semibold text-[#00856C] bg-[#00856C]/10 border border-[#00856C]/25 rounded px-1.5 py-0.5 ml-1">
                         {deliverableNames.length} deliverables
                       </span>
                     )}
@@ -1405,8 +1414,8 @@ export function BrandAgentApp({
               <div className="ml-2 mb-3 space-y-2">
                 {/* Generated Prompt */}
                 {agentResponses[message.id].prompt && (
-                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                    <p className="text-[10px] font-medium text-purple-400 mb-1.5">Generated Prompt</p>
+                  <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg">
+                    <p className="text-[10px] font-medium text-[#1ED75F]/70 mb-1.5">Generated Prompt</p>
                     <p className="text-xs font-mono leading-relaxed text-foreground">
                       {agentResponses[message.id].prompt}
                     </p>
@@ -1416,7 +1425,7 @@ export function BrandAgentApp({
                           size="sm"
                           variant="default"
                           onClick={() => onApplyPrompt(agentResponses[message.id].prompt!)}
-                          className="h-6 text-[9px] gap-1 bg-purple-600 hover:bg-purple-700"
+                          className="h-6 text-[9px] gap-1 bg-[#00856C] hover:bg-[#006B55]"
                         >
                           <Sparkles className="w-2.5 h-2.5" />
                           Use Prompt
@@ -1438,7 +1447,7 @@ export function BrandAgentApp({
                 {/* Camera Preset */}
                 {agentResponses[message.id].camera_preset && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg border">
-                    <Camera className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <Camera className="w-3.5 h-3.5 text-[#1ED75F]/70 shrink-0" />
                     <span className="text-[10px] text-muted-foreground flex-1">
                       f/{agentResponses[message.id].camera_preset!.aperture} | {agentResponses[message.id].camera_preset!.focal_length}mm | {agentResponses[message.id].camera_preset!.lighting_setup?.replace(/_/g, ' ')}
                     </span>
@@ -1447,7 +1456,7 @@ export function BrandAgentApp({
                         size="sm"
                         variant="ghost"
                         onClick={() => onApplyCameraPreset(agentResponses[message.id].camera_preset!)}
-                        className="h-5 text-[9px] px-2 text-purple-400 hover:text-purple-300"
+                        className="h-5 text-[9px] px-2 text-[#1ED75F]/70 hover:text-[#1ED75F]/60"
                       >
                         Apply Camera
                       </Button>
@@ -1459,7 +1468,7 @@ export function BrandAgentApp({
                 {agentResponses[message.id].recommended_model && onApplyModel && (
                   <button
                     onClick={() => onApplyModel(agentResponses[message.id].recommended_model!)}
-                    className="text-[10px] text-purple-400 hover:text-purple-300 hover:underline px-3"
+                    className="text-[10px] text-[#1ED75F]/70 hover:text-[#1ED75F]/60 hover:underline px-3"
                   >
                     Recommended model: {agentResponses[message.id].recommended_model}
                   </button>
@@ -1490,11 +1499,11 @@ export function BrandAgentApp({
                 {agentResponses[message.id].competitor_analysis && (() => {
                   const analysis = agentResponses[message.id].competitor_analysis!;
                   return (
-                    <div className="p-3 bg-purple-950/40 border border-purple-500/20 rounded-lg space-y-3">
+                    <div className="p-3 bg-[#0F2219]/70 border border-[#00856C]/20 rounded-lg space-y-3">
                       {/* Header */}
                       <div className="flex items-center gap-1.5">
-                        <Target className="w-3.5 h-3.5 text-purple-200 shrink-0" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-purple-200">Beat This Ad</span>
+                        <Target className="w-3.5 h-3.5 text-[#1ED75F] shrink-0" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#1ED75F]">Beat This Ad</span>
                       </div>
 
                       {/* Summary */}
@@ -1502,14 +1511,14 @@ export function BrandAgentApp({
 
                       {/* Scene Timeline */}
                       {analysis.scenes?.length > 0 && (
-                        <div className="pt-2 border-t border-purple-500/15">
-                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider mb-1.5">Scene Breakdown</p>
+                        <div className="pt-2 border-t border-[#00856C]/15">
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider mb-1.5">Scene Breakdown</p>
                           <div className="space-y-1">
                             {analysis.scenes.map((scene, i) => (
                               <div key={i} className="flex items-start gap-2 text-xs">
-                                <span className="text-purple-300/60 shrink-0 font-mono text-[10px] pt-0.5">{scene.timestamp}</span>
+                                <span className="text-[#1ED75F]/50 shrink-0 font-mono text-[10px] pt-0.5">{scene.timestamp}</span>
                                 <span className="text-foreground/60 flex-1">{scene.scene_type}</span>
-                                <span className="text-purple-300/50 shrink-0 text-[10px] italic">{scene.emotional_signal}</span>
+                                <span className="text-[#1ED75F]/40 shrink-0 text-[10px] italic">{scene.emotional_signal}</span>
                               </div>
                             ))}
                           </div>
@@ -1518,12 +1527,12 @@ export function BrandAgentApp({
 
                       {/* Strategic Openings */}
                       {analysis.weaknesses?.length > 0 && (
-                        <div className="pt-2 border-t border-purple-500/15">
-                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider mb-1.5">Strategic Openings</p>
+                        <div className="pt-2 border-t border-[#00856C]/15">
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider mb-1.5">Strategic Openings</p>
                           <ul className="space-y-1">
                             {analysis.weaknesses.map((w, i) => (
                               <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
-                                <span className="text-purple-200 mt-0.5 shrink-0">›</span>
+                                <span className="text-[#1ED75F] mt-0.5 shrink-0">›</span>
                                 {w}
                               </li>
                             ))}
@@ -1533,17 +1542,17 @@ export function BrandAgentApp({
 
                       {/* 3 Campaign Directions */}
                       {analysis.campaign_directions?.length > 0 && (
-                        <div className="pt-2 border-t border-purple-500/15 space-y-2">
-                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider">3 Ways to Beat It</p>
+                        <div className="pt-2 border-t border-[#00856C]/15 space-y-2">
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider">3 Ways to Beat It</p>
                           {analysis.campaign_directions.map((dir, i) => (
                             <button
                               key={i}
                               onClick={() => handleDirectionSelect(dir, analysis)}
-                              className="w-full text-left p-2 bg-purple-950/40 hover:bg-purple-800/30 border border-purple-500/20 hover:border-purple-500/40 rounded cursor-pointer transition-colors space-y-0.5"
+                              className="w-full text-left p-2 bg-[#0F2219]/70 hover:bg-[#00856C]/20 border border-[#00856C]/20 hover:border-[#00856C]/40 rounded cursor-pointer transition-colors space-y-0.5"
                             >
                               <p className="text-xs font-semibold text-foreground/90">{dir.title}</p>
                               <p className="text-[11px] text-foreground/60 leading-snug">{dir.concept}</p>
-                              <p className="text-[10px] text-purple-300/70 italic">"{dir.tagline}"</p>
+                              <p className="text-[10px] text-[#1ED75F]/55 italic">"{dir.tagline}"</p>
                             </button>
                           ))}
                         </div>
@@ -1551,16 +1560,16 @@ export function BrandAgentApp({
 
                       {/* Counter Deliverables */}
                       {analysis.counter_deliverables && analysis.counter_deliverables.length > 0 && (
-                        <div className="pt-2 border-t border-purple-500/15 space-y-1.5">
-                          <p className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider">Build These</p>
+                        <div className="pt-2 border-t border-[#00856C]/15 space-y-1.5">
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider">Build These</p>
                           {analysis.counter_deliverables.map((d, i) => (
                             <button
                               key={i}
                               onClick={() => handleSendMessage(`Generate a creative package for a ${d.name} (${d.aspect_ratio}, deliverable_type: ${d.deliverable_type}) as part of the counter-campaign. Brief: ${d.description}`, [])}
-                              className="w-full text-left flex items-center gap-2 px-2 py-1.5 bg-purple-950/40 hover:bg-purple-800/30 border border-purple-500/20 hover:border-purple-500/40 rounded transition-colors"
+                              className="w-full text-left flex items-center gap-2 px-2 py-1.5 bg-[#0F2219]/70 hover:bg-[#00856C]/20 border border-[#00856C]/20 hover:border-[#00856C]/40 rounded transition-colors"
                             >
                               <span className="text-xs font-medium text-foreground/80 flex-1">{d.name}</span>
-                              <span className="text-[10px] text-purple-300/50 shrink-0">{d.aspect_ratio}</span>
+                              <span className="text-[10px] text-[#1ED75F]/40 shrink-0">{d.aspect_ratio}</span>
                             </button>
                           ))}
                         </div>
@@ -1568,8 +1577,8 @@ export function BrandAgentApp({
 
                       {/* Counter Brief (collapsible) */}
                       {analysis.counter_brief && (
-                        <details className="pt-2 border-t border-purple-500/15">
-                          <summary className="text-[10px] font-semibold text-purple-300/70 uppercase tracking-wider cursor-pointer select-none">
+                        <details className="pt-2 border-t border-[#00856C]/15">
+                          <summary className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider cursor-pointer select-none">
                             Full Counter Brief
                           </summary>
                           <p className="text-xs text-foreground/70 leading-relaxed mt-1.5">{analysis.counter_brief}</p>
@@ -1583,19 +1592,19 @@ export function BrandAgentApp({
                 {agentResponses[message.id].self_demo_analysis && (() => {
                   const demo = agentResponses[message.id].self_demo_analysis!;
                   return (
-                    <div className="p-3 bg-violet-500/5 border border-violet-500/20 rounded-lg space-y-3">
+                    <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Self Analysis</span>
-                        <span className="text-[10px] font-bold text-violet-400">Demo Score: {demo.demo_score}/100</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#1ED75F]/70">Self Analysis</span>
+                        <span className="text-[10px] font-bold text-[#1ED75F]/70">Demo Score: {demo.demo_score}/100</span>
                       </div>
                       <p className="text-xs text-foreground/80 leading-relaxed">{demo.product_summary}</p>
                       {demo.ux_observations?.length > 0 && (
                         <div>
-                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">UX Observations</p>
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider mb-1.5">UX Observations</p>
                           <ul className="space-y-1">
                             {demo.ux_observations.map((o, i) => (
                               <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
-                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                <span className="text-[#1ED75F]/70 mt-0.5 shrink-0">›</span>
                                 {o}
                               </li>
                             ))}
@@ -1603,12 +1612,12 @@ export function BrandAgentApp({
                         </div>
                       )}
                       {demo.missed_opportunities?.length > 0 && (
-                        <div className="pt-2 border-t border-violet-500/15">
-                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">Missed Opportunities</p>
+                        <div className="pt-2 border-t border-[#00856C]/15">
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider mb-1.5">Missed Opportunities</p>
                           <ul className="space-y-1">
                             {demo.missed_opportunities.map((o, i) => (
                               <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
-                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                <span className="text-[#1ED75F]/70 mt-0.5 shrink-0">›</span>
                                 {o}
                               </li>
                             ))}
@@ -1616,12 +1625,12 @@ export function BrandAgentApp({
                         </div>
                       )}
                       {demo.demo_narrative_issues?.length > 0 && (
-                        <div className="pt-2 border-t border-violet-500/15">
-                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">Narrative Issues</p>
+                        <div className="pt-2 border-t border-[#00856C]/15">
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider mb-1.5">Narrative Issues</p>
                           <ul className="space-y-1">
                             {demo.demo_narrative_issues.map((n, i) => (
                               <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
-                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                <span className="text-[#1ED75F]/70 mt-0.5 shrink-0">›</span>
                                 {n}
                               </li>
                             ))}
@@ -1629,12 +1638,12 @@ export function BrandAgentApp({
                         </div>
                       )}
                       {demo.recommended_improvements?.length > 0 && (
-                        <div className="pt-2 border-t border-violet-500/15">
-                          <p className="text-[10px] font-semibold text-violet-400/70 uppercase tracking-wider mb-1.5">Recommended Improvements</p>
+                        <div className="pt-2 border-t border-[#00856C]/15">
+                          <p className="text-[10px] font-semibold text-[#1ED75F]/55 uppercase tracking-wider mb-1.5">Recommended Improvements</p>
                           <ul className="space-y-1">
                             {demo.recommended_improvements.map((r, i) => (
                               <li key={i} className="flex items-start gap-1.5 text-xs text-foreground/70">
-                                <span className="text-violet-400 mt-0.5 shrink-0">›</span>
+                                <span className="text-[#1ED75F]/70 mt-0.5 shrink-0">›</span>
                                 {r}
                               </li>
                             ))}
@@ -1647,7 +1656,7 @@ export function BrandAgentApp({
 
                 {/* Creative Package (interleaved text + images) */}
                 {agentResponses[message.id].creative_package && (
-                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                  <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg">
                     <CreativePackageDisplay
                       parts={agentResponses[message.id].creative_package!.parts}
                       imageUrls={agentResponses[message.id].creative_package!.image_urls}
@@ -1664,8 +1673,8 @@ export function BrandAgentApp({
 
                 {/* Generated Videos */}
                 {agentResponses[message.id].generated_videos && agentResponses[message.id].generated_videos!.length > 0 && (
-                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg space-y-2">
-                    <p className="text-[10px] font-medium text-purple-400">Generated Video</p>
+                  <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg space-y-2">
+                    <p className="text-[10px] font-medium text-[#1ED75F]/70">Generated Video</p>
                     {agentResponses[message.id].generated_videos!.map((url, vidIdx) => (
                       <div key={vidIdx} className="rounded-lg overflow-hidden border border-border/50">
                         <video
@@ -1681,7 +1690,7 @@ export function BrandAgentApp({
                           {onSetImage && (
                             <button
                               onClick={() => onSetImage(url)}
-                              className="text-[10px] text-purple-400 hover:text-purple-300"
+                              className="text-[10px] text-[#1ED75F]/70 hover:text-[#1ED75F]/60"
                             >
                               Use in Canvas
                             </button>
@@ -1702,8 +1711,8 @@ export function BrandAgentApp({
 
                 {/* Generated Images (single tool) */}
                 {!agentResponses[message.id].creative_package && agentResponses[message.id].generated_images && agentResponses[message.id].generated_images!.length > 0 && (
-                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                    <p className="text-[10px] font-medium text-purple-400 mb-2">Generated Images</p>
+                  <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg">
+                    <p className="text-[10px] font-medium text-[#1ED75F]/70 mb-2">Generated Images</p>
                     <div className={`grid gap-2 ${
                       agentResponses[message.id].generated_images!.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
                     }`}>
@@ -1719,7 +1728,7 @@ export function BrandAgentApp({
                             {onSetImage && (
                               <button
                                 onClick={() => onSetImage(img.url)}
-                                className="text-[9px] text-purple-300 hover:text-white"
+                                className="text-[9px] text-[#1ED75F]/60 hover:text-white"
                               >
                                 Load to Canvas
                               </button>
@@ -1741,8 +1750,8 @@ export function BrandAgentApp({
 
                 {/* Edited Image */}
                 {agentResponses[message.id].edited_image && (
-                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                    <p className="text-[10px] font-medium text-purple-400 mb-2">Edited Image</p>
+                  <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg">
+                    <p className="text-[10px] font-medium text-[#1ED75F]/70 mb-2">Edited Image</p>
                     <div className="relative group rounded-lg overflow-hidden border border-border/50">
                       <img
                         src={agentResponses[message.id].edited_image!.url}
@@ -1754,7 +1763,7 @@ export function BrandAgentApp({
                         {onSetImage && (
                           <button
                             onClick={() => onSetImage(agentResponses[message.id].edited_image!.url)}
-                            className="text-[9px] text-purple-300 hover:text-white"
+                            className="text-[9px] text-[#1ED75F]/60 hover:text-white"
                           >
                             Load to Canvas
                           </button>
@@ -1774,8 +1783,8 @@ export function BrandAgentApp({
 
                 {/* Generation History */}
                 {agentResponses[message.id].generation_history && agentResponses[message.id].generation_history!.length > 0 && (
-                  <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                    <p className="text-[10px] font-medium text-purple-400 mb-2">
+                  <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg">
+                    <p className="text-[10px] font-medium text-[#1ED75F]/70 mb-2">
                       Past Generations ({agentResponses[message.id].generation_history!.length})
                     </p>
                     <div className="grid grid-cols-2 gap-2">
@@ -1797,7 +1806,7 @@ export function BrandAgentApp({
                               {onSetImage && (
                                 <button
                                   onClick={() => onSetImage(gen.output_urls[0])}
-                                  className="text-[8px] text-purple-300 hover:text-white"
+                                  className="text-[8px] text-[#1ED75F]/60 hover:text-white"
                                 >
                                   Canvas
                                 </button>
@@ -1822,8 +1831,8 @@ export function BrandAgentApp({
 
         {isVoiceMode && activeToolName && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-            <div className="flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 rounded-full px-3 py-1.5">
-              <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 bg-[#00856C]/10 border border-[#00856C]/20 rounded-full px-3 py-1.5">
+              <div className="h-2 w-2 rounded-full bg-[#00856C]/100 animate-pulse" />
               <span>
                 {activeToolName === 'generate_creative_package' ? 'Generating creative package...' :
                  activeToolName === 'analyze_competitor_content' ? 'Analyzing competitor content...' :
@@ -1838,10 +1847,10 @@ export function BrandAgentApp({
 
         {analyzingVideoAt && (
           <div className="flex items-center gap-2 text-xs py-2">
-            <div className="flex items-center gap-2 bg-purple-950/40 border border-purple-500/30 rounded-lg px-3 py-2 w-full">
-              <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse flex-shrink-0" />
+            <div className="flex items-center gap-2 bg-[#0F2219]/70 border border-[#00856C]/30 rounded-lg px-3 py-2 w-full">
+              <div className="h-2 w-2 rounded-full bg-[#1ED75F] animate-pulse flex-shrink-0" />
               <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-purple-200 font-medium">Analyzing video</span>
+                <span className="text-[#1ED75F] font-medium">Analyzing video</span>
                 <span className="text-muted-foreground">
                   {elapsedAnalysisSeconds < 60
                     ? `${elapsedAnalysisSeconds}s · Gemini is watching the video...`
@@ -1854,10 +1863,10 @@ export function BrandAgentApp({
 
         {videoRenderingAt && (
           <div className="flex items-center gap-2 text-xs py-2">
-            <div className="flex items-center gap-2 bg-purple-500/10 border border-purple-500/30 rounded-lg px-3 py-2 w-full">
-              <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse flex-shrink-0" />
+            <div className="flex items-center gap-2 bg-[#00856C]/10 border border-[#00856C]/30 rounded-lg px-3 py-2 w-full">
+              <div className="h-2 w-2 rounded-full bg-[#1ED75F] animate-pulse flex-shrink-0" />
               <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="text-purple-300 font-medium">Video rendering</span>
+                <span className="text-[#1ED75F]/60 font-medium">Video rendering</span>
                 <span className="text-muted-foreground">
                   {elapsedVideoSeconds < 60
                     ? `${elapsedVideoSeconds}s elapsed · appears in History when ready`
@@ -1877,8 +1886,8 @@ export function BrandAgentApp({
 
         {isLoading && messages.length > 0 && messages[messages.length - 1].role === 'model' && !messages[messages.length - 1].content && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-            <div className="flex items-center gap-1.5 bg-purple-500/10 rounded-full px-3 py-1.5">
-              <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 bg-[#00856C]/10 rounded-full px-3 py-1.5">
+              <div className="h-2 w-2 rounded-full bg-[#00856C]/100 animate-pulse" />
               <span>Thinking...</span>
             </div>
           </div>
@@ -1902,7 +1911,7 @@ export function BrandAgentApp({
                 key={`${promptOffset}-${idx}`}
                 variant="outline"
                 size="sm"
-                className="text-[11px] h-auto py-1 px-2.5 bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200 hover:border-purple-400/50 rounded-full"
+                className="text-[11px] h-auto py-1 px-2.5 bg-[#00856C]/10 border-[#00856C]/30 text-[#1ED75F]/60 hover:bg-[#007A60]/20 hover:text-[#1ED75F] hover:border-[#00856C]/50 rounded-full"
                 onClick={() => handleSendMessage(prompt, [])}
                 disabled={isLoading}
               >
@@ -1913,7 +1922,7 @@ export function BrandAgentApp({
             <Button
               variant="ghost"
               size="sm"
-              className="h-5 text-[10px] text-purple-400/60 hover:text-purple-300 px-1.5"
+              className="h-5 text-[10px] text-[#1ED75F]/50 hover:text-[#1ED75F]/60 px-1.5"
               onClick={() => setPromptOffset(prev => (prev + 3) % quickPrompts.length)}
             >
               More
@@ -1947,7 +1956,7 @@ export function BrandAgentApp({
                 }
               }}
               placeholder="Paste a URL and press Enter..."
-              className="flex-1 h-6 text-[11px] bg-background/50 border border-border/40 rounded px-2 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-purple-500/50"
+              className="flex-1 h-6 text-[11px] bg-background/50 border border-border/40 rounded px-2 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[#00856C]/50"
             />
             {pendingUrl.trim() && liveControlRef.current && (
               <button
@@ -1955,7 +1964,7 @@ export function BrandAgentApp({
                   liveControlRef.current!.sendText(`Here is the URL to analyze: ${pendingUrl.trim()}`);
                   setPendingUrl('');
                 }}
-                className="h-6 px-2 text-[10px] bg-purple-600 hover:bg-purple-500 text-white rounded shrink-0"
+                className="h-6 px-2 text-[10px] bg-[#00856C] hover:bg-[#007A60] text-white rounded shrink-0"
               >
                 Send
               </button>
@@ -2011,7 +2020,7 @@ export function BrandAgentApp({
           placeholder={`Describe your ${brandName || 'brand'} shot...`}
           disclaimer=""
           compact
-          sendButtonClassName="text-purple-400 hover:text-purple-300"
+          sendButtonClassName="text-[#1ED75F]/70 hover:text-[#1ED75F]/60"
         />
       )}
     </div>

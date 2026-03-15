@@ -1,4 +1,4 @@
-// ABOUTME: Capacitor configuration for the Vince mobile app (iOS)
+// ABOUTME: Capacitor configuration for the Vince mobile app (iOS and Android)
 // ABOUTME: Points to the Vite build output and configures platform-specific settings
 
 import type { CapacitorConfig } from '@capacitor/cli';
@@ -14,12 +14,18 @@ const config: CapacitorConfig = {
       'generativelanguage.googleapis.com',
       'accounts.google.com',
     ],
+    // https scheme required for getUserMedia (secure context) on Android
+    androidScheme: 'https',
   },
   backgroundColor: '#0f0a1e',
   ios: {
     scheme: 'Vince',
     contentInset: 'automatic',
     backgroundColor: '#0f0a1e',
+  },
+  android: {
+    backgroundColor: '#0f0a1e',
+    webContentsDebuggingEnabled: true,
   },
   plugins: {
     SplashScreen: {
