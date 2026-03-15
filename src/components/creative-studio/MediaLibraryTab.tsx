@@ -120,7 +120,7 @@ export function MediaLibraryTab() {
       // Select only columns needed for display — avoids fetching heavy jsonb fields
       let mediaQuery = supabase
         .from('media')
-        .select('id, filename, title, url, thumbnail_url, mime_type, file_type, folder_id, created_at, size_bytes, created_by, creator_profile:profiles!created_by(full_name, avatar_url)', { count: 'exact' })
+        .select('id, filename, title, url, thumbnail_url, mime_type, file_type, folder_id, created_at, size_bytes, created_by', { count: 'exact' })
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
@@ -157,7 +157,22 @@ export function MediaLibraryTab() {
       if (foldersError) throw foldersError;
       if (allFoldersError) throw allFoldersError;
 
-      setMedia((mediaData || []) as unknown as MediaFile[]);
+      // Fetch creator profiles separately (media.created_by has no FK constraint to profiles)
+      const creatorIds = [...new Set((mediaData || []).map((f) => f.created_by).filter(Boolean))];
+      const profileMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+      if (creatorIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', creatorIds);
+        (profilesData || []).forEach((p) => { profileMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url }; });
+      }
+      const mediaWithProfiles = (mediaData || []).map((f) => ({
+        ...f,
+        creator_profile: f.created_by ? (profileMap[f.created_by] ?? null) : null,
+      }));
+
+      setMedia(mediaWithProfiles as unknown as MediaFile[]);
       setFolders((foldersData || []) as unknown as MediaFolder[]);
       setAllFolders((allFoldersData || []) as unknown as MediaFolder[]);
 

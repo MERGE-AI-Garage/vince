@@ -191,12 +191,23 @@ export function MediaPreview({
 
       const { data: updatedFile, error: fetchError } = await supabase
         .from('media')
-        .select('*, creator_profile:profiles!created_by(full_name, avatar_url)')
+        .select('*')
         .eq('id', currentFile.id)
         .single();
 
       if (fetchError) throw fetchError;
-      if (updatedFile) setCurrentFile(updatedFile as MediaFile);
+      if (updatedFile) {
+        let creatorProfile = currentFile.creator_profile ?? null;
+        if (updatedFile.created_by && !creatorProfile) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', updatedFile.created_by)
+            .single();
+          creatorProfile = profileData ?? null;
+        }
+        setCurrentFile({ ...updatedFile, creator_profile: creatorProfile } as MediaFile);
+      }
 
       toast.success('AI analysis complete!');
       onUpdate?.();
