@@ -13,6 +13,7 @@ const CreativeStudio = lazy(() => import('@/pages/CreativeStudio'));
 const CreativeStudioAdmin = lazy(() => import('@/pages/CreativeStudioAdmin'));
 const VinceControlPanel = lazy(() => import('@/pages/VinceControlPanel'));
 const MyCampaigns = lazy(() => import('@/pages/MyCampaigns'));
+const VinceShowcase = lazy(() => import('@/pages/VinceShowcase'));
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
@@ -58,6 +59,7 @@ function AppRoutes() {
         <Route path="/campaigns" element={<ProtectedRoute><MyCampaigns /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><CreativeStudioAdmin /></ProtectedRoute>} />
         <Route path="/vince" element={<ProtectedRoute><VinceControlPanel /></ProtectedRoute>} />
+        <Route path="/showcase" element={<VinceShowcase />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

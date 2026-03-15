@@ -1,14 +1,15 @@
 // ABOUTME: Welcome screen for Creative Studio — dark cinematic splash with two states
 // ABOUTME: Full dark treatment with glass cards, immersive brand imagery, and prominent guidelines
 
-import { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ImagePlus, Film, Scissors,
-  MessagesSquare, Camera,
+  MessagesSquare, Camera, Layers, Mic,
   Sparkles, Dna, AudioLines, Bot,
   LayoutTemplate, Shield, Palette,
-  Upload, ArrowRight, Box,
+  ArrowRight, Box, Star,
   Users, Zap, Share, BookOpen,
   MessageSquare, Wand2,
   Chrome, Download, CheckCircle2,
@@ -39,7 +40,6 @@ import type { BrandStats } from '@/hooks/useCreativeStudioBrandIntelligence';
 interface WelcomeScreenProps {
   brand?: CreativeStudioBrand;
   brandStats?: BrandStats;
-  onUploadClick: () => void;
   onOpenBrandDNA?: () => void;
   onOpenArtDirection?: () => void;
   onOpenPromptLibrary?: () => void;
@@ -78,59 +78,77 @@ const qpIconMap: Record<string, React.ElementType> = {
   palette: Palette,
 };
 
-// ── System capabilities data ──────────────────────────────────────────────────
+// ── Brief card animation data ─────────────────────────────────────────────────
 
-interface Capability {
-  key: WelcomeImageKey;
+const BRIEF_SCENARIOS = [
+  {
+    brand: 'MERGE',
+    color: '#1ED75F',
+    brief: 'Campaign package for the brand relaunch — full suite, all formats, copy and images together',
+    formats: ['Billboard 16:9', 'Email header', 'OOH transit'],
+  },
+  {
+    brand: 'Google',
+    color: '#4285F4',
+    brief: 'Beat this ad — competitor URL, give me 3 counter directions for our Q2 Workspace push',
+    formats: ['Scene analysis', '3 counter briefs', 'Creative directions'],
+  },
+  {
+    brand: 'MERGE',
+    color: '#A78BFA',
+    brief: 'LinkedIn post for the AI Enablement Summit — thought leadership, forward-looking, executive tone',
+    formats: ['LinkedIn post', 'Event banner 16:9', 'Story 9:16'],
+  },
+] as const;
+
+// ── Feature card data ─────────────────────────────────────────────────────────
+
+interface FeatureCard {
+  imageKey: WelcomeImageKey;
   icon: typeof ImagePlus;
   title: string;
+  accent: string;
+  headline: string;
   desc: string;
-  learnMore: string;
-  models: string[];
-  strengths: string[];
-  tryIt: string;
+  tags: string[];
 }
 
-const CAPABILITIES: readonly Capability[] = [
+const FEATURE_CARDS: readonly FeatureCard[] = [
   {
-    key: 'image_generation',
-    icon: Bot,
+    imageKey: 'image_generation',
+    icon: Mic,
     title: 'Creative Director',
-    desc: 'Brief by voice or text — complete campaigns with copy and images in seconds',
-    learnMore: 'Talk to Vince the way you\'d brief a junior designer. He asks the right questions, then returns a complete creative package — headlines, body copy, and on-brand images together in a single response. No prompt engineering. No template wrangling.',
-    models: ['Gemini Live', 'Gemini 3.1 Flash Image'],
-    strengths: ['Real-time voice briefing', 'Interleaved copy + images', '14 agency formats', 'Brand context always applied'],
-    tryIt: 'Load a brand, open the Creative Director, and say "make me a LinkedIn post for our fall campaign." See what comes back.',
+    accent: '#2563EB',
+    headline: 'Brief by voice. Get a campaign.',
+    desc: 'Talk to Vince like you\'d brief a junior designer. He asks the right questions, generates complete packages — copy and images together — without any prompt engineering.',
+    tags: ['Real-time voice', '26 callable tools', 'No prompt engineering'],
   },
   {
-    key: 'video_generation',
+    imageKey: 'video_generation',
     icon: Dna,
     title: 'Brand Intelligence',
-    desc: 'Tell Vince your brand once — he remembers it in every generation, forever',
-    learnMore: 'Point Vince at a website or upload brand guidelines and reference images. He builds a persistent brand intelligence stack — visual DNA, photography standards, tone of voice, compliance guardrails — and injects the right context into every generation automatically. You never re-explain your brand.',
-    models: ['Gemini 2.0 Flash', 'pgvector semantic search'],
-    strengths: ['One-time brand setup', 'Automatic context injection', 'Visual DNA extraction', 'Compliance guardrails'],
-    tryIt: 'Create a brand, paste a website URL, and let Vince crawl it. Then generate something without any brand instructions — watch how on-brand the output is.',
+    accent: '#00856C',
+    headline: 'Tell him once. He never forgets.',
+    desc: 'Vince learns your brand from website, guidelines, and images — building a persistent memory that governs every generation automatically.',
+    tags: ['One-time setup', 'pgvector memory', 'Auto injection'],
   },
   {
-    key: 'editing_suite',
+    imageKey: 'editing_suite',
     icon: Zap,
     title: 'Beat This Ad',
-    desc: 'Share a competitor\'s video — get strategic weaknesses and 3 counter-campaign directions',
-    learnMore: 'Paste a competitor\'s YouTube ad URL into a live voice session. Vince analyzes the video using multimodal AI — extracting emotional hooks, messaging strategy, visual style, and target audience — then returns three counter-campaign directions grounded in your brand. All while the conversation stays open.',
-    models: ['Gemini 2.0 Flash multimodal'],
-    strengths: ['Video scene analysis', 'Messaging deconstruction', 'Counter-campaign directions', 'Mid-session async'],
-    tryIt: 'Open the Creative Director, start a voice session, and say "let\'s beat this ad" then share a competitor URL.',
+    accent: '#F97316',
+    headline: 'Competitor URL → counter-campaign.',
+    desc: 'Paste a competitor\'s video mid-session. Get scene analysis, strategic gaps, and three counter-campaign directions grounded in your brand.',
+    tags: ['Video analysis', 'Multimodal AI', '3 counter directions'],
   },
   {
-    key: 'conversational_editing',
-    icon: Share,
+    imageKey: 'conversational_editing',
+    icon: Layers,
     title: 'Campaign Packages',
-    desc: '14 agency formats — copy and images together, organized and ready for handoff',
-    learnMore: 'Every creative brief produces a complete package: LinkedIn post, billboard, email header, OOH, social story, print — all with fully written copy and on-brand images interleaved. Archived permanently with a brand alignment score, and downloadable as a ZIP organized by deliverable for agency handoff.',
-    models: ['Gemini 3.1 Flash Image'],
-    strengths: ['Interleaved copy + images', '14 format templates', 'Brand alignment scoring', 'ZIP export for handoff'],
-    tryIt: 'Ask for a "full campaign package for a product launch" and scroll through what comes back — copy and images, format by format.',
+    accent: '#A78BFA',
+    headline: 'Copy and images. Together. Ready.',
+    desc: '14 agency formats — LinkedIn, billboard, OOH, email, social — all with fully written copy and on-brand images interleaved in one response.',
+    tags: ['14 formats', 'Interleaved copy + images', 'ZIP for handoff'],
   },
 ];
 
@@ -168,12 +186,163 @@ function ModelBadges({ className }: { className?: string }) {
   );
 }
 
+// ── Director Brief Card ───────────────────────────────────────────────────────
+
+function DirectorBriefCard() {
+  const [idx, setIdx] = useState(0);
+  const [chars, setChars] = useState(0);
+  const [phase, setPhase] = useState<'typing' | 'generating' | 'done'>('typing');
+  const scenario = BRIEF_SCENARIOS[idx];
+
+  useEffect(() => { setChars(0); setPhase('typing'); }, [idx]);
+
+  useEffect(() => {
+    if (phase === 'typing') {
+      if (chars < scenario.brief.length) {
+        const t = setTimeout(() => setChars(c => c + 1), 24);
+        return () => clearTimeout(t);
+      }
+      const t = setTimeout(() => setPhase('generating'), 400);
+      return () => clearTimeout(t);
+    }
+    if (phase === 'generating') {
+      const t = setTimeout(() => setPhase('done'), 1600);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setIdx(i => (i + 1) % BRIEF_SCENARIOS.length), 3000);
+    return () => clearTimeout(t);
+  }, [phase, chars, scenario.brief.length]);
+
+  return (
+    <div className="rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm shadow-[0_32px_80px_-16px_rgba(0,0,0,0.5)]">
+      {/* Voice header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          {/* Pulsing voice orb */}
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              style={{ background: `${scenario.color}18` }}
+              animate={{ scale: phase === 'typing' ? [1, 1.35, 1] : 1 }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <div className="relative w-5 h-5 rounded-full flex items-center justify-center" style={{ background: `${scenario.color}30` }}>
+              <Mic className="w-2.5 h-2.5" style={{ color: scenario.color }} />
+            </div>
+          </div>
+          <div>
+            <p className="font-epilogue text-[11px] font-semibold text-white/80">Vince</p>
+            <div className="flex items-center gap-1.5">
+              <motion.div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: scenario.color }}
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              />
+              <span className="font-epilogue text-[9px] font-medium" style={{ color: scenario.color }}>
+                {phase === 'typing' ? 'Listening...' : phase === 'generating' ? 'Generating...' : 'Ready'}
+              </span>
+            </div>
+          </div>
+        </div>
+        {/* Voice waveform */}
+        <div className="flex items-center gap-[3px] h-6">
+          {([0.5, 0.9, 0.6, 1, 0.7, 0.85, 0.45] as const).map((h, i) => (
+            <motion.div
+              key={i}
+              className="w-[3px] rounded-full"
+              style={{ background: `${scenario.color}70`, height: `${h * 14}px` }}
+              animate={phase === 'typing' ? { scaleY: [1, 1.8, 1] } : { scaleY: 0.2 }}
+              transition={{ duration: 0.4 + i * 0.07, repeat: Infinity, ease: 'easeInOut', delay: i * 0.06 }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="p-5 space-y-4">
+        {/* Brand context */}
+        <div className="flex items-center gap-2">
+          <span className="font-epilogue text-[10px] text-white/25 uppercase tracking-[0.12em]">Brand</span>
+          <motion.span
+            key={scenario.brand}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="px-2.5 py-0.5 rounded-full font-epilogue text-[10px] font-semibold border"
+            style={{ color: scenario.color, borderColor: `${scenario.color}50`, background: `${scenario.color}15` }}
+          >
+            {scenario.brand}
+          </motion.span>
+        </div>
+
+        {/* Brief */}
+        <div>
+          <p className="font-epilogue text-[10px] text-white/25 uppercase tracking-[0.12em] mb-1.5">Brief</p>
+          <div className="min-h-[68px] rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2.5">
+            <p className="font-epilogue text-[12px] text-white/75 leading-relaxed">
+              {scenario.brief.slice(0, chars)}
+              {phase === 'typing' && (
+                <span className="inline-block w-[2px] h-[13px] bg-white/60 ml-0.5 translate-y-[2px] animate-pulse" />
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Status — fixed height so card never jumps during phase transitions */}
+        <div className="h-[72px] relative">
+          <AnimatePresence mode="wait">
+            {phase === 'typing' && <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 0 }} exit={{ opacity: 0 }} className="absolute inset-0" />}
+            {phase === 'generating' && (
+              <motion.div key="gen" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                className="absolute inset-0 flex items-center gap-2.5"
+              >
+                <div
+                  className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin shrink-0"
+                  style={{ borderColor: scenario.color, borderTopColor: 'transparent' }}
+                />
+                <span className="font-epilogue text-[11px]" style={{ color: scenario.color }}>
+                  Generating campaign...
+                </span>
+              </motion.div>
+            )}
+            {phase === 'done' && (
+              <motion.div key="done" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                className="absolute inset-0 rounded-xl px-3 py-2.5 border flex flex-col justify-center gap-2"
+                style={{ borderColor: `${scenario.color}25`, background: `${scenario.color}08` }}
+              >
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: scenario.color }} />
+                  <span className="font-epilogue text-[10px] font-semibold" style={{ color: scenario.color }}>Package ready</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {scenario.formats.map(f => (
+                    <span key={f} className="font-epilogue text-[10px] text-white/45 bg-white/[0.05] border border-white/[0.08] px-2 py-0.5 rounded-full">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Scenario dots */}
+        <div className="flex justify-center gap-2 pt-1">
+          {BRIEF_SCENARIOS.map((s, i) => (
+            <div key={i} className="h-1 rounded-full transition-all duration-500"
+              style={{ width: i === idx ? '20px' : '6px', background: i === idx ? scenario.color : 'rgba(255,255,255,0.15)' }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function WelcomeScreen({
   brand,
   brandStats,
-  onUploadClick,
   onOpenBrandDNA,
   onOpenArtDirection,
   onOpenPromptLibrary,
@@ -182,39 +351,31 @@ export function WelcomeScreen({
   onQuickPromptClick,
   onDemoClick,
 }: WelcomeScreenProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   if (brand) {
     return (
       <BrandWelcome
         brand={brand}
         brandStats={brandStats}
-        onUploadClick={onUploadClick}
         onOpenBrandDNA={onOpenBrandDNA}
         onOpenArtDirection={onOpenArtDirection}
         onOpenPromptLibrary={onOpenPromptLibrary}
         onOpenBrandAgent={onOpenBrandAgent}
         onOpenGuidelines={onOpenGuidelines}
         onQuickPromptClick={onQuickPromptClick}
-        fileInputRef={fileInputRef}
       />
     );
   }
 
   return (
-    <SystemWelcome onUploadClick={onUploadClick} fileInputRef={fileInputRef} onDemoClick={onDemoClick} />
+    <SystemWelcome onDemoClick={onDemoClick} />
   );
 }
 
-// ── State A: No brand — System Capabilities ──────────────────────────────────
+// ── State A: No brand — Vince splash ─────────────────────────────────────────
 
 function SystemWelcome({
-  onUploadClick,
-  fileInputRef,
   onDemoClick,
 }: {
-  onUploadClick: () => void;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
   onDemoClick?: () => void;
 }) {
   const { data: welcomeImages } = useStudioWelcomeImages();
@@ -225,161 +386,131 @@ function SystemWelcome({
       animate="visible"
       className="relative w-full h-full overflow-y-auto bg-[#0D1B16]"
     >
-      {/* Background: ambient glow + vignette */}
+      {/* Background glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute -top-1/4 -left-1/4 w-3/4 h-3/4 rounded-full opacity-[0.08] blur-3xl animate-pulse"
-          style={{
-            background: 'radial-gradient(circle, #00856C, transparent)',
-            animationDuration: '6s',
-          }}
-        />
-        <div
-          className="absolute -bottom-1/4 -right-1/4 w-3/4 h-3/4 rounded-full opacity-[0.05] blur-3xl animate-pulse"
-          style={{
-            background: 'radial-gradient(circle, #00856C, transparent)',
-            animationDuration: '8s',
-            animationDelay: '2s',
-          }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.5))]" />
+        <div className="absolute -top-1/3 -left-1/4 w-3/4 h-3/4 rounded-full opacity-[0.10] blur-3xl animate-pulse"
+          style={{ background: 'radial-gradient(circle, #00856C, transparent)', animationDuration: '7s' }} />
+        <div className="absolute top-1/2 right-0 w-1/2 h-1/2 rounded-full opacity-[0.06] blur-3xl animate-pulse"
+          style={{ background: 'radial-gradient(circle, #2563EB, transparent)', animationDuration: '9s', animationDelay: '1s' }} />
+        <div className="absolute -bottom-1/4 left-1/4 w-2/3 h-2/3 rounded-full opacity-[0.05] blur-3xl animate-pulse"
+          style={{ background: 'radial-gradient(circle, #A78BFA, transparent)', animationDuration: '11s', animationDelay: '3s' }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(0,0,0,0.4))]" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center px-6 pt-6 pb-4">
+      <div className="relative z-10 flex flex-col items-center px-6 pt-8 pb-10 gap-10">
 
-        {/* Page header — bare text, no card */}
-        <motion.div
-          variants={itemVariants}
-          className="w-full max-w-4xl flex items-end justify-between mb-5"
-        >
-          <div>
-            <h2 className="font-fraunces text-3xl font-semibold text-white tracking-tight leading-none mb-1">
-              Vince
-            </h2>
-            <p className="font-epilogue text-xs text-white/40">
-              Brand-aware AI creative production
-            </p>
-          </div>
-          <div className="flex items-center gap-2 pb-0.5">
-            <button
-              onClick={onUploadClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] border border-white/[0.12] text-white/70 hover:bg-white/[0.14] hover:text-white transition-colors font-epilogue text-xs"
-            >
-              <Upload className="w-3 h-3" />
-              Upload to Edit
-            </button>
-            {onDemoClick && (
+        {/* ── Hero ── */}
+        <motion.div variants={containerVariants} className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+
+          {/* Left: value prop */}
+          <motion.div variants={itemVariants} className="space-y-6">
+            <div className="space-y-3">
+              <h1 className="font-fraunces text-4xl lg:text-[52px] font-semibold tracking-tight leading-[1.08]">
+                <span className="text-white">Meet </span>
+                <span style={{ color: '#1ED75F' }}>Vince.</span>
+                <br />
+                <span className="text-white/50">Your AI Creative</span>
+                <br />
+                <span className="text-white">Director.</span>
+              </h1>
+              <p className="font-epilogue text-[15px] text-white/50 leading-relaxed max-w-[420px]">
+                Talk to Vince. He already knows your brand — copy and images together, every format, in seconds.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {onDemoClick && (
+                <button
+                  onClick={onDemoClick}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1ED75F] text-[#0D1B16] font-bold font-epilogue text-sm hover:bg-[#22ef6a] transition-colors shadow-[0_0_24px_rgba(30,215,95,0.3)]"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  See it live
+                </button>
+              )}
               <button
-                onClick={onDemoClick}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1ED75F]/10 border border-[#1ED75F]/20 text-[#1ED75F]/80 hover:bg-[#1ED75F]/20 hover:text-[#1ED75F] transition-colors font-epilogue text-xs"
+                onClick={() => window.open('/showcase', '_blank')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.07] border border-white/[0.12] text-white/70 hover:bg-white/[0.12] hover:text-white transition-colors font-epilogue text-sm"
               >
-                <Wand2 className="w-3 h-3" />
-                Platform Demo
+                <Star className="w-4 h-4" />
+                View showcase
               </button>
-            )}
-          </div>
+            </div>
+          </motion.div>
+
+          {/* Right: animated brief card */}
+          <motion.div variants={itemVariants}>
+            <DirectorBriefCard />
+          </motion.div>
         </motion.div>
 
-        {/* Capability cards */}
-        <motion.div
-          variants={containerVariants}
-          className="max-w-4xl w-full mb-4"
-        >
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {CAPABILITIES.map((cap) => (
-              <HoverCard key={cap.title} openDelay={300} closeDelay={100}>
-                <HoverCardTrigger asChild>
-                  <motion.div
-                    variants={itemVariants}
-                    className={cn(
-                      'group/cap flex flex-col rounded-xl cursor-default overflow-hidden',
-                      GLASS, GLASS_HOVER,
-                    )}
-                  >
-                    {welcomeImages?.[cap.key] ? (
-                      <div className="w-full h-28 overflow-hidden">
-                        <img src={welcomeImages[cap.key]} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover/cap:scale-105" />
-                      </div>
-                    ) : (
-                      <div className="w-full h-28 flex items-center justify-center bg-white/[0.03]">
-                        <cap.icon className="w-6 h-6 text-white/20" />
-                      </div>
-                    )}
-                    <div className="px-3 py-2.5">
-                      <h3 className="font-epilogue text-[11px] font-semibold text-white/85 mb-0.5">{cap.title}</h3>
-                      <p className="font-epilogue text-[10px] text-white/35 leading-snug line-clamp-2">{cap.desc}</p>
-                    </div>
-                  </motion.div>
-                </HoverCardTrigger>
-                <HoverCardContent
-                  side="bottom"
-                  align="center"
-                  className="w-80 p-0 overflow-hidden border-white/[0.12] bg-[#0F1F19]/95 backdrop-blur-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
+        {/* ── Feature cards ── */}
+        <motion.div variants={containerVariants} className="max-w-5xl w-full space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {FEATURE_CARDS.map((card) => (
+              <motion.div
+                key={card.title}
+                variants={itemVariants}
+                className={cn('group/fc rounded-2xl overflow-hidden flex flex-col', GLASS, GLASS_HOVER)}
+              >
+                {/* Visual header */}
+                <div
+                  className="h-32 relative overflow-hidden flex items-center justify-center"
+                  style={{ background: `linear-gradient(145deg, ${card.accent}28, ${card.accent}08)` }}
                 >
-                  {/* Header */}
-                  <div className="px-4 py-3 border-b border-white/[0.06] bg-white/[0.03]">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-[#00856C]/20 flex items-center justify-center">
-                        <cap.icon className="w-4 h-4 text-[#00D26A]" />
-                      </div>
-                      <div>
-                        <p className="font-epilogue text-sm font-semibold text-white/90">{cap.title}</p>
-                        <p className="font-epilogue text-[10px] text-white/35">{cap.models.join(' · ')}</p>
-                      </div>
-                    </div>
+                  <div className="absolute inset-0 opacity-25"
+                    style={{ background: `radial-gradient(circle at 50% 70%, ${card.accent}, transparent 65%)` }} />
+                  {welcomeImages?.[card.imageKey] ? (
+                    <img src={welcomeImages[card.imageKey]} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/fc:scale-105" />
+                  ) : (
+                    <card.icon className="w-10 h-10 relative z-10 transition-transform duration-300 group-hover/fc:scale-110" style={{ color: `${card.accent}CC` }} />
+                  )}
+                </div>
+                {/* Content */}
+                <div className="p-4 flex-1 flex flex-col gap-2">
+                  <div>
+                    <h3 className="font-epilogue text-[12px] font-bold text-white/90 mb-0.5">{card.title}</h3>
+                    <p className="font-epilogue text-[11px] font-medium leading-snug" style={{ color: card.accent }}>{card.headline}</p>
                   </div>
-                  {/* Body */}
-                  <div className="px-4 py-3 space-y-3">
-                    <p className="font-epilogue text-xs text-white/50 leading-relaxed">{cap.learnMore}</p>
-                    <div className="space-y-1.5">
-                      <p className="font-epilogue text-[10px] font-medium text-white/25 uppercase tracking-wider">Strengths</p>
-                      <div className="flex flex-wrap gap-1">
-                        {cap.strengths.map((s) => (
-                          <span key={s} className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium font-epilogue bg-[#00856C]/15 border border-[#00856C]/20 text-[#00D26A]/70">{s}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="pt-2 border-t border-white/[0.06]">
-                      <p className="font-epilogue text-[10px] text-white/40">
-                        <span className="font-medium text-[#00D26A]/60">Try it:</span> {cap.tryIt}
-                      </p>
-                    </div>
+                  <p className="font-epilogue text-[10px] text-white/40 leading-relaxed flex-1">{card.desc}</p>
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    {card.tags.map(t => (
+                      <span key={t} className="font-epilogue text-[9px] text-white/30 bg-white/[0.04] border border-white/[0.07] px-1.5 py-0.5 rounded-full">
+                        {t}
+                      </span>
+                    ))}
                   </div>
-                </HoverCardContent>
-              </HoverCard>
+                </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
 
-        {/* Powered-by model line */}
-        <motion.div variants={itemVariants} className="max-w-4xl w-full flex items-center justify-center gap-2 mb-5">
-          <span className="font-epilogue text-[10px] text-white/20 uppercase tracking-wider">Powered by</span>
+        {/* ── Powered by ── */}
+        <motion.div variants={itemVariants} className="max-w-5xl w-full flex items-center justify-center gap-2">
+          <span className="font-epilogue text-[10px] text-white/15 uppercase tracking-wider">Powered by</span>
           <ModelBadges />
         </motion.div>
 
-        {/* Chrome Extension CTA */}
+        {/* ── Chrome Extension CTA ── */}
         <motion.div
           variants={itemVariants}
-          className="max-w-4xl w-full mb-4 relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#133B34]/[0.60] to-[#0D1B16]/[0.60] border border-[#00856C]/20 backdrop-blur-sm"
+          className="max-w-5xl w-full relative rounded-2xl overflow-hidden border border-[#1ED75F]/15 backdrop-blur-sm"
+          style={{ background: 'linear-gradient(135deg, rgba(19,59,52,0.7), rgba(13,27,22,0.7))' }}
         >
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-4 px-6 py-3">
-            <div className="w-9 h-9 rounded-xl bg-[#1ED75F]/10 flex items-center justify-center shrink-0">
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-5 px-7 py-5">
+            <div className="w-11 h-11 rounded-2xl bg-[#1ED75F]/10 border border-[#1ED75F]/20 flex items-center justify-center shrink-0">
               <Chrome className="w-5 h-5 text-[#1ED75F]" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-fraunces text-sm font-semibold text-white mb-0.5">
-                AI Brand Guidelines Chrome Extension
+              <h3 className="font-fraunces text-base font-semibold text-white mb-1">
+                Brand Intelligence Chrome Extension
               </h3>
-              <p className="font-epilogue text-xs text-white/50 leading-relaxed mb-2">
-                Brand intelligence in a sidebar — next to ChatGPT, Gemini, Claude, Midjourney, and more.
+              <p className="font-epilogue text-xs text-white/45 leading-relaxed mb-2.5">
+                Vince's brand context in a sidebar — next to any AI tool you already use.
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {['ChatGPT', 'Gemini', 'Claude', 'Midjourney', 'Firefly'].map((p) => (
-                  <span
-                    key={p}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] font-epilogue text-[10px] text-white/50"
-                  >
+                {['ChatGPT', 'Gemini', 'Claude', 'Midjourney', 'Firefly'].map(p => (
+                  <span key={p} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.09] font-epilogue text-[10px] text-white/50">
                     <CheckCircle2 className="w-2.5 h-2.5 text-[#1ED75F]" />
                     {p}
                   </span>
@@ -389,14 +520,13 @@ function SystemWelcome({
             <a
               href="/vince-extension.zip"
               download
-              className="inline-flex items-center gap-2 rounded-xl bg-[#1ED75F] text-[#0D1B16] font-semibold font-epilogue text-xs px-5 py-2.5 hover:bg-[#1ED75F]/90 transition-colors shadow-lg shadow-[#1ED75F]/20 shrink-0"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#1ED75F] text-[#0D1B16] font-bold font-epilogue text-xs px-5 py-2.5 hover:bg-[#22ef6a] transition-colors shadow-[0_0_20px_rgba(30,215,95,0.25)] shrink-0"
             >
               <Download className="w-3.5 h-3.5" />
               Download Extension
             </a>
           </div>
         </motion.div>
-
 
       </div>
     </motion.div>
@@ -408,25 +538,21 @@ function SystemWelcome({
 function BrandWelcome({
   brand,
   brandStats,
-  onUploadClick,
   onOpenBrandDNA,
   onOpenArtDirection,
   onOpenPromptLibrary,
   onOpenBrandAgent,
   onOpenGuidelines,
   onQuickPromptClick,
-  fileInputRef,
 }: {
   brand: CreativeStudioBrand;
   brandStats?: BrandStats;
-  onUploadClick: () => void;
   onOpenBrandDNA?: () => void;
   onOpenArtDirection?: () => void;
   onOpenPromptLibrary?: () => void;
   onOpenBrandAgent?: () => void;
   onOpenGuidelines?: () => void;
   onQuickPromptClick?: (prompt: string) => void;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const [brandVoiceOpen, setBrandVoiceOpen] = useState(false);
   const { data: generationPrompt } = useBrandGenerationPrompt(brand.id);
@@ -539,11 +665,11 @@ function BrandWelcome({
                 )}
               </div>
               <button
-                onClick={onUploadClick}
+                onClick={() => window.open('/showcase', '_blank')}
                 className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.12] border border-white/[0.20] text-white/80 hover:bg-white/[0.20] hover:text-white transition-colors font-epilogue text-xs backdrop-blur-sm"
               >
-                <Upload className="w-3 h-3" />
-                Upload Reference
+                <Star className="w-3 h-3" />
+                View showcase
               </button>
             </div>
           </div>

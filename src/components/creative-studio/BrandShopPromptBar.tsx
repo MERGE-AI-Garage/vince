@@ -19,7 +19,10 @@ import {
   SlidersHorizontal,
   FlaskConical,
   X,
+  Upload,
+  Star,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -29,6 +32,7 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { PromptExpander } from '@/components/creative-studio/PromptExpander';
+import { useCreativeStudioStore } from '@/store/creative-studio-store';
 
 export type GenerationMode = 'image' | 'video' | 'edit' | 'upscale' | 'recontext' | 'tryon' | 'conversation';
 
@@ -117,6 +121,24 @@ export function BrandShopPromptBar({
   labGuideOpen = false,
 }: BrandShopPromptBarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+  const { setCurrentImage } = useCreativeStudioStore();
+
+  const handleUploadFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1];
+      setCurrentImage(`data:${file.type};base64,${base64}`);
+    };
+    reader.readAsDataURL(file);
+    // Reset so same file can be re-selected
+    e.target.value = '';
+  }, [setCurrentImage]);
 
   // Auto-resize textarea (only grows, never shrinks below user-set height)
   const handleInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -176,6 +198,22 @@ export function BrandShopPromptBar({
           })}
         </TooltipProvider>
 
+        {/* Upload Image — inline with mode buttons */}
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleUploadFile}
+          className="hidden"
+        />
+        <button
+          onClick={() => uploadInputRef.current?.click()}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-card border border-transparent hover:border-border/50 hover:shadow-sm"
+        >
+          <Upload className="w-3.5 h-3.5" />
+          <span>Upload Image</span>
+        </button>
+
         <div className="flex-1" />
 
         {/* Edit tool active indicator */}
@@ -203,6 +241,23 @@ export function BrandShopPromptBar({
             {currentMask ? 'Edit Mask' : 'Mask'}
           </Button>
         )}
+
+        {/* Showcase */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-[#1ED75F] hover:text-[#1ED75F] hover:bg-[#1ED75F]/10"
+              onClick={() => navigate('/showcase')}
+            >
+              <Star className="h-3.5 w-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p className="text-xs">Vince Showcase</p>
+          </TooltipContent>
+        </Tooltip>
 
         {/* Drawer toggles */}
         <div className="flex items-center gap-0.5 ml-2">

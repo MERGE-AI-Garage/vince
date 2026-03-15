@@ -404,7 +404,6 @@ export function EditorCanvas({
           <WelcomeScreen
             brand={selectedBrand}
             brandStats={brandStats}
-            onUploadClick={() => fileInputRef.current?.click()}
             onOpenBrandDNA={onOpenBrandDNA}
             onOpenArtDirection={onOpenArtDirection}
             onOpenPromptLibrary={onOpenPromptLibrary}
