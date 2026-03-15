@@ -1,14 +1,24 @@
-// ABOUTME: Admin tab for managing Gemini-generated icon images on the system welcome page
-// ABOUTME: Grid of 9 image slots (8 capability cards + hero) with regenerate, upload, and remove
+// ABOUTME: Admin tab for managing the Creative Studio welcome page images
+// ABOUTME: Editable DB-backed prompts, model selection, image sets, batched generation, version history
 
 import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   RefreshCw, Trash2, ImageIcon, Loader2, Upload, Eye, Library, FolderOpen,
   CheckCircle2, AlertCircle, Clock, Cpu, ChevronDown, ChevronUp,
+  Save, Layers, FileText, Pencil, X, History, RotateCcw, Sparkles,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -16,7 +26,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useUpdateSiteSetting } from '@/hooks/useSiteSettings';
-import { useImageGenerationHistory } from '@/hooks/useImageGenerationHistory';
 import { MediaPickerDialog } from '@/components/cms/MediaPickerDialog';
 import {
   useStudioWelcomeImages,
@@ -24,6 +33,23 @@ import {
   type WelcomeImageKey,
 } from '@/hooks/useStudioWelcomeImages';
 import { ImageGenerationConfirm, type PendingImageGeneration } from '@/components/ui/image-generation-confirm';
+import { useCreativeStudioModels } from '@/hooks/useCreativeStudioModels';
+import {
+  useStudioWelcomeImagePrompts,
+  useUpdateStudioWelcomeImagePrompt,
+  useStudioWelcomeImagePromptVersions,
+  useRestoreStudioWelcomeImagePromptVersion,
+  type StudioWelcomeImagePrompt,
+  type StudioWelcomeImagePromptVersion,
+} from '@/hooks/useStudioWelcomeImagePrompts';
+import {
+  useStudioWelcomeImageSets,
+  useSaveStudioWelcomeImageSet,
+  useActivateStudioWelcomeImageSet,
+  useRenameStudioWelcomeImageSet,
+  useDeleteStudioWelcomeImageSet,
+  type StudioWelcomeImageSet,
+} from '@/hooks/useStudioWelcomeImageSets';
 
 const ALL_KEYS: WelcomeImageKey[] = [
   'hero',
@@ -31,15 +57,49 @@ const ALL_KEYS: WelcomeImageKey[] = [
   'product_recontext', 'virtual_tryon', 'conversational_editing', 'camera_controls',
 ];
 
+const BATCH_SIZE = 5;
+
 export function WelcomeImagesTab() {
   const { data: images, isLoading } = useStudioWelcomeImages();
   const updateSetting = useUpdateSiteSetting();
   const queryClient = useQueryClient();
 
+  const { data: allModels } = useCreativeStudioModels('image');
+  const imageModels = (allModels || []).filter(m =>
+    (m.capabilities as string[])?.includes('text_to_image'),
+  );
+
+  const { data: prompts } = useStudioWelcomeImagePrompts();
+  const updatePrompt = useUpdateStudioWelcomeImagePrompt();
+  const restoreVersion = useRestoreStudioWelcomeImagePromptVersion();
+
+  const { data: sets } = useStudioWelcomeImageSets();
+  const saveSet = useSaveStudioWelcomeImageSet();
+  const activateSet = useActivateStudioWelcomeImageSet();
+  const renameSet = useRenameStudioWelcomeImageSet();
+  const deleteSet = useDeleteStudioWelcomeImageSet();
+
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const effectiveModel = selectedModel || imageModels[0]?.model_id || 'gemini-3-pro-image-preview';
+
   const [regeneratingKeys, setRegeneratingKeys] = useState<Set<string>>(new Set());
   const [selectedKey, setSelectedKey] = useState<WelcomeImageKey | null>(null);
   const [pendingGen, setPendingGen] = useState<PendingImageGeneration | null>(null);
   const [mediaPickerKey, setMediaPickerKey] = useState<WelcomeImageKey | null>(null);
+
+  // Prompts panel state
+  const [promptsExpanded, setPromptsExpanded] = useState(false);
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+  const [editingPromptText, setEditingPromptText] = useState('');
+  const [versionHistoryPromptId, setVersionHistoryPromptId] = useState<string | null>(null);
+
+  // Sets panel state
+  const [setsExpanded, setSetsExpanded] = useState(false);
+  const [saveSetOpen, setSaveSetOpen] = useState(false);
+  const [saveSetName, setSaveSetName] = useState('');
+  const [renamingSetId, setRenamingSetId] = useState<string | null>(null);
+  const [renamingSetName, setRenamingSetName] = useState('');
+  const [deletingSetId, setDeletingSetId] = useState<string | null>(null);
 
   const presentCount = ALL_KEYS.filter(k => images?.[k]).length;
   const missingCount = ALL_KEYS.length - presentCount;
@@ -48,7 +108,7 @@ export function WelcomeImagesTab() {
     setRegeneratingKeys(prev => new Set([...prev, key]));
     try {
       const { error } = await supabase.functions.invoke('generate-studio-welcome-images', {
-        body: { sections: [key] },
+        body: { sections: [key], model: effectiveModel },
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['studio-welcome-images'] });
@@ -101,18 +161,115 @@ export function WelcomeImagesTab() {
       toast.info('All images present. Use individual regenerate to replace.');
       return;
     }
+
     setRegeneratingKeys(new Set(keys));
+    let totalSuccess = 0;
+    let totalFailed = 0;
+
     try {
-      const { error } = await supabase.functions.invoke('generate-studio-welcome-images', {
-        body: { sections: keys },
-      });
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['studio-welcome-images'] });
-      toast.success(`${keys.length} image${keys.length > 1 ? 's' : ''} generated`);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to generate images');
+      for (let i = 0; i < keys.length; i += BATCH_SIZE) {
+        const batch = keys.slice(i, i + BATCH_SIZE);
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(keys.length / BATCH_SIZE);
+
+        if (totalBatches > 1) {
+          toast.info(`Generating batch ${batchNum}/${totalBatches} (${batch.length} images)...`);
+        }
+
+        const { data, error } = await supabase.functions.invoke('generate-studio-welcome-images', {
+          body: { sections: batch, model: effectiveModel },
+        });
+
+        if (error) {
+          toast.error(`Batch ${batchNum} failed: ${error.message}`);
+          totalFailed += batch.length;
+          continue;
+        }
+
+        totalSuccess += data?.summary?.success ?? 0;
+        queryClient.invalidateQueries({ queryKey: ['studio-welcome-images'] });
+      }
+
+      if (totalFailed === 0) {
+        toast.success(`${totalSuccess} image${totalSuccess !== 1 ? 's' : ''} generated`);
+      } else {
+        toast.warning(`${totalSuccess} generated, ${totalFailed} failed`);
+      }
     } finally {
       setRegeneratingKeys(new Set());
+    }
+  };
+
+  const handleSaveSet = async () => {
+    if (!saveSetName.trim()) return;
+    const promptSnapshot = prompts?.reduce((acc, p) => {
+      acc[p.image_key] = { prompt: p.prompt, aspect_ratio: p.aspect_ratio };
+      return acc;
+    }, {} as Record<string, { prompt: string; aspect_ratio: string }>);
+
+    try {
+      await saveSet.mutateAsync({
+        name: saveSetName.trim(),
+        model_used: effectiveModel,
+        images: (images as Record<string, string>) || {},
+        prompts: promptSnapshot,
+      });
+      toast.success(`Set "${saveSetName.trim()}" saved`);
+      setSaveSetName('');
+      setSaveSetOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save set');
+    }
+  };
+
+  const handleActivateSet = async (setId: string) => {
+    try {
+      await activateSet.mutateAsync(setId);
+      toast.success('Image set applied to welcome page');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to activate set');
+    }
+  };
+
+  const handleRenameSet = async () => {
+    if (!renamingSetId || !renamingSetName.trim()) return;
+    try {
+      await renameSet.mutateAsync({ id: renamingSetId, name: renamingSetName.trim() });
+      setRenamingSetId(null);
+      setRenamingSetName('');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to rename set');
+    }
+  };
+
+  const handleDeleteSet = async () => {
+    if (!deletingSetId) return;
+    try {
+      await deleteSet.mutateAsync(deletingSetId);
+      setDeletingSetId(null);
+      toast.success('Set deleted');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete set');
+    }
+  };
+
+  const handleEditPrompt = (p: StudioWelcomeImagePrompt) => {
+    setEditingPromptId(p.id);
+    setEditingPromptText(p.prompt);
+  };
+
+  const handleSavePrompt = async (p: StudioWelcomeImagePrompt) => {
+    try {
+      await updatePrompt.mutateAsync({
+        id: p.id,
+        prompt: editingPromptText,
+        aspect_ratio: p.aspect_ratio,
+        changeSummary: 'Manual edit',
+      });
+      setEditingPromptId(null);
+      toast.success(`${p.label} prompt saved`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save prompt');
     }
   };
 
@@ -128,8 +285,25 @@ export function WelcomeImagesTab() {
 
   return (
     <div className="space-y-6">
-      {/* Summary bar */}
-      <div className="flex items-center gap-3">
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {/* Model selector */}
+        {imageModels.length > 0 && (
+          <Select value={effectiveModel} onValueChange={setSelectedModel}>
+            <SelectTrigger className="w-64 h-8 text-xs">
+              <Cpu className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {imageModels.map(m => (
+                <SelectItem key={m.model_id} value={m.model_id} className="text-xs">
+                  {m.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         <Badge variant="secondary" className="text-xs">
           <CheckCircle2 className="h-3 w-3 mr-1 text-purple-500" />
           {presentCount}/{ALL_KEYS.length} present
@@ -140,7 +314,15 @@ export function WelcomeImagesTab() {
             {missingCount} missing
           </Badge>
         )}
+
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="outline" size="sm"
+            onClick={() => { setSaveSetName(''); setSaveSetOpen(true); }}
+            disabled={!images || Object.keys(images).length === 0}
+          >
+            <Save className="h-3.5 w-3.5 mr-1.5" />Save Set
+          </Button>
           {missingCount > 0 && (
             <Button
               variant="outline" size="sm"
@@ -320,6 +502,198 @@ export function WelcomeImagesTab() {
         </div>
       </div>
 
+      {/* Prompts section — collapsible */}
+      <div className="border rounded-lg">
+        <button
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30 transition-colors"
+          onClick={() => setPromptsExpanded(!promptsExpanded)}
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <span>Generation Prompts</span>
+            {prompts && (
+              <Badge variant="secondary" className="text-[10px]">{prompts.length}</Badge>
+            )}
+          </div>
+          {promptsExpanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+
+        {promptsExpanded && prompts && (
+          <div className="border-t divide-y">
+            {prompts.map(p => (
+              <div key={p.id} className="px-4 py-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{p.label}</span>
+                    <Badge variant="outline" className="text-[10px]">{p.aspect_ratio}</Badge>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1"
+                      onClick={() => setVersionHistoryPromptId(p.id)}
+                    >
+                      <History className="h-3 w-3" />Versions
+                    </Button>
+                    {editingPromptId === p.id ? (
+                      <>
+                        <Button
+                          variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground"
+                          onClick={() => setEditingPromptId(null)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm" className="h-6 px-2 text-xs"
+                          onClick={() => handleSavePrompt(p)}
+                          disabled={updatePrompt.isPending}
+                        >
+                          {updatePrompt.isPending ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <><Save className="h-3 w-3 mr-1" />Save</>
+                          )}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost" size="sm" className="h-6 w-6 p-0"
+                        onClick={() => handleEditPrompt(p)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {editingPromptId === p.id ? (
+                  <Textarea
+                    value={editingPromptText}
+                    onChange={e => setEditingPromptText(e.target.value)}
+                    className="text-xs min-h-[100px] resize-y font-mono"
+                    autoFocus
+                  />
+                ) : (
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+                    {p.prompt}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Image Sets section — collapsible */}
+      <div className="border rounded-lg">
+        <button
+          className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30 transition-colors"
+          onClick={() => setSetsExpanded(!setsExpanded)}
+        >
+          <div className="flex items-center gap-2">
+            <Layers className="h-4 w-4 text-muted-foreground" />
+            <span>Image Sets</span>
+            {sets && sets.length > 0 && (
+              <Badge variant="secondary" className="text-[10px]">{sets.length}</Badge>
+            )}
+          </div>
+          {setsExpanded ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+
+        {setsExpanded && (
+          <div className="border-t">
+            {sets && sets.length > 0 ? (
+              <div className="divide-y">
+                {sets.map(set => (
+                  <div key={set.id} className="px-4 py-3">
+                    {renamingSetId === set.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={renamingSetName}
+                          onChange={e => setRenamingSetName(e.target.value)}
+                          className="h-7 text-xs flex-1"
+                          autoFocus
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') handleRenameSet();
+                            if (e.key === 'Escape') setRenamingSetId(null);
+                          }}
+                        />
+                        <Button size="sm" className="h-7 px-2 text-xs" onClick={handleRenameSet}
+                          disabled={renameSet.isPending}>
+                          Save
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0"
+                          onClick={() => setRenamingSetId(null)}>
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {set.is_active && (
+                            <Star className="h-3 w-3 text-amber-500 shrink-0" />
+                          )}
+                          <span className="text-sm font-medium truncate">{set.name}</span>
+                          <Badge variant="secondary" className="text-[10px] shrink-0">
+                            <Cpu className="h-2.5 w-2.5 mr-1" />
+                            {set.model_used.split('-').slice(0, 3).join('-')}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {set.image_count} imgs
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {!set.is_active && (
+                            <Button
+                              variant="outline" size="sm" className="h-6 px-2 text-xs"
+                              onClick={() => handleActivateSet(set.id)}
+                              disabled={activateSet.isPending}
+                            >
+                              {activateSet.isPending ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                'Apply'
+                              )}
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost" size="sm" className="h-6 w-6 p-0"
+                            onClick={() => {
+                              setRenamingSetId(set.id);
+                              setRenamingSetName(set.name);
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
+                            onClick={() => setDeletingSetId(set.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-4 py-6 text-center">
+                <p className="text-sm text-muted-foreground">No sets saved yet.</p>
+                <p className="text-xs text-muted-foreground mt-1">Generate images and click "Save Set" to snapshot this run.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Detail dialog */}
       {selectedKey && (
         <WelcomeImageDetailDialog
@@ -328,6 +702,7 @@ export function WelcomeImagesTab() {
           sectionKey={selectedKey}
           label={WELCOME_IMAGE_LABELS[selectedKey].label}
           currentUrl={images?.[selectedKey] || null}
+          prompt={prompts?.find(p => p.image_key === selectedKey) || null}
           onImageSwapped={handleImageSwapped}
           onRegenerate={(key) => setPendingGen({
             label: WELCOME_IMAGE_LABELS[key].label,
@@ -354,11 +729,141 @@ export function WelcomeImagesTab() {
         }}
         mediaType="images"
       />
+
+      {/* Save set dialog */}
+      <AlertDialog open={saveSetOpen} onOpenChange={setSaveSetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Image Set</AlertDialogTitle>
+            <AlertDialogDescription>
+              Snapshot the current images and prompts as a named set. You can apply any saved set to the welcome page later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            placeholder={`${imageModels.find(m => m.model_id === effectiveModel)?.name || effectiveModel} — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
+            value={saveSetName}
+            onChange={e => setSaveSetName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSaveSet()}
+            className="mt-2"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveSet} disabled={saveSet.isPending || !saveSetName.trim()}>
+              {saveSet.isPending ? 'Saving...' : 'Save Set'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete set confirm */}
+      <AlertDialog open={!!deletingSetId} onOpenChange={(open) => !open && setDeletingSetId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Image Set</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the set. The generated images are not affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSet}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Version history dialog */}
+      {versionHistoryPromptId && (
+        <PromptVersionHistoryDialog
+          open={!!versionHistoryPromptId}
+          onOpenChange={(open) => !open && setVersionHistoryPromptId(null)}
+          promptId={versionHistoryPromptId}
+          promptLabel={prompts?.find(p => p.id === versionHistoryPromptId)?.label || ''}
+          onRestore={async (version) => {
+            try {
+              await restoreVersion.mutateAsync({ promptId: versionHistoryPromptId, version });
+              toast.success('Prompt restored');
+              setVersionHistoryPromptId(null);
+            } catch (err: any) {
+              toast.error(err.message || 'Failed to restore');
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
 
-// ── Detail dialog ───────────────────────────────────────────────────────
+// ── Prompt version history dialog ────────────────────────────────────────
+
+interface PromptVersionHistoryDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  promptId: string;
+  promptLabel: string;
+  onRestore: (version: StudioWelcomeImagePromptVersion) => void;
+}
+
+function PromptVersionHistoryDialog({
+  open, onOpenChange, promptId, promptLabel, onRestore,
+}: PromptVersionHistoryDialogProps) {
+  const { data: versions, isLoading } = useStudioWelcomeImagePromptVersions(promptId);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{promptLabel} — Version History</DialogTitle>
+        </DialogHeader>
+        {isLoading ? (
+          <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />Loading versions...
+          </div>
+        ) : !versions?.length ? (
+          <p className="text-sm text-muted-foreground py-4">No version history yet. Save an edit to start tracking versions.</p>
+        ) : (
+          <div className="space-y-2">
+            {versions.map((v, idx) => (
+              <div key={v.id} className="border rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={idx === 0 ? 'default' : 'secondary'} className="text-[10px]">
+                      v{v.version_number}
+                    </Badge>
+                    {v.change_summary && (
+                      <span className="text-xs text-muted-foreground">{v.change_summary}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">{formatDate(v.created_at)}</span>
+                    {idx > 0 && (
+                      <Button
+                        variant="outline" size="sm" className="h-6 px-2 text-xs gap-1"
+                        onClick={() => onRestore(v)}
+                      >
+                        <RotateCcw className="h-3 w-3" />Restore
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{v.prompt}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Detail dialog ─────────────────────────────────────────────────────────
 
 interface WelcomeImageDetailDialogProps {
   open: boolean;
@@ -366,21 +871,25 @@ interface WelcomeImageDetailDialogProps {
   sectionKey: WelcomeImageKey;
   label: string;
   currentUrl: string | null;
+  prompt: StudioWelcomeImagePrompt | null;
   onImageSwapped: (key: WelcomeImageKey, url: string) => void;
   onRegenerate: (key: WelcomeImageKey) => void;
   isRegenerating: boolean;
 }
 
 function WelcomeImageDetailDialog({
-  open, onOpenChange, sectionKey, label, currentUrl,
+  open, onOpenChange, sectionKey, label, currentUrl, prompt,
   onImageSwapped, onRegenerate, isRegenerating,
 }: WelcomeImageDetailDialogProps) {
   const [promptExpanded, setPromptExpanded] = useState(false);
+  const [editingPrompt, setEditingPrompt] = useState(false);
+  const [editPromptText, setEditPromptText] = useState('');
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reuse the guidelines image history hook — works with any original_prompt/metadata pattern
+  const updatePrompt = useUpdateStudioWelcomeImagePrompt();
+
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ['studio-welcome-image-history', sectionKey],
     queryFn: async () => {
@@ -402,14 +911,8 @@ function WelcomeImageDetailDialog({
   const latestGeneration = history?.[0];
 
   const handleUpload = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File must be under 5MB');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      toast.error('Only image files are supported');
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5MB'); return; }
+    if (!file.type.startsWith('image/')) { toast.error('Only image files are supported'); return; }
     setUploading(true);
     try {
       const ext = file.name.split('.').pop() || 'png';
@@ -418,7 +921,6 @@ function WelcomeImageDetailDialog({
         .from('media')
         .upload(filePath, file, { contentType: file.type, upsert: false });
       if (uploadErr) throw uploadErr;
-
       const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
       onImageSwapped(sectionKey, publicUrl);
       toast.success(`${label} updated`);
@@ -429,27 +931,24 @@ function WelcomeImageDetailDialog({
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleUpload(file);
-    e.target.value = '';
+  const handleSavePrompt = async () => {
+    if (!prompt) return;
+    try {
+      await updatePrompt.mutateAsync({
+        id: prompt.id,
+        prompt: editPromptText,
+        aspect_ratio: prompt.aspect_ratio,
+        changeSummary: 'Edited from detail panel',
+      });
+      setEditingPrompt(false);
+      toast.success('Prompt saved');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save prompt');
+    }
   };
 
-  const handleMediaSelect = (media: { url: string }) => {
-    onImageSwapped(sectionKey, media.url);
-    setMediaPickerOpen(false);
-    toast.success(`${label} updated from library`);
-  };
-
-  const handleRestoreVersion = (url: string) => {
-    onImageSwapped(sectionKey, url);
-    toast.success(`${label} restored from history`);
-  };
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <>
@@ -475,75 +974,98 @@ function WelcomeImageDetailDialog({
 
           {/* Action buttons */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline" size="sm"
-              onClick={() => onRegenerate(sectionKey)}
-              disabled={isRegenerating}
-            >
+            <Button variant="outline" size="sm" onClick={() => onRegenerate(sectionKey)} disabled={isRegenerating}>
               {isRegenerating ? (
                 <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Generating...</>
               ) : (
                 <><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Regenerate</>
               )}
             </Button>
-            <Button
-              variant="outline" size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
               {uploading ? (
                 <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Uploading...</>
               ) : (
                 <><Upload className="h-3.5 w-3.5 mr-1.5" />Upload</>
               )}
             </Button>
-            <Button
-              variant="outline" size="sm"
-              onClick={() => setMediaPickerOpen(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setMediaPickerOpen(true)}>
               <Library className="h-3.5 w-3.5 mr-1.5" />Browse Library
             </Button>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileSelect}
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ''; }}
               className="hidden"
             />
           </div>
 
-          {/* Prompt metadata */}
+          {/* Editable prompt */}
+          {prompt && (
+            <div className="border rounded-lg">
+              <div className="flex items-center justify-between px-3 py-2.5">
+                <span className="text-sm font-medium text-muted-foreground">Prompt</span>
+                <div className="flex items-center gap-1">
+                  {editingPrompt ? (
+                    <>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0"
+                        onClick={() => setEditingPrompt(false)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" className="h-6 px-2 text-xs"
+                        onClick={handleSavePrompt} disabled={updatePrompt.isPending}>
+                        {updatePrompt.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-1" />Save</>}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0"
+                      onClick={() => { setEditingPrompt(true); setEditPromptText(prompt.prompt); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="px-3 pb-3 border-t pt-2.5">
+                {editingPrompt ? (
+                  <Textarea
+                    value={editPromptText}
+                    onChange={e => setEditPromptText(e.target.value)}
+                    className="text-xs min-h-[100px] resize-y font-mono"
+                    autoFocus
+                  />
+                ) : (
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{prompt.prompt}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Generation metadata from latest run */}
           {latestGeneration && (
             <div className="border rounded-lg">
               <button
                 className="w-full flex items-center justify-between px-3 py-2.5 text-sm text-left hover:bg-muted/50 transition-colors"
                 onClick={() => setPromptExpanded(!promptExpanded)}
               >
-                <span className="font-medium text-muted-foreground">Generation Prompt</span>
+                <span className="font-medium text-muted-foreground">Last Generation</span>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-[10px] font-normal">
-                    <Cpu className="h-2.5 w-2.5 mr-1" />
-                    {latestGeneration.model_used}
+                    <Cpu className="h-2.5 w-2.5 mr-1" />{latestGeneration.model_used}
                   </Badge>
                   <Badge variant="secondary" className="text-[10px] font-normal">
-                    <Clock className="h-2.5 w-2.5 mr-1" />
-                    {formatDate(latestGeneration.created_at)}
+                    <Clock className="h-2.5 w-2.5 mr-1" />{formatDate(latestGeneration.created_at)}
                   </Badge>
                   {latestGeneration.generation_time_ms && (
                     <Badge variant="secondary" className="text-[10px] font-normal">
                       {(latestGeneration.generation_time_ms / 1000).toFixed(1)}s
                     </Badge>
                   )}
-                  {promptExpanded ? (
-                    <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
+                  {promptExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
                 </div>
               </button>
               {promptExpanded && (
                 <div className="px-3 pb-3 border-t">
-                  <p className="text-xs text-muted-foreground leading-relaxed pt-2.5 whitespace-pre-wrap">
+                  <p className="text-xs text-muted-foreground leading-relaxed pt-2.5 whitespace-pre-wrap line-clamp-6">
                     {latestGeneration.prompt}
                   </p>
                 </div>
@@ -575,16 +1097,13 @@ function WelcomeImageDetailDialog({
                           ? 'border-purple-500 ring-1 ring-purple-500/30'
                           : 'border-transparent hover:border-muted-foreground/30',
                       )}
-                      onClick={() => !isCurrent && handleRestoreVersion(gen.image_url)}
+                      onClick={() => !isCurrent && onImageSwapped(sectionKey, gen.image_url)}
                       title={isCurrent ? 'Current image' : `Restore — ${formatDate(gen.created_at)}`}
                     >
                       <img
                         src={gen.image_url}
                         alt={`Version from ${formatDate(gen.created_at)}`}
-                        className={cn(
-                          'object-cover',
-                          sectionKey === 'hero' ? 'w-32 h-12' : 'w-16 h-16',
-                        )}
+                        className={cn('object-cover', sectionKey === 'hero' ? 'w-32 h-12' : 'w-16 h-16')}
                       />
                       <div className="text-[9px] text-muted-foreground text-center py-0.5">
                         {formatDate(gen.created_at)}
@@ -601,10 +1120,9 @@ function WelcomeImageDetailDialog({
       <MediaPickerDialog
         open={mediaPickerOpen}
         onOpenChange={setMediaPickerOpen}
-        onSelect={handleMediaSelect}
+        onSelect={(media) => { onImageSwapped(sectionKey, media.url); setMediaPickerOpen(false); toast.success(`${label} updated from library`); }}
         mediaType="images"
       />
     </>
   );
 }
-

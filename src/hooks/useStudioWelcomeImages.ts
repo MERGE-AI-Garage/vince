@@ -37,15 +37,14 @@ export function useStudioWelcomeImages() {
         .from('site_settings')
         .select('value')
         .eq('key', 'creative_studio_welcome_images')
-        .single();
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (error) {
-        if (error.code === 'PGRST116') return {};
-        throw error;
-      }
+      if (error) throw error;
 
       return (data?.value as WelcomeImages) || {};
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 }
