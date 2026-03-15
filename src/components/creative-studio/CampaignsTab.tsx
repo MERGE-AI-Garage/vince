@@ -403,7 +403,11 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
 
 // ── Conversation Transcript ───────────────────────────────────────────────────
 
-function ConversationTranscript({ conversationId }: { conversationId: string }) {
+function ConversationTranscript({ conversationId, isNearby, nearbyDate }: {
+  conversationId: string;
+  isNearby?: boolean;
+  nearbyDate?: string;
+}) {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -433,6 +437,14 @@ function ConversationTranscript({ conversationId }: { conversationId: string }) 
 
   return (
     <div className="space-y-3">
+      {isNearby && nearbyDate && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border/30 mb-1">
+          <LinkIcon className="w-3 h-3 text-muted-foreground/50 shrink-0" />
+          <p className="text-[11px] text-muted-foreground/60">
+            Nearest session — {format(new Date(nearbyDate), 'MMM d, h:mm a')}. Campaign was generated via voice mode and not directly linked.
+          </p>
+        </div>
+      )}
       {messages.map(msg => (
         <div
           key={msg.id}
@@ -833,6 +845,7 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
   const [zipping, setZipping] = useState(false);
   const [imageInfo, setImageInfo] = useState<ImageInfoState | null>(null);
   const [mediaRecord, setMediaRecord] = useState<MediaRecord | null>(null);
+  const [nearbyConversation, setNearbyConversation] = useState<{ id: string; created_at: string } | null>(null);
   const storedNames = (gen.metadata?.deliverable_names as string[] | undefined) || [];
   const copyBlocks = (gen.copy_blocks as PackagePart[] | undefined) || [];
   const hasCopy = copyBlocks.some(p => p.type === 'text');
@@ -841,6 +854,28 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
   const brief = gen.prompt_text || '';
   const conversationId = gen.metadata?.conversation_id as string | undefined;
   const userName = gen.user?.full_name;
+
+  // When no conversation is directly linked, look for the nearest Vince session within 2 hours
+  useEffect(() => {
+    if (conversationId) return;
+    const created = new Date(gen.created_at);
+    const windowStart = new Date(created.getTime() - 30 * 60 * 1000).toISOString();
+    const windowEnd = new Date(created.getTime() + 2 * 60 * 60 * 1000).toISOString();
+    supabase
+      .from('chatbot_conversations')
+      .select('id, created_at, messages')
+      .eq('metadata->>assistant', 'vince')
+      .gte('updated_at', windowStart)
+      .lte('updated_at', windowEnd)
+      .order('updated_at', { ascending: true })
+      .limit(10)
+      .then(({ data }) => {
+        if (!data) return;
+        // Pick the first one that has at least 1 message
+        const match = data.find(c => Array.isArray(c.messages) && c.messages.length > 0);
+        if (match) setNearbyConversation({ id: match.id, created_at: match.created_at });
+      });
+  }, [gen.created_at, conversationId]);
 
   useEffect(() => {
     if (!imageInfo) { setMediaRecord(null); return; }
@@ -880,9 +915,9 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
 
   return (
     <>
-    <div className="space-y-0">
-      {/* Header */}
-      <div className="pb-5 border-b border-emerald-500/20">
+    <div className="space-y-6">
+      {/* Header card */}
+      <div className="bg-card border border-border/50 rounded-xl p-5">
         {/* Breadcrumb row */}
         <div className="flex items-center gap-1.5 mb-4">
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 h-7 px-2 text-muted-foreground hover:text-foreground">
@@ -927,7 +962,7 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
       </div>
 
       {/* Body: main content + metadata sidebar */}
-      <div className="pt-6 grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
         {/* Left: tabbed content */}
         <div className="min-w-0">
           <Tabs defaultValue="campaign">
@@ -937,7 +972,7 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
               </TabsTrigger>
               <TabsTrigger value="conversation" className="gap-1.5 text-xs">
                 <MessageSquare className="w-3.5 h-3.5" />Conversation
-                {!conversationId && <span className="ml-1 text-[9px] text-muted-foreground/40">(no link)</span>}
+                {!conversationId && !nearbyConversation && <span className="ml-1 text-[9px] text-muted-foreground/40">(no link)</span>}
               </TabsTrigger>
               <TabsTrigger value="analysis" className="gap-1.5 text-xs">
                 <BarChart2 className="w-3.5 h-3.5" />Analysis
@@ -992,13 +1027,19 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
             <TabsContent value="conversation">
               {conversationId ? (
                 <ConversationTranscript conversationId={conversationId} />
+              ) : nearbyConversation ? (
+                <ConversationTranscript
+                  conversationId={nearbyConversation.id}
+                  isNearby
+                  nearbyDate={nearbyConversation.created_at}
+                />
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
                   <MessageSquare className="w-10 h-10 text-muted-foreground/20" />
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground/60">No conversation linked</p>
+                    <p className="text-sm font-medium text-foreground/60">No conversation found</p>
                     <p className="text-xs text-muted-foreground/40 max-w-xs">
-                      Campaigns generated after this update will have their conversation transcript linked here automatically.
+                      This campaign was generated via voice mode before transcript recording was enabled.
                     </p>
                   </div>
                 </div>
@@ -1012,7 +1053,7 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
         </div>
 
         {/* Right: Metadata panel */}
-        <div className="lg:sticky lg:top-6">
+        <div className="lg:sticky lg:top-6 bg-card border border-border/50 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Campaign Info</span>
             <div className="flex-1 h-px bg-border/30" />
