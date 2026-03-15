@@ -96,6 +96,7 @@ export function MediaLibraryTab() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<MediaFile | null>(null);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [deleteFolderTarget, setDeleteFolderTarget] = useState<MediaFolder | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -116,10 +117,9 @@ export function MediaLibraryTab() {
       // Select only columns needed for display — avoids fetching heavy jsonb fields
       let mediaQuery = supabase
         .from('media')
-        .select('id, filename, title, url, thumbnail_url, mime_type, file_type, folder_id, created_at, size_bytes, created_by', { count: 'exact' })
+        .select('id, filename, title, url, thumbnail_url, mime_type, file_type, folder_id, created_at, size_bytes, created_by, creator_profile:profiles!created_by(full_name, avatar_url)', { count: 'exact' })
         .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-        .limit(100);
+        .order('created_at', { ascending: false });
 
       if (currentFolderId) {
         mediaQuery = mediaQuery.eq('folder_id', currentFolderId);
@@ -257,6 +257,21 @@ export function MediaLibraryTab() {
       toast.success(`Deleted ${selectedFiles.size} file(s)`);
       setSelectedFiles(new Set());
       setShowBulkDeleteConfirm(false);
+      await fetchData();
+    } catch (error: any) {
+      toast.error(`Delete failed: ${error.message}`);
+    }
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (!deleteFolderTarget) return;
+    try {
+      // Move any files in this folder to root before deleting
+      await supabase.from('media').update({ folder_id: null }).eq('folder_id', deleteFolderTarget.id);
+      const { error } = await supabase.from('media_folders').delete().eq('id', deleteFolderTarget.id);
+      if (error) throw error;
+      toast.success(`Folder "${deleteFolderTarget.name}" deleted`);
+      setDeleteFolderTarget(null);
       await fetchData();
     } catch (error: any) {
       toast.error(`Delete failed: ${error.message}`);
@@ -641,7 +656,7 @@ export function MediaLibraryTab() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors ${
+                      className={`group relative flex flex-col items-center gap-2 p-4 rounded-lg border transition-colors ${
                         snapshot.isDraggingOver ? 'bg-primary/10 border-primary' : 'hover:bg-accent'
                       }`}
                     >
@@ -659,6 +674,13 @@ export function MediaLibraryTab() {
                           );
                         })()}
                         <span className="text-sm font-medium truncate w-full text-center">{folder.name}</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteFolderTarget(folder); }}
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10"
+                        title="Delete folder"
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
                       </button>
                       <div style={{ display: 'none' }}>{provided.placeholder}</div>
                     </div>
@@ -915,6 +937,23 @@ export function MediaLibraryTab() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete {selectedFiles.size} file(s)
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!deleteFolderTarget} onOpenChange={() => setDeleteFolderTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete folder "{deleteFolderTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Any files inside this folder will be moved to the root library. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteFolder} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Folder
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
