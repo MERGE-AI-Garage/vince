@@ -987,7 +987,7 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[1400px] max-h-[88vh] p-0 gap-0 rounded-2xl sm:rounded-2xl overflow-hidden font-product-sans [&>button:last-child]:hidden"
+        className="max-w-[1400px] max-h-[88vh] p-0 gap-0 rounded-2xl sm:rounded-2xl overflow-hidden font-product-sans [&>button:last-child]:hidden brand-guidelines-panel"
         style={{
           backgroundColor: 'hsl(var(--cs-surface-2))',
           borderColor: 'hsl(var(--cs-border-mid))',

@@ -172,6 +172,22 @@
     --cs-text-primary: 0 0% 90%;
   }
 
+  /* Brand guidelines panels always render neutral — not brand-tinted.
+     Standalone selector required: dialog portals render outside .creative-studio in the DOM. */
+  .brand-guidelines-panel {
+    --cs-surface-0: 0 0% 96%;
+    --cs-surface-1: 0 0% 100%;
+    --cs-surface-2: 0 0% 97%;
+    --cs-surface-3: 0 0% 92%;
+    --cs-border-subtle: 0 0% 88%;
+    --cs-border-mid: 0 0% 78%;
+    --cs-text-primary: 0 0% 10%;
+    --foreground: 0 0% 10%;
+    --muted-foreground: 0 0% 45%;
+    --card: 0 0% 100%;
+    color: hsl(0 0% 10%);
+  }
+
 }
 
 @layer base {
