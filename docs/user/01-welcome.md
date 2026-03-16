@@ -22,6 +22,8 @@ Vince is your AI creative director. You brief him by voice — like talking to a
 
 3. **Click "Sign In"**
 
+<ScreenshotCard title="Sign In" route="/login" imagePath="/visual-manual/screenshots/01-login.png" />
+
 You'll land on the main Vince screen. That's it — no email confirmation needed.
 
 **Can't sign in?**

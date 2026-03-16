@@ -44,7 +44,7 @@ Having problems? Find your issue below.
 2. **Wait for the reset** — Quotas reset weekly. The reset day is shown in the quota display.
 3. **Ask your admin** — Your admin can raise your limit or grant you unlimited access if needed.
 
-📷 [SCREENSHOT NEEDED: Quota display showing remaining generations and reset date]
+
 
 > **CONFIRMED** — `src/components/creative-studio/QuotaDisplay.tsx`; `CreativeStudioUserQuota` type in `src/types/creative-studio.ts`; `QuotaErrorResponse` type showing reset date
 
@@ -77,7 +77,7 @@ Having problems? Find your issue below.
 3. **Use chat instead** — If voice isn't working, the voice interface also has a text input. Type your brief instead of speaking.
 4. **Reload the page** — Sometimes the voice connection drops. Refresh and reopen the agent.
 
-📷 [SCREENSHOT NEEDED: Voice overlay showing microphone button and text input option]
+
 
 > **CONFIRMED** — `src/components/creative-studio/BrandAgentApp.tsx`; `src/components/creative-studio/VoiceOverlay.tsx`
 

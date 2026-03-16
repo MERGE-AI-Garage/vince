@@ -8,7 +8,7 @@ Learn how to create images, videos, and full campaign packages — and how to ed
 
 The **mode selector** sits inside the prompt bar at the bottom of the screen. Click it to switch between modes.
 
-📷 [SCREENSHOT NEEDED: Mode selector open, showing available modes]
+<ScreenshotCard title="Studio — Mode Selector" route="/studio" imagePath="/visual-manual/screenshots/03-studio.png" />
 
 > **CONFIRMED** — `src/components/creative-studio/BrandShopPromptBar.tsx`
 
@@ -26,7 +26,7 @@ This is the default mode. Describe what you want and Vince generates it from scr
 4. Make sure the mode is set to **Image**
 5. Press **Enter** or click the Generate button
 
-📷 [SCREENSHOT NEEDED: Prompt bar in Image mode with a sample prompt]
+<ScreenshotCard title="Studio — Image Mode" route="/studio" imagePath="/visual-manual/screenshots/03-studio.png" />
 
 **Result:** Your image appears on the canvas and is saved to History.
 
@@ -50,7 +50,7 @@ Use this when you want to change a specific area of an image — swap a backgrou
 4. Describe what you want in that area in the prompt bar
 5. Click Generate
 
-📷 [SCREENSHOT NEEDED: Canvas with masking brush visible on an image, painted area highlighted]
+
 
 **Eraser:** Use the eraser tool in the masking canvas to undo parts of your painted selection before generating.
 
@@ -70,7 +70,7 @@ Use this to extend an image beyond its original edges — useful for turning a s
 4. Add a prompt describing what the expanded area should look like (or leave blank to let Vince infer)
 5. Click Generate
 
-📷 [SCREENSHOT NEEDED: Outpaint direction selector on the masking canvas]
+
 
 > **CONFIRMED** — `src/components/creative-studio/MaskingCanvas.tsx` (outpainting directions listed)
 
@@ -87,7 +87,7 @@ Use this to increase the resolution of an image for large-format print or high-q
 3. Choose your quality options in the panel that appears
 4. Click Generate
 
-📷 [SCREENSHOT NEEDED: Upscale mode panel with quality options]
+
 
 > **CONFIRMED** — `src/components/creative-studio/UpscalePanel.tsx` referenced in generation types
 
@@ -105,7 +105,7 @@ This mode lets you refine an image through back-and-forth dialogue. Vince rememb
 4. Vince edits and shows the result
 5. Continue refining with follow-up requests
 
-📷 [SCREENSHOT NEEDED: Conversational edit panel with multi-turn thread visible]
+
 
 **How it works behind the scenes:** Vince stores a "thought signature" that tracks what it knows about your image across edits, so each instruction builds on the last.
 
@@ -134,7 +134,7 @@ Vince can create short videos from a text description, animate a starting image,
 5. Write your prompt (or use **Director Mode** for precise control — see below)
 6. Click Generate
 
-📷 [SCREENSHOT NEEDED: Video generation panel with type selector and settings visible]
+
 
 **Director Mode:** Turn this on to describe your video as a structured scene — camera movement, lighting, subject action, dialogue. This gives you precise control over the shot.
 
@@ -164,11 +164,11 @@ journey
 
 1. Click the **Vince Agent** button (microphone/chat icon)
 
-   📷 [SCREENSHOT NEEDED: Vince Agent button location in the studio]
+
 
 2. The voice interface opens. You'll see an animated visualizer and a microphone button.
 
-   📷 [SCREENSHOT NEEDED: Voice overlay open with visualizer and mic button]
+
 
 3. Speak your campaign brief — for example:
    > *"Create a campaign for our summer product relaunch. We need LinkedIn posts, a display banner, and an email header. Energetic, warm tones, product-forward."*
@@ -180,7 +180,7 @@ journey
 
 5. Review the finished package — each deliverable shows its format, dimensions, and category
 
-   📷 [SCREENSHOT NEEDED: Creative package display with deliverables listed]
+   
 
 6. Click **Download ZIP** to export everything in organized folders
 
@@ -228,7 +228,7 @@ Vince can generate these formats in a campaign package:
    - All deliverables with images and copy
 4. Click **Download ZIP** to re-export any past campaign
 
-📷 [SCREENSHOT NEEDED: Campaigns tab with campaign cards and detail view]
+<ScreenshotCard title="Campaigns" route="/campaigns" imagePath="/visual-manual/screenshots/04-campaigns.png" />
 
 > **CONFIRMED** — `src/components/creative-studio/CampaignsTab.tsx`
 
@@ -247,7 +247,7 @@ Settings include:
 - **Color temperature** — warm or cool tones
 - **Composition rules** — rule of thirds, centered, etc.
 
-📷 [SCREENSHOT NEEDED: Camera controls panel open with settings visible]
+
 
 > **CONFIRMED** — `src/components/creative-studio/CameraControlsPanel.tsx`
 

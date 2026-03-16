@@ -54,7 +54,7 @@ A good brief tells Vince three things: **what** you're promoting, **who** it's f
 
 **Tip:** Treat it like talking to a colleague, not a search engine. Full sentences work better than keywords.
 
-📷 [SCREENSHOT NEEDED: Voice button active state in InputArea]
+<ScreenshotCard title="Vince Chat" route="/vince" imagePath="/visual-manual/screenshots/06-vince-tab-chat.png" />
 
 ---
 
@@ -223,7 +223,7 @@ For a full searchable view, go to the **Generations** tab at the top of the scre
 
 **Note:** You can view Brand DNA but editing it is typically done by your team's admin.
 
-📷 [SCREENSHOT NEEDED: Brand DNA panel expanded]
+<ScreenshotCard title="Brand Intelligence" route="/vince" imagePath="/visual-manual/screenshots/08-vince-tab-brand-intel.png" />
 
 ---
 

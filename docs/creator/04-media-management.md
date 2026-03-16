@@ -10,7 +10,7 @@ The Media Library is where you store, organize, and reuse images, videos, and ot
 - **Extension:** Click the **Media** tab in the side panel
 - **Mobile:** Tap the **Media** tab in the bottom navigation
 
-📷 [SCREENSHOT NEEDED: Media Library open, showing file grid with thumbnails]
+<ScreenshotCard title="Media Library" route="/admin" imagePath="/visual-manual/screenshots/15-admin-tab-media.png" />
 
 > **CONFIRMED** — `src/components/creative-studio/MediaLibraryPanel.tsx`; `src/components/creative-studio/MediaLibraryTab.tsx`; extension and mobile tabs confirmed in `extension/src/BrandApp.tsx` and `mobile/src/MobileApp.tsx`
 
@@ -27,7 +27,7 @@ The Media Library is where you store, organize, and reuse images, videos, and ot
 5. Add tags if you'd like to find them easily later
 6. Click **Upload**
 
-📷 [SCREENSHOT NEEDED: Upload dialog with drag-and-drop area and folder selector]
+
 
 > **CONFIRMED** — `src/components/creative-studio/MediaUploadDialog.tsx`
 
@@ -72,7 +72,7 @@ Folders help you keep your assets tidy — by campaign, client, season, or any s
 2. Use the **Move** action
 3. Choose the destination folder
 
-📷 [SCREENSHOT NEEDED: Folder structure in sidebar with colored folder icons]
+
 
 > **CONFIRMED** — folder hierarchy with color and icon fields in `src/types/media.ts`; `src/components/media/MediaBreadcrumbs.tsx`
 
@@ -90,7 +90,7 @@ The Media Library has a search bar and filters to quickly find what you're looki
 - **Date range** — files uploaded or created within a time window
 - **File size** — to find large files taking up space
 
-📷 [SCREENSHOT NEEDED: Search bar active with filter chips applied]
+
 
 > **CONFIRMED** — filter fields on media types in `src/types/media.ts`
 
@@ -110,7 +110,7 @@ Every file in the Media Library has metadata you can view and edit.
 3. Add or remove tags
 4. Save
 
-📷 [SCREENSHOT NEEDED: File detail view with tags visible and edit option]
+
 
 > **CONFIRMED** — `src/components/media/MediaTagDialog.tsx`; `auto_tags`, `detected_objects`, `custom_metadata` fields in `src/types/media.ts`
 
@@ -128,7 +128,7 @@ You can share individual files from the Media Library with a link.
    - **Download permission** — allow or block downloading
 4. Copy the share link and send it
 
-📷 [SCREENSHOT NEEDED: Share dialog with options visible]
+
 
 > **CONFIRMED** — sharing fields (`share_token`, `share_expiry`, `share_password`, `allow_download`) in `src/types/media.ts`
 

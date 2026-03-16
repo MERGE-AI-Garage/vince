@@ -8,7 +8,7 @@ Vince gives you two ways to start quickly without writing a prompt from scratch:
 
 Quick Prompts are the fastest way to start. They appear as buttons on the welcome screen when you first load a brand.
 
-📷 [SCREENSHOT NEEDED: Welcome screen with quick prompt buttons visible]
+<ScreenshotCard title="Welcome Screen" route="/" imagePath="/visual-manual/screenshots/02-homepage.png" />
 
 Each quick prompt is a pre-written direction specific to your selected brand. Click one to instantly fill the prompt bar with that prompt — then hit Generate or edit it first.
 
@@ -30,7 +30,7 @@ The Template Library is a searchable collection of detailed, reusable prompts. U
 1. Click the **Templates** button in the prompt bar area (book/library icon)
 2. The Template Library panel slides in from the side
 
-📷 [SCREENSHOT NEEDED: Template Library panel open with templates listed]
+<ScreenshotCard title="Prompt Library" route="/vince" imagePath="/visual-manual/screenshots/07-vince-tab-prompts.png" />
 
 > **CONFIRMED** — `src/components/creative-studio/PromptLibraryPanel.tsx`
 
@@ -42,7 +42,7 @@ The Template Library is a searchable collection of detailed, reusable prompts. U
 - **Category filter:** Click a category chip to show only templates of that type (e.g., product, lifestyle, campaign)
 - **Scroll** through the grid to browse all available templates
 
-📷 [SCREENSHOT NEEDED: Template library with search bar active and filtered results]
+
 
 ---
 
@@ -55,7 +55,7 @@ The Template Library is a searchable collection of detailed, reusable prompts. U
    - **Number fields** — enter a number (e.g., number of people)
 3. Click **Apply** (or similar confirm button)
 
-📷 [SCREENSHOT NEEDED: Template detail view with variable fields filled in]
+
 
 **What happens when you apply a template:**
 - The prompt bar fills with the expanded, complete prompt

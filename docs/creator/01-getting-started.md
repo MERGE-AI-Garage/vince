@@ -18,7 +18,7 @@ Welcome! This guide walks you through creating your first piece of AI-generated 
 2. Enter your email address and password
 3. Click **Sign In**
 
-📷 [SCREENSHOT NEEDED: Login screen with email/password fields]
+<ScreenshotCard title="Login" route="/login" imagePath="/visual-manual/screenshots/01-login.png" />
 
 **What You Should See:**
 The Creative Studio opens with a large canvas area in the center and a brand selector across the top.
@@ -38,7 +38,7 @@ Every generation in Vince is tied to a brand. The brand gives Vince its creative
 2. Click the brand name or the brand selector dropdown
 3. Choose the brand you want to work with
 
-📷 [SCREENSHOT NEEDED: Brand selector in top bar with a brand selected]
+<ScreenshotCard title="Creative Studio" route="/" imagePath="/visual-manual/screenshots/02-homepage.png" />
 
 **What You Should See:**
 The canvas background and accent colors update to match the brand you selected. The welcome screen shows that brand's quick prompts and guidelines.
@@ -57,7 +57,7 @@ The prompt bar is at the **bottom of the screen**. This is where you describe wh
    - *"Bold social post for a summer campaign, warm tones, energetic"*
 3. Make sure the mode selector shows **Image** (the default)
 
-📷 [SCREENSHOT NEEDED: Prompt bar at bottom with text typed in, Image mode selected]
+<ScreenshotCard title="Studio — Prompt Bar" route="/studio" imagePath="/visual-manual/screenshots/03-studio.png" />
 
 **Tips for good prompts:**
 - Be specific about mood, lighting, and composition
@@ -73,7 +73,6 @@ The prompt bar is at the **bottom of the screen**. This is where you describe wh
 1. Press **Enter** or click the **Generate** button (arrow icon)
 2. Watch the canvas — you'll see a loading indicator while Vince works
 
-📷 [SCREENSHOT NEEDED: Canvas showing generation in progress with loading state]
 
 **What You Should See:**
 Your image appears on the canvas. The left sidebar (History) also adds a thumbnail of your new generation.
@@ -92,7 +91,6 @@ Once generated, your image fills the canvas.
 2. If you want to tweak it, edit the prompt and generate again
 3. If you're happy with it, move on to download
 
-📷 [SCREENSHOT NEEDED: Completed image on canvas]
 
 **Not what you expected?**
 - Try adding more detail to your prompt
@@ -107,7 +105,6 @@ Once generated, your image fills the canvas.
 2. Click the **Download** icon that appears
 3. Your image saves to your computer's Downloads folder
 
-📷 [SCREENSHOT NEEDED: Download button visible on canvas hover]
 
 **Your image is ready to use!** 🎉
 
@@ -119,7 +116,7 @@ Once generated, your image fills the canvas.
 
 The left sidebar keeps every image you've generated in this session and in past sessions. Click any thumbnail to bring it back to the canvas.
 
-📷 [SCREENSHOT NEEDED: History sidebar with several generation thumbnails]
+<ScreenshotCard title="Generation History" route="/studio" imagePath="/visual-manual/screenshots/14-admin-tab-generations.png" />
 
 > **CONFIRMED** — `src/components/creative-studio/HistoryPanel.tsx`
 
