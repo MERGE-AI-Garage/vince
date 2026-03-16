@@ -177,7 +177,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'generate_creative_package',
-    description: 'Generate a complete creative package with interleaved text and images in a single call. Use this when the user asks for a campaign, a set of deliverables, or multiple assets at once. This generates ALL copy AND images together — much faster than generating images one by one. Returns alternating text blocks (headlines, body copy, strategy notes) and images. PREFER this over generate_image when the user wants a creative campaign or multiple deliverables. Use deliverable_type for common named formats (linkedin_post, product_shot_with_text, social_story, display_banner, email_header) — these include pre-built instructions for branded typography and layout rendered directly into the image. WARNING: Do NOT use this tool when the conversation contains "[Reference images uploaded by user: ...]" and the user wants their own face/likeness to appear in the output — use generate_headshot_scene instead, as this tool cannot reproduce a specific real person\'s face.',
+    description: 'Generate a complete creative package with interleaved text and images in a single call. Use this when the user asks for a campaign, a set of deliverables, or multiple assets at once. This generates ALL copy AND images together — much faster than generating images one by one. Returns alternating text blocks (headlines, body copy, strategy notes) and images. PREFER this over generate_image when the user wants a creative campaign or multiple deliverables. Use deliverable_type for common named formats (linkedin_post, product_shot_with_text, social_story, display_banner, email_header) — these include pre-built instructions for branded typography and layout rendered directly into the image. WARNING: This tool CANNOT reproduce a specific real person\'s face — it generates images from text descriptions only. If the user wants to appear in the campaign images — whether via an uploaded headshot OR a named character reference collection — you MUST use the two-step flow: (1) call generate_headshot_scene first to place the person in the scene, then (2) call this tool with pre_generated_image_url set to the output_url. Skipping generate_headshot_scene will produce random fictional people, not the actual subject.',
     parameters: {
       type: 'object',
       properties: {
@@ -1231,7 +1231,7 @@ REQUIREMENTS:
       ],
     }],
     generationConfig: {
-      responseModalities: ['TEXT', 'IMAGE'],
+      responseModalities: ['IMAGE'],
     },
   };
 
@@ -1467,13 +1467,17 @@ async function generateVideo(
 
   const referenceImages: string[] = [];
 
-  // Resolve named collection to image URLs (up to 3, primary first)
+  // Resolve named collection to image URLs (up to 3, primary first).
+  // Normalize name: lowercase, treat hyphens and spaces as equivalent.
   if (params.reference_collection) {
+    const raw = (params.reference_collection as string).toLowerCase().trim();
+    const withHyphen = raw.replace(/ /g, '-');
+    const withSpace = raw.replace(/-/g, ' ');
     const { data: collectionRefs } = await supabase
       .from('creative_studio_brand_references')
       .select('url')
       .eq('brand_id', context.brand_id)
-      .eq('collection', params.reference_collection as string)
+      .or(`collection.eq.${withHyphen},collection.eq.${withSpace}`)
       .order('is_primary', { ascending: false })
       .order('sort_order', { ascending: true })
       .limit(3);
@@ -2200,7 +2204,8 @@ GENERATION FLOW:
 
 UPLOADED REFERENCE IMAGES:
 - When the user uploads images (headshots, logos, products), you will see "[Reference images uploaded by user: url1, url2]" in their message.
-- ALWAYS include those URLs as reference_image_urls when calling generate_creative_package or generate_image.
+- ALWAYS include those URLs as reference_image_urls when calling generate_creative_package.
+- generate_image does NOT accept uploaded image URLs — it only accepts reference_collections (named DB collections). Never pass reference_image_urls to generate_image.
 - These images become the actual subjects in the generated output — a headshot means that person appears, a logo means that logo appears.
 - Never claim to use an uploaded image unless you actually passed its URL to the generation tool.
 

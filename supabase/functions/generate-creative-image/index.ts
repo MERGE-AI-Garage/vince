@@ -670,11 +670,17 @@ serve(async (req) => {
     if (resolvedCollections?.length && brand_id) {
       currentStep = 'REF_COLLECTIONS';
       try {
+        // Normalize collection names: lowercase, include both hyphen and space variants
+        // so "kurt miller" matches "kurt-miller" in the DB and vice versa.
+        const normalizedCollections = resolvedCollections.flatMap((c: string) => {
+          const lower = c.toLowerCase().trim();
+          return [lower, lower.replace(/ /g, '-'), lower.replace(/-/g, ' ')];
+        });
         const { data: collectionRefs, error: collError } = await supabase
           .from('creative_studio_brand_references')
           .select('*')
           .eq('brand_id', brand_id)
-          .in('collection', resolvedCollections)
+          .in('collection', normalizedCollections)
           .order('collection')
           .order('is_primary', { ascending: false })
           .order('sort_order', { ascending: true });
@@ -885,7 +891,7 @@ serve(async (req) => {
       // (gemini-3.1+ rejects unknown fields; older models silently ignore them)
 
       const generationConfig: Record<string, unknown> = {
-        responseModalities: ['TEXT', 'IMAGE'],
+        responseModalities: ['IMAGE'],
         imageConfig: multiTurnImageConfig,
       };
 
@@ -999,7 +1005,7 @@ serve(async (req) => {
       // (gemini-3.1+ rejects unknown fields; older models silently ignore them)
 
       const generationConfig: Record<string, unknown> = {
-        responseModalities: ['TEXT', 'IMAGE'],
+        responseModalities: ['IMAGE'],
         imageConfig,
       };
 
