@@ -78,33 +78,9 @@ To rebuild after code changes, re-run the build command and click the reload ico
 
 ## Mobile App (iOS & Android)
 
-Vince runs as a Capacitor hybrid app — the same React codebase wrapped in a native shell. The mobile app uses the root `node_modules` and its own `vite.config.ts` to build a separate bundle.
+Vince runs as a Capacitor hybrid app — the same React codebase wrapped in a native shell. Five tabs: Chat, Brand (DNA viewer), Prompts (Gemini-powered prompt generator), Campaigns (generated image gallery), and Media.
 
-### App ID
-
-`io.vince.app`
-
-### Features
-
-The mobile app is a full-featured creative companion organized into five tabs:
-
-| Tab | Description |
-|-----|-------------|
-| **Chat** | Full voice + text conversation with Vince — same AI agent as the web app, optimized for mobile |
-| **Brand** | Collapsible brand DNA viewer — identity, tone of voice, writing principles, color palette, typography, social voice, brand story, and logo library, all pulled from the brand profile |
-| **Prompts** | Brand prompt library from Director mode. Tap any prompt to fill in variable fields and generate a full Gemini-crafted prompt, then copy to clipboard |
-| **Campaigns** | Generated image and campaign gallery — filterable by type (Image, Campaign, Video), with a full-screen detail view showing provenance, model, and generation time |
-| **Media** | Brand media library |
-
-#### Prompts tab — variable fields
-
-Prompt templates can include `{{variable_name}}` placeholders. When a prompt has variables, tapping it opens a form sheet before generation:
-- Free-text fields → text input
-- Select fields → tap-to-pick option buttons
-- Number fields → numeric input
-- Required fields are gated — the Generate button stays disabled until they're filled
-
-After filling variables, Vince substitutes them into the template and sends it to the `generate-brand-prompt` edge function (Gemini), which returns a full on-brand prompt ready to copy.
+See [mobile/README.md](mobile/README.md) for the full spec — architecture, tab descriptions, iOS/Android platform notes, and environment variable setup.
 
 ### Prerequisites
 
