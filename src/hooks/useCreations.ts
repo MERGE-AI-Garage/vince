@@ -9,6 +9,7 @@ export interface Generation {
   generation_type: string;
   prompt_text: string | null;
   output_urls: string[] | null;
+  copy_blocks: Array<{ type: 'text' | 'image'; content?: string; image_base64?: string; mime_type?: string }> | null;
   metadata: Record<string, unknown> | null;
   model_used: string | null;
   parameters: Record<string, unknown> | null;
@@ -28,7 +29,7 @@ export function useCreations(brandId: string | null) {
 
     supabase
       .from('creative_studio_generations')
-      .select('id, generation_type, prompt_text, output_urls, metadata, model_used, parameters, generation_time_ms, actual_cost_usd, created_at')
+      .select('id, generation_type, prompt_text, output_urls, copy_blocks, metadata, model_used, parameters, generation_time_ms, actual_cost_usd, created_at')
       .eq('brand_id', brandId)
       .eq('status', 'completed')
       .not('output_urls', 'is', null)

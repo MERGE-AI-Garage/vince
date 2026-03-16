@@ -1,8 +1,10 @@
 // ABOUTME: Campaign archive panel for the extension ChatTab.
-// ABOUTME: Lists past brand generations; clicking one pastes its prompt into the chat input.
+// ABOUTME: Lists past brand generations; clicking one shows the full CreativePackageCard detail view.
 
-import React from 'react';
-import { useCreations } from '../hooks/useCreations';
+import React, { useState } from 'react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { useCreations, type Generation } from '../hooks/useCreations';
+import { CreativePackageCard, type PackagePart } from './CreativePackageCard';
 
 const PURPLE = '#8b5cf6';
 const PURPLE_RGB = '139, 92, 246';
@@ -28,11 +30,112 @@ const TYPE_LABELS: Record<string, string> = {
 
 interface Props {
   brandId: string | null;
+  brandName?: string;
   onSelectPrompt: (prompt: string) => void;
 }
 
-export function CampaignHistoryPanel({ brandId, onSelectPrompt }: Props) {
+function CampaignDetail({ item, brandName, onBack, onRegenerate }: {
+  item: Generation;
+  brandName: string;
+  onBack: () => void;
+  onRegenerate: () => void;
+}) {
+  const parts = (item.copy_blocks as PackagePart[] | null) || [];
+  const imageUrls = (item.output_urls || []).filter(u => /\.(jpg|jpeg|png|webp|gif)/i.test(u));
+  const deliverableNames = (item.parameters?.deliverable_names as string[] | undefined) || [];
+  const brandAlignment = item.metadata?.brand_alignment as {
+    score: number;
+    dimensions: { visual_identity: boolean; photography: boolean; color_system: boolean; brand_voice: boolean };
+  } | undefined;
+  const label = TYPE_LABELS[item.generation_type] ?? item.generation_type.replace(/_/g, ' ');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'Epilogue, system-ui, sans-serif' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '10px 12px 8px',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
+        flexShrink: 0,
+      }}>
+        <button
+          onClick={onBack}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center' }}
+        >
+          <ArrowLeft size={14} />
+        </button>
+        <span style={{
+          fontSize: '9px', fontWeight: 700, color: PURPLE,
+          background: `rgba(${PURPLE_RGB}, 0.12)`,
+          border: `1px solid rgba(${PURPLE_RGB}, 0.25)`,
+          padding: '1px 5px', borderRadius: '3px',
+        }}>
+          {label}
+        </span>
+        <span style={{ fontSize: '10px', color: 'rgba(0,0,0,0.45)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {relativeTime(item.created_at)}
+        </span>
+      </div>
+
+      {/* Card body — scrollable */}
+      <div style={{
+        flex: 1, overflowY: 'auto', padding: '12px',
+        background: '#1a1a2e',
+        scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent',
+      }}>
+        <CreativePackageCard
+          parts={parts}
+          imageUrls={imageUrls}
+          latencyMs={item.generation_time_ms || 0}
+          brandName={brandName}
+          model={item.model_used || ''}
+          brief={item.prompt_text || undefined}
+          deliverableNames={deliverableNames}
+          brandAlignment={brandAlignment}
+        />
+      </div>
+
+      {/* Footer — regenerate */}
+      {item.prompt_text && (
+        <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(0,0,0,0.07)', flexShrink: 0 }}>
+          <button
+            onClick={onRegenerate}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+              width: '100%', padding: '7px 12px',
+              background: `rgba(${PURPLE_RGB}, 0.1)`,
+              border: `1px solid rgba(${PURPLE_RGB}, 0.3)`,
+              borderRadius: '6px', cursor: 'pointer',
+              fontSize: '11px', fontWeight: 600, color: PURPLE,
+              fontFamily: 'Epilogue, system-ui, sans-serif',
+            }}
+          >
+            <RefreshCw size={11} />
+            Regenerate
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function CampaignHistoryPanel({ brandId, brandName, onSelectPrompt }: Props) {
   const { items, isLoading } = useCreations(brandId);
+  const [selected, setSelected] = useState<Generation | null>(null);
+
+  if (selected) {
+    return (
+      <CampaignDetail
+        item={selected}
+        brandName={brandName || 'Campaign'}
+        onBack={() => setSelected(null)}
+        onRegenerate={() => {
+          if (selected.prompt_text) onSelectPrompt(selected.prompt_text);
+          setSelected(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div style={{
@@ -72,8 +175,7 @@ export function CampaignHistoryPanel({ brandId, onSelectPrompt }: Props) {
           return (
             <button
               key={item.id}
-              onClick={() => item.prompt_text && onSelectPrompt(item.prompt_text)}
-              disabled={!item.prompt_text}
+              onClick={() => setSelected(item)}
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -83,7 +185,7 @@ export function CampaignHistoryPanel({ brandId, onSelectPrompt }: Props) {
                 background: 'none',
                 border: 'none',
                 borderBottom: '1px solid rgba(0,0,0,0.05)',
-                cursor: item.prompt_text ? 'pointer' : 'default',
+                cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'background 0.1s',
               }}

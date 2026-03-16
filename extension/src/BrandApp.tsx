@@ -337,6 +337,7 @@ function TabLayout() {
       <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0, background: '#f5f4f2' }}>
         <ChatTab
           brandId={selectedBrandId}
+          brandName={selectedBrand?.name}
           brandColor={theme.accent}
           voiceState={vince.voiceState}
           isMuted={vince.isMuted}

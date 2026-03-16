@@ -18,6 +18,7 @@ const PURPLE_RGB = '124, 110, 245';
 
 interface Props {
   brandId: string | null;
+  brandName?: string;
   brandColor?: string;
   voiceState: VoiceState;
   isMuted: boolean;
@@ -75,7 +76,7 @@ function AudioBars({ volumeRef }: { volumeRef: React.MutableRefObject<number> })
 
 // ─── Chat Tab ────────────────────────────────────────────────────────────────
 
-export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscript, voiceToolResults, volumeRef, onStartVoice, onStopVoice, onToggleMute }: Props) {
+export function ChatTab({ brandId, brandName, brandColor, voiceState, isMuted, voiceTranscript, voiceToolResults, volumeRef, onStartVoice, onStopVoice, onToggleMute }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -317,6 +318,7 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
         <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <CampaignHistoryPanel
             brandId={brandId}
+            brandName={brandName}
             onSelectPrompt={p => { setInput(p); setShowCampaigns(false); setTimeout(() => inputRef.current?.focus(), 50); }}
           />
         </div>
