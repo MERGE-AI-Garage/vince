@@ -48,18 +48,32 @@ function Chip({ label, color }: { label: string; color?: string }) {
 // ─── Color swatch ─────────────────────────────────────────────────────────────
 
 function ColorSwatch({ hex, name, role }: { hex: string; name?: string; role?: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(hex.toUpperCase()).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-      <div style={{ width: 36, height: 36, borderRadius: 8, background: hex, flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }} />
+    <button onClick={handleCopy} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', textAlign: 'left' }}>
+      <div style={{ position: 'relative', width: 36, height: 36, borderRadius: 8, background: hex, flexShrink: 0, border: '1px solid rgba(255,255,255,0.1)' }}>
+        {copied && (
+          <div style={{ position: 'absolute', inset: 0, borderRadius: 7, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        )}
+      </div>
       <div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)', fontFamily: 'monospace' }}>{hex.toUpperCase()}</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: copied ? '#22c55e' : 'rgba(255,255,255,0.85)', fontFamily: 'monospace', transition: 'color 0.15s' }}>{copied ? 'Copied!' : hex.toUpperCase()}</div>
         {(name || role) && (
           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
             {[name, role].filter(Boolean).join(' · ')}
           </div>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -316,9 +330,22 @@ export function BrandDNATab({ brandId, brandColor = '#a855f7' }: BrandDNATabProp
         <Section title="Logos" accent={brandColor}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {data.brand_logos.map(logo => (
-              <div key={logo.id} style={{ width: 72, height: 72, borderRadius: 10, background: logo.background === 'dark' ? '#111' : 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 6 }}>
+              <button
+                key={logo.id}
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: logo.variant || 'Logo', url: logo.url }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(logo.url).catch(() => {});
+                  }
+                }}
+                style={{ position: 'relative', width: 72, height: 72, borderRadius: 10, background: logo.background === 'dark' ? '#111' : 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: 6, cursor: 'pointer' }}
+              >
                 <img src={logo.url} alt={logo.variant || 'Logo'} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-              </div>
+                <div style={{ position: 'absolute', bottom: 3, right: 3, width: 16, height: 16, borderRadius: 4, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+              </button>
             ))}
           </div>
         </Section>

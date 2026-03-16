@@ -191,12 +191,12 @@ export function BrandDNAPrompts() {
         <Badge variant="outline" className="text-xs">{prompts.length} prompts</Badge>
       </div>
 
-      <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20 p-4 space-y-1.5 text-sm">
-        <p className="font-medium text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-1.5 text-sm">
+        <p className="font-medium text-amber-900 flex items-center gap-1.5">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
           These are live system prompts sent to Gemini during brand analysis.
         </p>
-        <ul className="text-amber-800 dark:text-amber-300 space-y-1 text-xs pl-5 list-disc">
+        <ul className="text-amber-800 space-y-1 text-xs pl-5 list-disc">
           <li>Changes take effect immediately on the next analysis run — there is no staging environment.</li>
           <li>Specialized prompts (e.g., Food &amp; Restaurant) are auto-selected based on brand category. All others fall back to the generic variant.</li>
           <li>Each save can create a version record so you can roll back if a change breaks analysis output.</li>

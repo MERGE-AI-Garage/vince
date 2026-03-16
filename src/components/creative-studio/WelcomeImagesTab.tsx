@@ -911,7 +911,7 @@ function PromptVersionHistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle>{promptLabel} — Version History</DialogTitle>
         </DialogHeader>
@@ -1046,7 +1046,7 @@ function WelcomeImageDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>{label}</DialogTitle>
           </DialogHeader>

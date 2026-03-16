@@ -145,6 +145,13 @@ const VINCE_SECTIONS = [
 export default function CreativeStudioAdmin() {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('brands');
+
+  // Override dark CSS vars at the root so all portals (Select, Dialog, Tooltip, etc.)
+  // inherit light values while the admin page is mounted.
+  useEffect(() => {
+    document.documentElement.classList.add('admin-light-mode');
+    return () => document.documentElement.classList.remove('admin-light-mode');
+  }, []);
   const [settingsSection, setSettingsSection] = useState('general');
   const [vinceSection, setVinceSection] = useState('voice');
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
@@ -468,24 +475,25 @@ export default function CreativeStudioAdmin() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout className="bg-[#f8f9fa]">
       <AdminHeroHeader
         icon={LayoutDashboard}
+        eyebrow="CREATIVE PLATFORM"
         title="Intelligence Console"
-        description="Manage brands, AI models, user quotas, and generation costs"
+        description="Configure brand identities and DNA, tune AI models, manage team quotas, monitor generation costs, and analyze creative performance"
         backTo={{ path: '/', label: 'Back to Studio' }}
         actions={
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className="text-white/60 hover:text-white/90 hover:bg-white/[0.06]"
+              className="text-slate-400 hover:text-slate-200 hover:bg-slate-800"
               onClick={startAdminTour}
             >
               <HelpCircle className="h-4 w-4 mr-2" />
               Admin Tour
             </Button>
-            <Button variant="ghost" size="sm" className="text-white/60 hover:text-white/90 hover:bg-white/[0.06]" asChild>
+            <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-200 hover:bg-slate-800" asChild>
               <a href="/creative-studio" target="_blank">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open Studio
@@ -529,6 +537,7 @@ export default function CreativeStudioAdmin() {
         ]}
       />
 
+      <div className="admin-content brand-guidelines-panel">
       <div className="container mx-auto px-6 py-6 space-y-6">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -579,11 +588,11 @@ export default function CreativeStudioAdmin() {
             <div className="space-y-6">
               <div className="flex items-center justify-between pt-2">
                 <div>
-                  <h2 className="font-fraunces text-lg font-semibold text-white">Brands</h2>
-                  <p className="text-xs text-white/45 mt-0.5 font-epilogue">Visual identity, creative DNA, and style guidelines</p>
+                  <h2 className="font-fraunces text-lg font-semibold text-slate-900">Brands</h2>
+                  <p className="text-xs text-slate-500 mt-0.5 font-epilogue">Visual identity, creative DNA, and style guidelines</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => refetchBrands()} className="text-white/60 hover:text-white/90 hover:bg-white/[0.06]">
+                  <Button variant="ghost" size="sm" onClick={() => refetchBrands()} className="text-slate-500 hover:text-slate-700 hover:bg-slate-100">
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
                   </Button>
@@ -663,8 +672,8 @@ export default function CreativeStudioAdmin() {
                         className={cn(
                           'flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150',
                           isSelected
-                            ? 'bg-[#00856C] text-white shadow-sm'
-                            : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
+                            ? 'bg-slate-900 text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700',
                         )}
                       >
                         {brand.logo_url ? (
@@ -1201,8 +1210,8 @@ export default function CreativeStudioAdmin() {
                     className={cn(
                       'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-left transition-colors font-epilogue',
                       vinceSection === section.value
-                        ? 'bg-[#00856C]/15 text-[#1ED75F] border border-[#00856C]/20'
-                        : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80 border border-transparent'
+                        ? 'bg-slate-900 text-white border border-slate-700/50 shadow-sm'
+                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 border border-transparent'
                     )}
                   >
                     <section.icon className="h-3.5 w-3.5 shrink-0" />
@@ -1227,7 +1236,7 @@ export default function CreativeStudioAdmin() {
           open={isCreatingModel || !!editingModelId}
           onOpenChange={() => { setIsCreatingModel(false); setEditingModelId(null); }}
         >
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto brand-guidelines-panel">
             <DialogHeader>
               <DialogTitle>
                 {editingModelId ? 'Edit Model' : 'Add Model'}
@@ -1560,7 +1569,7 @@ export default function CreativeStudioAdmin() {
 
         {/* Model Delete Confirmation */}
         <Dialog open={!!deleteModelConfirm} onOpenChange={() => setDeleteModelConfirm(null)}>
-          <DialogContent>
+          <DialogContent className="brand-guidelines-panel">
             <DialogHeader>
               <DialogTitle>Delete Model</DialogTitle>
               <DialogDescription>
@@ -1609,7 +1618,7 @@ export default function CreativeStudioAdmin() {
 
         {/* Brand Delete Confirmation */}
         <Dialog open={!!deleteBrandConfirm} onOpenChange={() => setDeleteBrandConfirm(null)}>
-          <DialogContent>
+          <DialogContent className="brand-guidelines-panel">
             <DialogHeader>
               <DialogTitle>Delete Brand</DialogTitle>
               <DialogDescription>
@@ -1631,6 +1640,7 @@ export default function CreativeStudioAdmin() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
       </div>
     </PageLayout>
   );

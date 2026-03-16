@@ -196,7 +196,7 @@ function PromptDialog({
 }) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[60vh]">
+      <DialogContent className="max-w-2xl max-h-[60vh] brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle>Full Prompt</DialogTitle>
         </DialogHeader>
@@ -266,7 +266,7 @@ export function ChartDrillDownDialog({
   return (
     <>
       <Dialog open={!!drillDown} onOpenChange={(open) => { if (!open) onClose(); }}>
-        <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col [&>button.absolute]:hidden">
+        <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col [&>button.absolute]:hidden brand-guidelines-panel">
           {drillDown && (
             <>
               <DialogHeader className="border-b pb-4 shrink-0">

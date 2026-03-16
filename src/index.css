@@ -102,9 +102,9 @@
   }
 
   .dark {
-    --background: 165 35% 10%;
+    --background: 165 35% 7%;
     --foreground: 140 10% 92%;
-    --card: 165 28% 14%;
+    --card: 165 30% 10%;
     --card-foreground: 140 10% 92%;
     --muted: 165 14% 14%;
     --muted-foreground: 150 10% 65%;
@@ -133,28 +133,47 @@
     --sidebar-border: 165 30% 20%;
     --sidebar-ring: 165 100% 26%;
 
-    --cs-surface-0: 165 35% 10%;
-    --cs-surface-1: 165 28% 14%;
-    --cs-surface-2: 165 25% 17%;
-    --cs-surface-3: 165 35% 8%;
-    --cs-border-subtle: 165 20% 21%;
-    --cs-border-mid: 165 18% 28%;
+    --cs-surface-0: 165 35% 7%;
+    --cs-surface-1: 165 30% 10%;
+    --cs-surface-2: 165 25% 13%;
+    --cs-surface-3: 165 35% 5%;
+    --cs-border-subtle: 165 20% 18%;
+    --cs-border-mid: 165 18% 25%;
     --cs-text-primary: 0 0% 90%;
+  }
+
+  /* Admin light mode — overrides popover/select portal vars at root so all
+     portaled elements (Select, DropdownMenu, Tooltip, etc.) render light.
+     Only popover vars here so page-level nav and header are not affected. */
+  .admin-light-mode,
+  .admin-light-mode.dark {
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --border: 220 13% 90%;
+    --input: 220 13% 93%;
+    --input-bg: 0 0% 100%;
+    --muted: 210 17% 95%;
+    --muted-foreground: 215 14% 45%;
+    --secondary: 210 17% 95%;
+    --secondary-foreground: 222 47% 11%;
+    --accent: 210 17% 93%;
+    --accent-foreground: 222 47% 11%;
+    --ring: 222 47% 22%;
   }
 
   /* Studio dark mode: higher specificity than .creative-studio alone — re-applies dark
      emerald vars to body when html has .dark and body has .creative-studio */
   .dark .creative-studio {
-    --background: 165 35% 10%;
+    --background: 165 35% 7%;
     --foreground: 140 10% 92%;
-    --card: 165 28% 14%;
+    --card: 165 30% 10%;
     --card-foreground: 140 10% 92%;
     --muted: 165 14% 14%;
     --muted-foreground: 150 10% 65%;
     --border: 165 16% 20%;
     --input: 165 18% 22%;
     --input-bg: 165 18% 22%;
-    --popover: 165 28% 14%;
+    --popover: 165 30% 10%;
     --popover-foreground: 140 10% 92%;
     --secondary: 165 14% 16%;
     --secondary-foreground: 140 10% 92%;
@@ -163,12 +182,12 @@
     --accent: 142 100% 50%;
     --accent-foreground: 140 10% 92%;
 
-    --cs-surface-0: 165 35% 10%;
-    --cs-surface-1: 165 28% 14%;
-    --cs-surface-2: 165 25% 17%;
-    --cs-surface-3: 165 35% 8%;
-    --cs-border-subtle: 165 20% 21%;
-    --cs-border-mid: 165 18% 28%;
+    --cs-surface-0: 165 35% 7%;
+    --cs-surface-1: 165 30% 10%;
+    --cs-surface-2: 165 25% 13%;
+    --cs-surface-3: 165 35% 5%;
+    --cs-border-subtle: 165 20% 18%;
+    --cs-border-mid: 165 18% 25%;
     --cs-text-primary: 0 0% 90%;
   }
 
@@ -190,11 +209,59 @@
     --muted: 0 0% 93%;
     --border: 0 0% 88%;
     --input: 0 0% 93%;
+    --input-bg: 0 0% 100%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
     --secondary: 0 0% 94%;
     --secondary-foreground: 0 0% 15%;
     color: hsl(0 0% 10%);
+  }
+
+  /* Enterprise admin content — glass cards, depth, neutral light surfaces */
+  .admin-content {
+    background: linear-gradient(160deg, #f0f4f8 0%, #f8fafc 50%, #f1f4f8 100%);
+    min-height: calc(100vh - 64px);
+  }
+
+  .admin-content .card,
+  .admin-content [class*="rounded-xl"][class*="border"],
+  .admin-content [class*="rounded-2xl"][class*="border"] {
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-color: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  }
+
+  .admin-content .card:hover {
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08), 0 12px 32px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  }
+
+  /* Tab section hero headers: force light gradient — skip preserve-dark sections.
+     Specificity (0,3,0) beats dark: variant specificity (0,2,0). */
+  .admin-content .rounded-xl.bg-gradient-to-br:not(.preserve-dark) {
+    --tw-gradient-from: #edf2f7 var(--tw-gradient-from-position);
+    --tw-gradient-via: #e8ecf1 var(--tw-gradient-via-position);
+    --tw-gradient-to: #dde5ed var(--tw-gradient-to-position);
+  }
+
+  .admin-content .rounded-xl.bg-gradient-to-br:not(.preserve-dark) h2 {
+    color: #1e293b;
+  }
+
+  .admin-content .rounded-xl.bg-gradient-to-br:not(.preserve-dark) > div > div > p,
+  .admin-content .rounded-xl.bg-gradient-to-br:not(.preserve-dark) > div > div > div > span {
+    color: #475569;
+  }
+
+  /* preserve-dark sections keep their intentional dark styling */
+  .admin-content .preserve-dark [class*="rounded-xl"][class*="border"],
+  .admin-content .preserve-dark [class*="rounded-2xl"][class*="border"] {
+    background: unset !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: unset !important;
+    box-shadow: none !important;
   }
 
 }

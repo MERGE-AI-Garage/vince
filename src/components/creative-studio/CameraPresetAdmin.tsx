@@ -353,7 +353,7 @@ export function CameraPresetAdmin() {
 
       {/* Single Delete Confirmation */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <DialogContent>
+        <DialogContent className="brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>Delete Camera Option</DialogTitle>
             <DialogDescription>
@@ -371,7 +371,7 @@ export function CameraPresetAdmin() {
 
       {/* Bulk Delete Confirmation */}
       <Dialog open={bulkDeleteConfirm} onOpenChange={() => setBulkDeleteConfirm(false)}>
-        <DialogContent>
+        <DialogContent className="brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>Delete {selectedIds.size} Options</DialogTitle>
             <DialogDescription>
@@ -690,7 +690,7 @@ function CreateOptionDialog({ open, onClose, onSave, saving }: CreateOptionDialo
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Camera className="w-4 h-4 text-primary" />

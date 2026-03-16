@@ -430,6 +430,10 @@ function ProblemSection() {
 
   return (
     <section ref={ref} className="relative py-32 overflow-hidden bg-[#0A0A0F]">
+      <div
+        className="absolute top-0 left-0 w-full h-1"
+        style={{ background: `linear-gradient(90deg, transparent, ${ORANGE}, transparent)` }}
+      />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_60%,_rgba(239,68,68,0.04)_0%,_transparent_60%)]" />
       <SectionGlow color={GLOW_ROSE} />
 
@@ -495,7 +499,7 @@ function ProblemSection() {
               <span className="text-red-400">Multiply the problem.</span>
             </h2>
             <p className="text-base text-white/50 leading-relaxed mb-8">
-              At every agency right now, people are using Gemini, Firefly, Claude, and a dozen other tools to generate content. Each person grabs whatever brand context they can find — a hex code from memory, a paragraph from the brand guide, a screenshot from the client's site — and pastes it into a prompt.
+              At every company right now, people are using Gemini, Firefly, Claude, and a dozen other tools to generate content. Each person grabs whatever brand context they can find — a hex code from memory, a paragraph from the brand guide, a screenshot from the client's site — and pastes it into a prompt.
             </p>
 
             <div className="rounded-2xl border border-white/[0.07] overflow-hidden">
@@ -546,19 +550,17 @@ function HeroSection() {
 
           <Reveal delay={0.1}>
             <h1 className="text-6xl md:text-7xl font-black tracking-tight leading-[1.0] text-white mb-6">
-              Meet{' '}
-              <span style={{ color: GREEN }}>Vince.</span>
+              <span style={{ color: GREEN }}>Vince</span> doesn't reference
               <br />
-              <span className="text-white/60">Your AI Creative</span>
+              <span className="text-white/60">your brand guidelines.</span>
               <br />
-              Director.
+              He becomes them.
             </h1>
           </Reveal>
 
           <Reveal delay={0.2}>
             <p className="text-xl text-white/50 leading-relaxed mb-10 max-w-lg">
-              Brief campaigns by voice. Get copy and images together, in every format, with your brand
-              built in — the first time and every time.
+              Brief by voice. Copy and images together, every format, grounded in your brand's DNA.
             </p>
           </Reveal>
 
@@ -781,6 +783,579 @@ function BrandIntelligenceSection() {
   );
 }
 
+// ─── Brand Travels Section ────────────────────────────────────────────────────
+// "AI Brand Guidelines" — the category moment. Shows the Chrome extension
+// sidebar alongside a live AI tool, demonstrating how compiled brand prompts
+// travel from Vince to any AI tool on any surface.
+
+interface TravelBrand {
+  id: string;
+  name: string;
+  color: string;
+  aiTool: string;
+  aiToolLabel: string;
+  starters: string[];
+  selectedStarter: string;
+  fields: { key: string; value: string }[];
+  compiledLines: string[];
+  pasteText: string;
+  response: { label: string; text: string }[];
+}
+
+const TRAVEL_BRANDS: TravelBrand[] = [
+  {
+    id: 'merge',
+    name: 'MERGE',
+    color: GREEN,
+    aiTool: 'gemini.google.com',
+    aiToolLabel: 'Gemini',
+    starters: ['AI Summit Campaign Hero', 'LinkedIn Thought Leadership', 'Billboard 16:9 OOH'],
+    selectedStarter: 'AI Summit Campaign Hero',
+    fields: [
+      { key: 'Campaign', value: 'AI Enablement Summit 2026' },
+      { key: 'Tone', value: 'Executive, thought leadership' },
+      { key: 'Lens', value: '85mm f/2.8, editorial clean' },
+      { key: 'Color', value: '#1ED75F MERGE green' },
+    ],
+    compiledLines: [
+      'AI Enablement Summit 2026 hero · Executive editorial · MERGE voice: direct, confident,',
+      'no corporate jargon · 85mm f/2.8 clean studio · Photography DNA: high-contrast,',
+      'authentic moments, #1ED75F accent — guardrails: zero stock-photo, thought-leadership POV',
+    ],
+    pasteText: 'AI Enablement Summit 2026 hero · Executive editorial · MERGE voice: direct, confident, no corporate jargon · 85mm f/2.8 clean studio · Photography DNA: high-contrast, authentic moments, #1ED75F accent — guardrails: zero stock-photo, thought-leadership POV',
+    response: [
+      { label: 'LinkedIn Draft', text: 'The agencies that figure out AI first won\'t be the biggest ones. They\'ll be the most intentional ones. We\'ve spent the last year wiring AI into creative workflows that actually scale — not just using the tools, but building the infrastructure around them.' },
+      { label: 'Hook Variation', text: 'Most AI conversations in agencies start with the tool. The smart ones start with the brand.' },
+      { label: 'Voice Check', text: 'Reads direct, confident, no corporate filler — MERGE brand voice honored. No hedging, no jargon. POV-first. Ready to post as-is.' },
+      { label: 'Brand voice applied', text: 'MERGE guardrails active · confident, direct, no jargon · copy ready ↗' },
+    ],
+  },
+  {
+    id: 'google',
+    name: 'GOOGLE',
+    color: BLUE,
+    aiTool: 'gemini.google.com',
+    aiToolLabel: 'Gemini',
+    starters: ['Pixel Launch Campaign', 'Made By Google Editorial', 'YouTube Brand Story'],
+    selectedStarter: 'Pixel Launch Campaign',
+    fields: [
+      { key: 'Product', value: 'Pixel 9 Pro' },
+      { key: 'Tone', value: 'Optimistic, human-centered' },
+      { key: 'Format', value: '16:9 hero + Story 9:16' },
+      { key: 'Color', value: '#4285F4 Google Blue' },
+    ],
+    compiledLines: [
+      'Pixel 9 Pro launch · Optimistic human-centered tone · Google voice: accessible,',
+      'curious, empowering · 16:9 hero + 9:16 story · Photography DNA: real people,',
+      'authentic moments, diverse · #4285F4 — guardrails: warmth over precision, no tech-bro',
+    ],
+    pasteText: 'Pixel 9 Pro launch · Optimistic human-centered tone · Google voice: accessible, curious, empowering · 16:9 hero + 9:16 story · Photography DNA: real people, authentic moments, diverse representation · #4285F4 Google Blue — guardrails: warmth over precision, no tech-bro aesthetic',
+    response: [
+      { label: 'Image Prompt', text: 'Person in natural morning light, Pixel 9 Pro held loosely — candid, not posed. 5600K warm ambient, shallow DOF f/2.8. Google Blue #4285F4 enters through a wardrobe detail. Real moment, not a product shoot.' },
+      { label: 'Hero Copy', text: '"See what matters." No product spec. No feature list. Single declarative thought. 18px Epilogue Regular, white on dark, #4285F4 underline treatment.' },
+      { label: 'Voice Check', text: 'Optimistic, warm, human-centered — Google brand DNA honored throughout. Zero tech-bro aesthetic. Authentic over aspirational. Warmth before precision.' },
+      { label: 'Google brand voice applied', text: 'Photography DNA active · guardrails enforced · prompt ready to use ↗' },
+    ],
+  },
+];
+
+type TravelPhase = 'idle' | 'fields' | 'compiled' | 'copied' | 'pasting' | 'responding' | 'done';
+
+function BrandTravelsMockup() {
+  const [brandIdx, setBrandIdx] = useState(0);
+  const [revealedFields, setRevealedFields] = useState(0);
+  const [phase, setPhase] = useState<TravelPhase>('idle');
+  const [pasteChars, setPasteChars] = useState(0);
+  const [revealedChunks, setRevealedChunks] = useState(0);
+  const [cycleKey, setCycleKey] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+  const brand = TRAVEL_BRANDS[brandIdx];
+
+  useEffect(() => {
+    if (!inView) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    brand.fields.forEach((_, i) => {
+      timers.push(setTimeout(() => setRevealedFields(i + 1), 700 + i * 480));
+    });
+    const afterFields = 700 + brand.fields.length * 480;
+    timers.push(setTimeout(() => setPhase('compiled'), afterFields + 300));
+    timers.push(setTimeout(() => setPhase('copied'), afterFields + 1600));
+    timers.push(setTimeout(() => setPhase('pasting'), afterFields + 2800));
+    const pasteDone = afterFields + 2800 + brand.pasteText.length * 8 + 800;
+    // Responding: reveal each chunk 550ms apart
+    timers.push(setTimeout(() => setPhase('responding'), pasteDone));
+    brand.response.forEach((_, i) => {
+      timers.push(setTimeout(() => setRevealedChunks(i + 1), pasteDone + 400 + i * 600));
+    });
+    const respondingDone = pasteDone + 400 + brand.response.length * 600 + 2000;
+    timers.push(setTimeout(() => {
+      setPhase('done');
+      setTimeout(() => {
+        setBrandIdx(idx => (idx + 1) % TRAVEL_BRANDS.length);
+        setRevealedFields(0);
+        setRevealedChunks(0);
+        setPhase('idle');
+        setPasteChars(0);
+        setCycleKey(k => k + 1);
+      }, 1800);
+    }, respondingDone));
+
+    return () => timers.forEach(clearTimeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, cycleKey]);
+
+  useEffect(() => {
+    if (phase !== 'pasting') { setPasteChars(0); return; }
+    let i = 0;
+    const iv = setInterval(() => { i++; setPasteChars(i); if (i >= brand.pasteText.length) clearInterval(iv); }, 8);
+    return () => clearInterval(iv);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  const isPasting = phase === 'pasting' || phase === 'done';
+
+  return (
+    <div ref={ref} className="w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl" style={{ background: '#0E0E16' }}>
+      {/* Browser chrome */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.06]" style={{ background: '#0A0A12' }}>
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]/70" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]/70" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]/70" />
+        </div>
+        <div className="flex-1 h-6 bg-white/[0.04] rounded-md px-3 flex items-center gap-1.5 mx-3">
+          <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 shrink-0" fill="rgba(255,255,255,0.2)">
+            <path d="M9 5V3.5a3 3 0 0 0-6 0V5H2v6h8V5H9zm-4-1.5a1 1 0 0 1 2 0V5H5V3.5z" />
+          </svg>
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={brand.id}
+              className="font-mono text-[9px] text-white/30"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {brand.aiTool}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+        {/* Vince extension icon */}
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded" style={{ backgroundColor: `${brand.color}18` }}>
+          <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill={brand.color}>
+            <rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="1.2" />
+            <rect x="9" y="1" width="6" height="14" rx="1" fill="currentColor" opacity="0.5" />
+          </svg>
+          <span className="font-mono text-[8px]" style={{ color: brand.color }}>Vince</span>
+        </div>
+      </div>
+
+      {/* Body: AI nav sidebar + AI main + Vince extension */}
+      <div className="flex" style={{ height: 460 }}>
+
+        {/* AI tool left nav sidebar */}
+        <div className="flex flex-col border-r border-white/[0.05] flex-shrink-0" style={{ width: 136, background: '#09090F' }}>
+          <div className="flex items-center gap-2 px-3 py-3 border-b border-white/[0.04]">
+            <AnimatePresence mode="wait">
+              <motion.div key={brand.id} className="flex items-center gap-2"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
+              >
+                {brand.id === 'merge'
+                  ? <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#4285F4" /></svg>
+                  : <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#4285F4" /></svg>
+                }
+                <span className="text-[10px] font-semibold text-white/40">{brand.aiToolLabel}</span>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          <div className="mx-2.5 mt-3 mb-2 flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-white/[0.07] cursor-pointer">
+            <span className="text-white/25 text-[10px] leading-none">✏</span>
+            <span className="text-[9px] text-white/25">New chat</span>
+          </div>
+          <div className="px-2.5 py-1 flex-1">
+            <p className="font-mono text-[7px] uppercase tracking-widest text-white/15 px-1.5 py-1.5">Recent</p>
+            {['Brand campaign brief', 'AI summit copy', 'LinkedIn strategy'].map((chat, i) => (
+              <div key={chat} className="flex items-center gap-1.5 px-1.5 py-1.5 rounded-md" style={{ backgroundColor: i === 0 ? 'rgba(255,255,255,0.04)' : 'transparent' }}>
+                <MessageSquare className="w-2.5 h-2.5 flex-shrink-0 text-white/15" />
+                <span className="text-[9px] text-white/22 truncate">{chat}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI tool main chat area */}
+        <div className="flex-1 flex flex-col min-w-0" style={{ background: '#0D0D1A' }}>
+          {/* Top bar — model indicator */}
+          <div className="flex items-center justify-between px-5 py-2 border-b border-white/[0.04]">
+            <AnimatePresence mode="wait">
+              <motion.span key={brand.id} className="text-[10px] text-white/25 font-mono"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}
+              >
+                gemini-2.5-flash
+              </motion.span>
+            </AnimatePresence>
+          </div>
+
+          {/* Chat history */}
+          <div className="flex-1 flex flex-col justify-end px-5 py-4 gap-3 overflow-hidden">
+            <div className="flex justify-end">
+              <div className="rounded-2xl rounded-tr-sm px-3 py-2 max-w-[75%]" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <p className="text-[10px] text-white/30">
+                  {brand.id === 'merge'
+                    ? 'Create a hero for our AI Enablement Summit — executive, editorial'
+                    : 'Need a Pixel 9 Pro launch hero — optimistic, real people'}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-start gap-2">
+              <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5"
+                style={{ background: 'rgba(66,133,244,0.15)' }}>
+                <span className="text-[8px]">✦</span>
+              </div>
+              <div className="rounded-2xl rounded-tl-sm px-3 py-2 max-w-[75%]" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <p className="text-[10px] text-white/20">I'd love to help — could you share your brand guidelines and photography preferences?</p>
+              </div>
+            </div>
+
+            {/* Brand prompt pasting in */}
+            <AnimatePresence>
+              {isPasting && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
+                  <div className="rounded-2xl rounded-tr-sm px-3 py-2.5 max-w-[90%] border"
+                    style={{ borderColor: `${brand.color}30`, backgroundColor: `${brand.color}0C` }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Layers className="w-3 h-3 flex-shrink-0" style={{ color: brand.color }} />
+                      <span className="font-mono text-[8px] font-bold uppercase tracking-wider" style={{ color: `${brand.color}80` }}>
+                        {brand.name} Brand DNA · Active
+                      </span>
+                    </div>
+                    <p className="font-mono text-[9px] leading-relaxed" style={{ color: `${brand.color}BB` }}>
+                      {brand.pasteText.slice(0, pasteChars)}
+                      {phase === 'pasting' && <span className="animate-pulse">|</span>}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Gemini response */}
+            <AnimatePresence>
+              {(phase === 'responding' || phase === 'done') && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-start gap-2"
+                >
+                  <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5"
+                    style={{ background: 'rgba(66,133,244,0.18)' }}>
+                    <svg viewBox="0 0 24 24" className="w-3 h-3"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#4285F4" /></svg>
+                  </div>
+                  <div className="flex-1 rounded-2xl rounded-tl-sm px-3 py-3 border border-white/[0.07] bg-white/[0.03] space-y-2.5">
+                    {brand.response.map((chunk, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: i < revealedChunks ? 1 : 0, y: i < revealedChunks ? 0 : 6 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        {i < brand.response.length - 1 ? (
+                          <div>
+                            <span className="font-mono text-[8px] font-bold uppercase tracking-wider mb-1 block" style={{ color: `${brand.color}70` }}>
+                              {chunk.label}
+                            </span>
+                            <p className="text-[10px] text-white/65 leading-relaxed">{chunk.text}</p>
+                          </div>
+                        ) : (
+                          // Last chunk is the status/ready line
+                          <div className="flex items-center gap-2 pt-1 border-t border-white/[0.06] mt-1">
+                            <motion.div
+                              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: brand.color }}
+                              animate={{ opacity: [1, 0.3, 1] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                            />
+                            <p className="font-mono text-[9px]" style={{ color: `${brand.color}90` }}>{chunk.text}</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                    {revealedChunks < brand.response.length && (
+                      <div className="flex items-center gap-1 pt-1">
+                        {[0, 1, 2].map(i => (
+                          <motion.div key={i} className="w-1 h-1 rounded-full bg-white/30"
+                            animate={{ opacity: [0.3, 1, 0.3] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Gemini-style large input */}
+          <div className="px-5 pb-4 pt-2">
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] px-4 py-3">
+              <div className="min-h-[24px] flex items-center">
+                {phase === 'responding' || phase === 'done' ? (
+                  <span className="text-[10px] text-white/15">Ask {brand.aiToolLabel} anything…</span>
+                ) : isPasting ? (
+                  <span className="text-[10px] font-mono" style={{ color: `${brand.color}90` }}>
+                    {brand.pasteText.slice(0, Math.min(pasteChars, 90))}{pasteChars < brand.pasteText.length ? '|' : ''}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-white/15">Ask {brand.aiToolLabel} anything…</span>
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/[0.05]">
+                <div className="flex items-center gap-3">
+                  <Mic className="w-3.5 h-3.5 text-white/20" />
+                  <span className="text-[8px] font-mono text-white/15">+ Attach</span>
+                </div>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: `${brand.color}20` }}>
+                  <ArrowRight className="w-3 h-3" style={{ color: brand.color }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Vince extension sidebar */}
+        <div className="flex flex-col overflow-hidden border-l border-white/[0.07]" style={{ width: 230, background: '#09090F' }}>
+          {/* Brand header */}
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/[0.06]">
+            <motion.div
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ backgroundColor: brand.color }}
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1.1, repeat: Infinity }}
+            />
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={brand.id}
+                className="font-mono text-[9px] font-bold"
+                style={{ color: brand.color }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {brand.name}
+              </motion.span>
+            </AnimatePresence>
+            <span className="font-mono text-[8px] text-white/20 ml-auto">DNA active</span>
+          </div>
+
+          {/* Tab bar */}
+          <div className="flex border-b border-white/[0.05]">
+            {['QuickStarters', 'Brand DNA'].map((tab, i) => (
+              <div
+                key={tab}
+                className="flex-1 text-center py-1.5 font-epilogue text-[8px] border-b-2"
+                style={{
+                  borderColor: i === 0 ? brand.color : 'transparent',
+                  color: i === 0 ? brand.color : 'rgba(255,255,255,0.2)',
+                }}
+              >
+                {tab}
+              </div>
+            ))}
+          </div>
+
+          {/* Starter list */}
+          <div className="border-b border-white/[0.04]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={brand.id}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+              >
+                {brand.starters.map((label, i) => (
+                  <div
+                    key={label}
+                    className="flex items-center gap-1.5 px-3 py-2 text-[9px]"
+                    style={{
+                      backgroundColor: i === 0 ? `${brand.color}12` : 'transparent',
+                      color: i === 0 ? brand.color : 'rgba(255,255,255,0.28)',
+                    }}
+                  >
+                    {i === 0
+                      ? <ChevronRight className="w-2.5 h-2.5 flex-shrink-0" style={{ color: brand.color }} />
+                      : <div className="w-2.5" />
+                    }
+                    <span className="font-epilogue leading-tight">{label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Fields */}
+          <div className="flex-1 p-3 space-y-1.5 overflow-hidden">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Zap className="w-3 h-3 flex-shrink-0" style={{ color: brand.color }} />
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={brand.id}
+                  className="font-epilogue text-[9px] font-semibold text-white/45"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                >
+                  {brand.selectedStarter}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={brand.id}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-1.5"
+              >
+                {brand.fields.map((field, i) => (
+                  <motion.div
+                    key={field.key}
+                    animate={{ opacity: i < revealedFields ? 1 : 0, y: i < revealedFields ? 0 : 5 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <span className="font-mono text-[8px] text-white/25 w-11 flex-shrink-0">{field.key}</span>
+                    <div className="flex-1 rounded border border-white/[0.06] bg-black/25 px-1.5 py-0.5">
+                      <span className="font-epilogue text-[8px] text-white/55">{field.value}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Compiled prompt */}
+          <AnimatePresence>
+            {(phase === 'compiled' || phase === 'copied' || phase === 'pasting' || phase === 'done') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border-t px-3 py-2.5"
+                style={{ borderColor: `${brand.color}20`, backgroundColor: `${brand.color}06` }}
+              >
+                <div className="flex items-center gap-1 mb-1.5">
+                  <Layers className="w-2.5 h-2.5 flex-shrink-0" style={{ color: brand.color }} />
+                  <span className="font-mono text-[7px] uppercase tracking-wider" style={{ color: `${brand.color}70` }}>
+                    Brand DNA Active
+                  </span>
+                  <motion.div
+                    className="ml-auto flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[7px] font-bold"
+                    style={{
+                      backgroundColor: phase === 'copied' ? `${brand.color}25` : 'rgba(255,255,255,0.04)',
+                      color: phase === 'copied' ? brand.color : 'rgba(255,255,255,0.2)',
+                      border: `1px solid ${phase === 'copied' ? brand.color : 'rgba(255,255,255,0.08)'}`,
+                    }}
+                    animate={phase === 'copied' ? { scale: [1, 1.12, 1] } : {}}
+                    transition={{ duration: 0.25 }}
+                  >
+                    {phase === 'copied'
+                      ? <><ClipboardCheck className="w-2 h-2" /> COPIED</>
+                      : <><Copy className="w-2 h-2" /> COPY</>
+                    }
+                  </motion.div>
+                </div>
+                {brand.compiledLines.map((line, i) => (
+                  <p key={i} className="font-mono text-[8px] text-white/40 leading-relaxed">{line}</p>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrandTravelsSection() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-80px' });
+
+  return (
+    <section ref={ref} id="brand-travels" className="relative py-32 bg-[#070A0F] overflow-hidden">
+      <div
+        className="absolute top-0 left-0 w-full h-1"
+        style={{ background: `linear-gradient(90deg, transparent, ${TEAL}, transparent)` }}
+      />
+      <SectionGlow color={GLOW_TEAL} />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
+        <Reveal className="mb-16 text-center">
+          <SectionHeader
+            eyebrow="AI Brand Guidelines"
+            eyebrowColor={TEAL}
+            headline={
+              <>
+                The brand travels
+                <br />
+                <span style={{ color: TEAL }}>with the prompt.</span>
+              </>
+            }
+            sub="Brand guidelines used to live in a PDF nobody opened. Vince converts your brand into executable AI directives — Photography DNA, voice rules, guardrails — pre-compiled and ready to fire into any AI tool, from any surface."
+          />
+        </Reveal>
+
+        {/* Browser + extension mockup */}
+        <Reveal delay={0.2} className="mb-12">
+          {inView && <BrandTravelsMockup />}
+        </Reveal>
+
+        {/* Feature row */}
+        <div className="grid sm:grid-cols-3 gap-5">
+          {[
+            {
+              color: GREEN,
+              icon: FileText,
+              title: 'From PDF to prompt',
+              desc: 'Brand intelligence converted into executable AI directives — not a document for humans, but a prompt artifact that fires every time.',
+            },
+            {
+              color: BLUE,
+              icon: Globe,
+              title: 'Works in any AI tool',
+              desc: 'Gemini, Claude, ChatGPT, Midjourney, Firefly. Paste the compiled prompt anywhere. The brand goes with it. No platform lock-in.',
+            },
+            {
+              color: PURPLE,
+              icon: Smartphone,
+              title: 'Every surface',
+              desc: 'Chrome extension sidebar, iOS, Android, and inside Vince Director Mode. The same brand intelligence — everywhere you work.',
+            },
+          ].map(({ color, icon: Icon, title, desc }, i) => (
+            <Reveal key={title} delay={0.35 + i * 0.08}>
+              <div className="flex items-start gap-3 p-5 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}20`, color }}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white text-sm mb-1">{title}</p>
+                  <p className="text-xs text-white/40 leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* Differentiator */}
+        <Reveal delay={0.5} className="mt-8">
+          <div className="flex items-start gap-4 px-6 py-5 rounded-xl border" style={{ borderColor: `${TEAL}18`, backgroundColor: `${TEAL}04` }}>
+            <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5" style={{ backgroundColor: TEAL }} />
+            <p className="text-sm text-white/50 leading-relaxed">
+              <span className="text-white/80 font-medium">Model-agnostic at the browser plane.</span>{' '}
+              This is a structural advantage. When a new AI tool ships next quarter,
+              the brand layer is already there — the sidebar stays open, the brand travels with you.
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 // ─── Creative Director / Voice Section ───────────────────────────────────────
 const VOICE_TOOLS = [
   { icon: Camera, label: 'Generate hero image', color: GREEN },
@@ -938,23 +1513,55 @@ function CreativeDirectorSection() {
   );
 }
 
-// ─── Director Mode Section ────────────────────────────────────────────────────
+// ─── Full Studio Section ──────────────────────────────────────────────────────
+
+// — Video (Director Mode) —
 const CAMERA_MOVEMENTS = [
   'Crane Shot', 'Dolly In', 'Dolly Out', 'Steadicam', 'Orbit',
   'Pan Left', 'Pan Right', 'Tilt Up', 'Tilt Down', 'Tracking Shot',
   'Dutch Angle', 'Handheld', 'Lock Off', 'Whip Pan',
 ];
-
 const LIGHTING_PRESETS = [
   'Golden Hour', 'Neon Glow', 'Studio 3-Point', 'Blue Hour',
   'Overcast Diffuse', 'Rim Light', 'Backlit Silhouette',
   'High Key Commercial', 'Low Key Dramatic', 'Natural Window', 'Practical Tungsten',
 ];
-
 const LENS_PRESETS = [
   '16mm Ultra-Wide', '24mm Wide', '35mm Standard', '50mm Normal',
   '85mm Portrait', '135mm Telephoto', 'Anamorphic 2.39:1',
   'Tilt-Shift Miniature', 'Macro Close-Up', 'Fish-Eye 180°', 'Vintage Anamorphic',
+];
+
+// — Still Photography —
+const CAMERA_BODIES = [
+  'Canon EOS R5', 'Sony A7R V', 'Hasselblad X2D 100C', 'Leica M11',
+  'Phase One IQ4 150MP', 'Fujifilm GFX 100S', 'Nikon Z9',
+  'ARRI Alexa 35', 'Mamiya RZ67', 'Pentax 67 Medium Format',
+];
+const FILM_STOCKS = [
+  'Kodak Portra 400', 'Kodak Ektar 100', 'Fuji Velvia 50',
+  'Ilford HP5 Plus', 'Kodak Tri-X 400', 'CineStill 800T',
+  'Kodak Gold 200', 'Fuji Superia 400', 'Lomochrome Purple', 'Fuji Pro 400H',
+];
+const APERTURE_STOPS = ['f/1.4', 'f/1.8', 'f/2.0', 'f/2.8', 'f/4.0', 'f/5.6', 'f/8.0', 'f/11', 'f/16', 'f/22'];
+const FOCAL_LENGTHS = ['16mm', '24mm', '35mm', '40mm', '50mm', '75mm', '85mm', '100mm', '135mm', '150mm', '200mm'];
+const LIGHTING_SETUPS = [
+  'Golden Hour', 'Natural Window Light', 'Studio 3-Point', 'Overcast Diffuse',
+  'Rim Light', 'High Key Commercial', 'Low Key Dramatic',
+  'Backlit Silhouette', 'Practical Tungsten', 'Hard Direct Flash',
+];
+const SHOT_TYPES = [
+  'Hero Product Shot', 'Environmental Portrait', 'Detail Close-Up',
+  'Lifestyle Scene', 'Editorial Fashion', 'Food Styling Hero',
+  'Corporate Headshot', 'Architecture Wide', 'Street Candid', 'Still Life',
+];
+const COLOR_GRADES = [
+  'Natural', 'Cinematic Teal & Orange', 'Vintage Film', 'High Contrast B&W',
+  'Muted & Desaturated', 'Warm Analog', 'Cool & Sterile', 'Cross-Processed',
+];
+const DEPTH_OF_FIELD = [
+  'Shallow — subject isolation', 'Medium — balanced focus',
+  'Deep — full scene sharp', 'Extreme shallow — bokeh foreground',
 ];
 
 function buildDirectorPrompt(camera: string, lighting: string, lens: string, subject: string): string {
@@ -962,164 +1569,346 @@ function buildDirectorPrompt(camera: string, lighting: string, lens: string, sub
   return `Shot of: ${subject.trim()} · Camera: ${camera} movement · Lighting: ${lighting} · Lens: ${lens} · Output: Veo 3.1 cinematic video, 16:9, broadcast quality`;
 }
 
+function buildStillPrompt(body: string, aperture: string, focal: string, film: string, lighting: string, shot: string, dof: string, grade: string): string {
+  return `${body} · ${focal} ${aperture} · ${film} · ${lighting} · ${dof.split('—')[0].trim()} · ${shot} · ${grade} · Brand DNA active`;
+}
+
+function StudioSelect({ label, value, options, onChange, accent }: {
+  label: string; value: string; options: string[];
+  onChange: (v: string) => void; accent: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="font-mono text-[10px] text-white/35 uppercase tracking-wider">{label}</label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="w-full appearance-none bg-black/30 border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white/80 focus:outline-none transition-all cursor-pointer pr-8"
+          style={{ ['--tw-ring-color' as string]: accent }}
+        >
+          {options.map(o => <option key={o} value={o} className="bg-[#1a1a20]">{o}</option>)}
+        </select>
+        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none rotate-90" />
+      </div>
+    </div>
+  );
+}
+
+function SliderField({ label, value, max, displayValue, leftLabel, rightLabel, onChange, accent }: {
+  label: string; value: number; max: number; displayValue: string;
+  leftLabel: string; rightLabel: string; onChange: (v: number) => void; accent: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <label className="font-mono text-[10px] text-white/35 uppercase tracking-wider">{label}</label>
+        <span className="font-mono text-[11px] font-semibold" style={{ color: accent }}>{displayValue}</span>
+      </div>
+      <input
+        type="range" min={0} max={max} step={1} value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+        style={{ accentColor: accent }}
+      />
+      <div className="flex justify-between">
+        <span className="font-mono text-[9px] text-white/20">{leftLabel}</span>
+        <span className="font-mono text-[9px] text-white/20">{rightLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 function DirectorModeSection() {
+  const [mode, setMode] = useState<'still' | 'video'>('still');
+
+  // Still photography state
+  const [cameraBody, setCameraBody] = useState('Canon EOS R5');
+  const [filmStock, setFilmStock] = useState('Kodak Portra 400');
+  const [apertureIdx, setApertureIdx] = useState(3); // f/2.8
+  const [focalIdx, setFocalIdx] = useState(6); // 85mm
+  const [lightingSetup, setLightingSetup] = useState('Golden Hour');
+  const [shotType, setShotType] = useState('Environmental Portrait');
+  const [dof, setDof] = useState('Shallow — subject isolation');
+  const [colorGrade, setColorGrade] = useState('Cinematic Teal & Orange');
+
+  // Video (Director Mode) state
   const [camera, setCamera] = useState('Crane Shot');
   const [lighting, setLighting] = useState('Golden Hour');
   const [lens, setLens] = useState('85mm Portrait');
   const [subject, setSubject] = useState('A confident creative director at a modern agency workspace');
-  const compiledPrompt = buildDirectorPrompt(camera, lighting, lens, subject);
+
+  const stillPrompt = buildStillPrompt(
+    cameraBody, APERTURE_STOPS[apertureIdx], FOCAL_LENGTHS[focalIdx],
+    filmStock, lightingSetup, shotType, dof, colorGrade,
+  );
+  const videoPrompt = buildDirectorPrompt(camera, lighting, lens, subject);
+
+  const isStill = mode === 'still';
+  const accent = isStill ? GREEN : PURPLE;
 
   return (
     <section className="relative py-32 bg-[#080A0F] overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-1"
-        style={{ background: `linear-gradient(90deg, transparent, ${PURPLE}, transparent)` }} />
-      <SectionGlow color={GLOW_PURPLE} />
+        style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+      <SectionGlow color={isStill ? GLOW_GREEN : GLOW_PURPLE} />
 
       <div className="max-w-7xl mx-auto px-6">
-        <Reveal className="mb-20">
+        <Reveal className="mb-14">
           <SectionHeader
-            eyebrow="Director Mode · Veo 3.1"
-            eyebrowColor={PURPLE}
+            eyebrow="Full Studio Mode"
+            eyebrowColor={accent}
             headline={
               <>
-                You're not writing prompts.
+                When you want
                 <br />
-                <span style={{ color: PURPLE }}>You're directing.</span>
+                <span style={{ color: accent }}>full control.</span>
               </>
             }
-            sub="14 camera movements. 11 lighting moods. 11 lens characters. Select your vision — the prompt compiles itself."
+            sub="Vince is off. The studio is on. Every camera parameter, every lens character, every film treatment — compiled into a production-ready prompt automatically."
           />
         </Reveal>
 
+        {/* Mode toggle */}
+        <Reveal className="mb-10">
+          <div className="flex justify-center">
+            <div className="flex p-1 rounded-2xl border border-white/[0.08] bg-white/[0.02] gap-1">
+              {([
+                { id: 'still', label: '📷  Still Photography', color: GREEN },
+                { id: 'video', label: '🎬  Director Mode · Veo 3', color: PURPLE },
+              ] as const).map(({ id, label, color }) => (
+                <button
+                  key={id}
+                  onClick={() => setMode(id)}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={mode === id
+                    ? { backgroundColor: `${color}18`, color, border: `1px solid ${color}35` }
+                    : { color: 'rgba(255,255,255,0.35)', border: '1px solid transparent' }
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Reveal>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          {/* Left: interactive controls */}
+          {/* Left: controls panel */}
           <Reveal>
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+              {/* Panel header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
                 <div className="flex items-center gap-2">
-                  <Video className="w-4 h-4 text-violet-400" />
-                  <span className="text-sm font-semibold text-white/70">Director Controls</span>
+                  {isStill
+                    ? <Camera className="w-4 h-4" style={{ color: GREEN }} />
+                    : <Video className="w-4 h-4" style={{ color: PURPLE }} />
+                  }
+                  <span className="text-sm font-semibold text-white/70">
+                    {isStill ? 'Photography Controls' : 'Director Controls'}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20">
-                  <motion.div className="w-1.5 h-1.5 rounded-full bg-violet-400"
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
+                  style={{ backgroundColor: `${accent}10`, borderColor: `${accent}25` }}>
+                  <motion.div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accent }}
                     animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.4, repeat: Infinity }} />
-                  <span className="font-mono text-[9px] text-violet-400">VEO 3 READY</span>
+                  <span className="font-mono text-[9px]" style={{ color: accent }}>
+                    {isStill ? 'BRAND DNA ACTIVE' : 'VEO 3 READY'}
+                  </span>
                 </div>
               </div>
 
               <div className="px-5 py-5 space-y-4">
-                {[
-                  { label: 'Camera Movement', value: camera, options: CAMERA_MOVEMENTS, set: setCamera },
-                  { label: 'Lighting Preset', value: lighting, options: LIGHTING_PRESETS, set: setLighting },
-                  { label: 'Lens', value: lens, options: LENS_PRESETS, set: setLens },
-                ].map(({ label, value, options, set }) => (
-                  <div key={label} className="flex flex-col gap-1.5">
-                    <label className="font-mono text-[10px] text-white/35 uppercase tracking-wider">{label}</label>
-                    <div className="relative">
-                      <select
-                        value={value}
-                        onChange={e => set(e.target.value)}
-                        className="w-full appearance-none bg-black/30 border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white/80 focus:outline-none focus:border-violet-500/40 transition-all cursor-pointer pr-8"
-                      >
-                        {options.map(o => <option key={o} value={o} className="bg-[#1a1a20]">{o}</option>)}
-                      </select>
-                      <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none rotate-90" />
+                {isStill ? (
+                  <>
+                    <StudioSelect label="Camera Body" value={cameraBody} options={CAMERA_BODIES} onChange={setCameraBody} accent={GREEN} />
+                    <StudioSelect label="Film Stock" value={filmStock} options={FILM_STOCKS} onChange={setFilmStock} accent={GREEN} />
+                    <SliderField
+                      label="Aperture" value={apertureIdx} max={APERTURE_STOPS.length - 1}
+                      displayValue={APERTURE_STOPS[apertureIdx]}
+                      leftLabel="Bokeh" rightLabel="Sharp"
+                      onChange={setApertureIdx} accent={GREEN}
+                    />
+                    <SliderField
+                      label="Focal Length" value={focalIdx} max={FOCAL_LENGTHS.length - 1}
+                      displayValue={FOCAL_LENGTHS[focalIdx]}
+                      leftLabel="Wide" rightLabel="Telephoto"
+                      onChange={setFocalIdx} accent={GREEN}
+                    />
+                    <StudioSelect label="Lighting Setup" value={lightingSetup} options={LIGHTING_SETUPS} onChange={setLightingSetup} accent={GREEN} />
+                    <StudioSelect label="Shot Type" value={shotType} options={SHOT_TYPES} onChange={setShotType} accent={GREEN} />
+                    <StudioSelect label="Depth of Field" value={dof} options={DEPTH_OF_FIELD} onChange={setDof} accent={GREEN} />
+                    <StudioSelect label="Color Grade" value={colorGrade} options={COLOR_GRADES} onChange={setColorGrade} accent={GREEN} />
+                  </>
+                ) : (
+                  <>
+                    {[
+                      { label: 'Camera Movement', value: camera, options: CAMERA_MOVEMENTS, set: setCamera },
+                      { label: 'Lighting Preset', value: lighting, options: LIGHTING_PRESETS, set: setLighting },
+                      { label: 'Lens', value: lens, options: LENS_PRESETS, set: setLens },
+                    ].map(({ label, value, options, set }) => (
+                      <StudioSelect key={label} label={label} value={value} options={options} onChange={set} accent={PURPLE} />
+                    ))}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="font-mono text-[10px] text-white/35 uppercase tracking-wider">Subject / Scene</label>
+                      <textarea
+                        value={subject}
+                        onChange={e => setSubject(e.target.value)}
+                        rows={2}
+                        className="bg-black/30 border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white/80 focus:outline-none resize-none transition-all"
+                        placeholder="Describe your subject or scene..."
+                      />
                     </div>
-                  </div>
-                ))}
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[10px] text-white/35 uppercase tracking-wider">Subject / Scene</label>
-                  <textarea
-                    value={subject}
-                    onChange={e => setSubject(e.target.value)}
-                    rows={2}
-                    className="bg-black/30 border border-white/[0.10] rounded-xl px-4 py-2.5 text-sm text-white/80 focus:outline-none focus:border-violet-500/40 resize-none transition-all"
-                    placeholder="Describe your subject or scene..."
-                  />
-                </div>
+                  </>
+                )}
 
                 {/* Compiled prompt */}
-                <div className="rounded-xl bg-black/40 border border-violet-500/15 p-4">
+                <div className="rounded-xl bg-black/40 p-4 border" style={{ borderColor: `${accent}18` }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Layers className="w-3.5 h-3.5 text-violet-400" />
-                    <span className="font-mono text-[9px] text-violet-400/70 uppercase">Generated Director Prompt</span>
+                    <Layers className="w-3.5 h-3.5" style={{ color: accent }} />
+                    <span className="font-mono text-[9px] uppercase" style={{ color: `${accent}99` }}>
+                      {isStill ? 'Compiled Photography Prompt' : 'Generated Director Prompt'}
+                    </span>
                   </div>
-                  <p className="font-mono text-[11px] text-white/55 leading-relaxed">{compiledPrompt}</p>
+                  <p className="font-mono text-[11px] text-white/55 leading-relaxed">
+                    {isStill ? stillPrompt : videoPrompt}
+                  </p>
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-300 font-semibold text-sm hover:bg-violet-500/25 transition-all">
-                  <Play className="w-4 h-4" />
-                  Generate Video
+                <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all border"
+                  style={{ backgroundColor: `${accent}15`, borderColor: `${accent}30`, color: accent }}
+                >
+                  {isStill
+                    ? <><Image className="w-4 h-4" /> Generate Image</>
+                    : <><Play className="w-4 h-4" /> Generate Video</>
+                  }
                 </button>
               </div>
             </div>
           </Reveal>
 
-          {/* Right: counts + brand note */}
+          {/* Right: count pills + preview */}
           <Reveal delay={0.2} className="flex flex-col gap-6">
-            <div className="flex gap-4 justify-center">
-              {[
-                { count: 14, label: 'Camera Presets', color: PURPLE },
-                { count: 11, label: 'Lighting Presets', color: TEAL },
-                { count: 11, label: 'Lens Characters', color: PURPLE },
-              ].map(({ count, label, color }) => (
-                <div key={label} className="flex flex-col items-center px-5 py-4 rounded-xl border flex-1"
-                  style={{ borderColor: `${color}25`, backgroundColor: `${color}08` }}>
-                  <span className="text-3xl font-black" style={{ color }}>{count}</span>
-                  <span className="text-[10px] text-white/40 mt-1 text-center leading-tight">{label}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Video preview card */}
-            <div className="rounded-2xl border border-violet-500/25 bg-violet-500/[0.04] overflow-hidden">
-              <div className="flex items-center gap-2 px-5 py-3 border-b border-violet-500/15">
-                <Video className="w-4 h-4 text-violet-400" />
-                <span className="text-xs font-semibold text-violet-300">Video Output Preview</span>
-                <div className="ml-auto px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/25">
-                  <span className="font-mono text-[9px] text-violet-400">VEO 3.1</span>
-                </div>
-              </div>
-              <div className="relative aspect-video bg-black/50 flex items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 opacity-20"
-                  style={{
-                    backgroundImage: 'linear-gradient(rgba(139,92,246,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.2) 1px, transparent 1px)',
-                    backgroundSize: '40px 40px',
-                  }} />
-                <div className="relative flex flex-col items-center gap-3">
-                  <div className="w-14 h-14 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
-                    <Play className="w-6 h-6 text-violet-400 ml-0.5" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs font-semibold text-white/60">{camera} — {lens}</p>
-                    <p className="text-[10px] text-white/30 mt-0.5">{lighting}</p>
-                  </div>
-                </div>
-                <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-black/60 border border-white/10">
-                  <span className="font-mono text-[9px] text-white/40">16:9 · 24fps</span>
-                </div>
-                <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-violet-500/20 border border-violet-500/30">
-                  <span className="font-mono text-[9px] text-violet-400">Brand DNA Active</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 px-5 py-3 border-t border-violet-500/10">
-                <div className="flex gap-1 flex-1">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <motion.div key={i} className="flex-1 rounded-sm bg-violet-500/20"
-                      style={{ height: 12 + Math.sin(i * 1.3) * 6 }}
-                      animate={{ opacity: [0.4, 0.8, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }} />
+            {isStill ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { count: 10, label: 'Camera Bodies', color: GREEN },
+                    { count: 10, label: 'Film Stocks', color: TEAL },
+                    { count: 10, label: 'Aperture Stops', color: GREEN },
+                    { count: 11, label: 'Focal Lengths', color: TEAL },
+                    { count: 10, label: 'Lighting Setups', color: GREEN },
+                    { count: 8, label: 'Color Grades', color: TEAL },
+                  ].map(({ count, label, color }) => (
+                    <div key={label} className="flex flex-col items-center px-4 py-3 rounded-xl border"
+                      style={{ borderColor: `${color}20`, backgroundColor: `${color}06` }}>
+                      <span className="text-2xl font-black" style={{ color }}>{count}</span>
+                      <span className="text-[10px] text-white/35 mt-0.5 text-center leading-tight">{label}</span>
+                    </div>
                   ))}
                 </div>
-                <span className="font-mono text-[9px] text-white/25 ml-2">0:05</span>
-              </div>
-            </div>
+                {/* Viewfinder preview */}
+                <div className="rounded-2xl border overflow-hidden" style={{ borderColor: `${GREEN}25`, backgroundColor: `${GREEN}04` }}>
+                  <div className="flex items-center gap-2 px-5 py-3 border-b" style={{ borderColor: `${GREEN}15` }}>
+                    <Camera className="w-4 h-4" style={{ color: GREEN }} />
+                    <span className="text-xs font-semibold" style={{ color: `${GREEN}CC` }}>Viewfinder</span>
+                    <div className="ml-auto px-2 py-0.5 rounded-full border" style={{ borderColor: `${GREEN}25`, backgroundColor: `${GREEN}10` }}>
+                      <span className="font-mono text-[9px]" style={{ color: GREEN }}>BRAND DNA ACTIVE</span>
+                    </div>
+                  </div>
+                  <div className="relative aspect-[4/3] bg-black/50 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 opacity-10"
+                      style={{
+                        backgroundImage: `linear-gradient(${GREEN}40 1px, transparent 1px), linear-gradient(90deg, ${GREEN}40 1px, transparent 1px)`,
+                        backgroundSize: '40px 40px',
+                      }} />
+                    {/* Viewfinder corners */}
+                    {[
+                      'top-3 left-3 border-t border-l',
+                      'top-3 right-3 border-t border-r',
+                      'bottom-3 left-3 border-b border-l',
+                      'bottom-3 right-3 border-b border-r',
+                    ].map((cls, i) => (
+                      <div key={i} className={`absolute w-5 h-5 ${cls}`} style={{ borderColor: `${GREEN}60` }} />
+                    ))}
+                    <div className="relative text-center">
+                      <p className="text-xs font-semibold text-white/60">{cameraBody}</p>
+                      <p className="text-[10px] text-white/35 mt-1">{FOCAL_LENGTHS[focalIdx]} · {APERTURE_STOPS[apertureIdx]} · {filmStock}</p>
+                      <p className="text-[10px] text-white/25 mt-0.5">{lightingSetup}</p>
+                    </div>
+                    <div className="absolute top-3 right-10 px-2 py-0.5 rounded bg-black/60 border border-white/10">
+                      <span className="font-mono text-[9px] text-white/40">{shotType.split(' ')[0]}</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-4 justify-center">
+                  {[
+                    { count: 14, label: 'Camera Presets', color: PURPLE },
+                    { count: 11, label: 'Lighting Moods', color: TEAL },
+                    { count: 11, label: 'Lens Characters', color: PURPLE },
+                  ].map(({ count, label, color }) => (
+                    <div key={label} className="flex flex-col items-center px-5 py-4 rounded-xl border flex-1"
+                      style={{ borderColor: `${color}25`, backgroundColor: `${color}08` }}>
+                      <span className="text-3xl font-black" style={{ color }}>{count}</span>
+                      <span className="text-[10px] text-white/40 mt-1 text-center leading-tight">{label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-2xl border border-violet-500/25 bg-violet-500/[0.04] overflow-hidden">
+                  <div className="flex items-center gap-2 px-5 py-3 border-b border-violet-500/15">
+                    <Video className="w-4 h-4 text-violet-400" />
+                    <span className="text-xs font-semibold text-violet-300">Video Output Preview</span>
+                    <div className="ml-auto px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/25">
+                      <span className="font-mono text-[9px] text-violet-400">VEO 3.1</span>
+                    </div>
+                  </div>
+                  <div className="relative aspect-video bg-black/50 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 opacity-20"
+                      style={{
+                        backgroundImage: 'linear-gradient(rgba(139,92,246,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.2) 1px, transparent 1px)',
+                        backgroundSize: '40px 40px',
+                      }} />
+                    <div className="relative flex flex-col items-center gap-3">
+                      <div className="w-14 h-14 rounded-full bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
+                        <Play className="w-6 h-6 text-violet-400 ml-0.5" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-semibold text-white/60">{camera} — {lens}</p>
+                        <p className="text-[10px] text-white/30 mt-0.5">{lighting}</p>
+                      </div>
+                    </div>
+                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded bg-black/60 border border-white/10">
+                      <span className="font-mono text-[9px] text-white/40">16:9 · 24fps</span>
+                    </div>
+                    <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-violet-500/20 border border-violet-500/30">
+                      <span className="font-mono text-[9px] text-violet-400">Brand DNA Active</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 px-5 py-3 border-t border-violet-500/10">
+                    <div className="flex gap-1 flex-1">
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <motion.div key={i} className="flex-1 rounded-sm bg-violet-500/20"
+                          style={{ height: 12 + Math.sin(i * 1.3) * 6 }}
+                          animate={{ opacity: [0.4, 0.8, 0.4] }}
+                          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.1 }} />
+                      ))}
+                    </div>
+                    <span className="font-mono text-[9px] text-white/25 ml-2">0:05</span>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-              <Dna className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+              <Dna className="w-4 h-4 shrink-0 mt-0.5" style={{ color: accent }} />
               <p className="text-xs text-white/40 leading-relaxed">
-                Brand DNA is injected into every video prompt automatically — your brand's visual language governs every frame without you specifying it.
+                {isStill
+                  ? 'Google\'s own Nano Banana prompting guide says prompt like a creative director — control the lens, the lighting, the film stock. We built this independently and arrived at the same architecture.'
+                  : 'Brand DNA is injected into every video prompt automatically — your brand\'s visual language governs every frame without you specifying it.'
+                }
               </p>
             </div>
           </Reveal>
@@ -2502,12 +3291,12 @@ function CTASection() {
               </div>
             </div>
             <p className="text-3xl md:text-4xl font-semibold text-white/90 tracking-tight">
-              Talk to Vince.
+              Vince doesn't reference your brand guidelines. He becomes them.
             </p>
           </div>
 
           <p className="text-base text-white/35 mb-14 leading-relaxed max-w-lg mx-auto">
-            He already knows your brand. Brief by voice — copy and images together, every format, the first time and every time.
+            Brief by voice. Copy and images together, every format, grounded in your brand's DNA.
           </p>
         </Reveal>
       </div>
@@ -2527,14 +3316,20 @@ function CTASection() {
               </div>
             </div>
             <p className="text-xl md:text-2xl font-semibold text-white/85 leading-relaxed mb-5 max-w-3xl">
-              I'm not a developer. I'm a Director of AI Enablement at a full-service marketing agency — and the Google AI ecosystem is what enabled me to build it.
+              I'm <span style={{ color: '#4ade80' }}>NOT</span> a developer… I'm <span style={{ color: '#4ade80' }}>Built Different</span>.
+              <br />
+              I'm the Director of AI Enablement at{' '}
+              <a href="https://mergeworld.com" target="_blank" rel="noopener noreferrer" style={{ color: '#4ade80' }}>MERGE</a>
+              {' '}— a marketing and technology agency at the intersection of health and wellness.
+              <br />
+              Google's AI ecosystem enabled me to build this.
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               <p className="text-sm text-white/45 leading-relaxed">
-                The code was the last step. I take walks and brain-dump into <span className="text-white/65">Gemini</span> for 30 minutes — raw thinking, no filter. Those ideas go into <span className="text-white/65">NotebookLM</span> as Gems alongside the API docs, so I can reason across my own thinking and the real specifications at the same time. <span className="text-white/65">Gemini Deep Research</span> validated architecture decisions against the full LLM landscape before I committed to anything.
+                The code was the last step, not the first. I take walks and talk to <a href="https://apps.apple.com/us/app/google-gemini/id6477489729" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Gemini</a> on my phone — thirty minutes of unfiltered brain dump, stream of consciousness, no filter. Those ideas go straight into <a href="https://notebooklm.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">NotebookLM</a> alongside the raw API docs and code lab notebooks, where I reason across my own thinking and the real specifications at the same time. <a href="https://gemini.google.com/deepresearch" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Gemini Deep Research</a> pressure-tested every architecture decision across the full LLM landscape — not just Google's docs, but cross-stack — so I understood Gemini's constraints and advantages in context, not in isolation. <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Gemini Canvas</a> drafted and extended the product narrative. <a href="https://colab.research.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Google Colab</a> gave me working examples before I touched the codebase.
               </p>
               <p className="text-sm text-white/45 leading-relaxed">
-                <span className="text-white/65">Canvas</span> drafted the content and UI narrative. <span className="text-white/65">Colab</span> and the developer code labs gave me working examples to run before integrating. <span className="text-white/65">Stitch</span> turned concepts into screens. <span className="text-white/65">AI Studio</span> tested prompts against real models. <span className="text-white/65">Jules</span> was an architecture sounding board. Connecting my <span className="text-white/65">GitHub repo to Gemini</span> and chatting with my own codebase while walking closed the loop. Deployed on <span className="text-white/65">Cloud Run</span>.
+                <a href="https://stitch.withgoogle.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Stitch</a> translated concepts into screen designs. <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">AI Studio</a> and <a href="https://console.cloud.google.com/vertex-ai/studio" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Vertex AI Studio</a> tested prompt patterns against real models. <a href="https://jules.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Jules</a> was my architecture sounding board. Connecting my <span className="text-white/65">GitHub repo to Gemini</span> and walking, talking out loud, asking questions about code I'd already written — that feedback loop compressed weeks into hours. Only then did implementation start — <span className="text-white/65">Gemini</span> and <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline decoration-blue-400/30 transition-all">Claude</a> as my AI collaborators, the human-AI partnership that took everything I'd researched, designed, and mapped and built it into something real.
               </p>
             </div>
             <p className="text-sm font-semibold leading-relaxed mt-6" style={{ color: `${GREEN}CC` }}>
@@ -2542,6 +3337,22 @@ function CTASection() {
               <br />
               So does the fact that it was built at all.
             </p>
+            <div className="flex items-center gap-3 mt-5 pt-5 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <div className="w-px h-8 rounded-full" style={{ backgroundColor: `${GREEN}40` }} />
+              <p className="text-xs text-white/40 leading-relaxed">
+                <a href="https://www.linkedin.com/in/macintoshexpert" target="_blank" rel="noopener noreferrer" className="text-white/65 font-semibold hover:text-white transition-colors">Kurt Miller</a>
+                {' · '}Director of AI Enablement at{' '}
+                <a href="https://mergeworld.com" target="_blank" rel="noopener noreferrer"
+                  style={{ color: '#4ade80' }}>
+                  MERGE
+                </a>
+                {' — '}a marketing and technology agency at the intersection of health and wellness. <span style={{ color: '#4ade80' }}>Built Different.</span>{' '}
+                <a href="https://mergeworld.com" target="_blank" rel="noopener noreferrer"
+                  className="text-white/35 hover:text-white/60 transition-colors">
+                  mergeworld.com
+                </a>
+              </p>
+            </div>
           </div>
         </Reveal>
 
@@ -2553,48 +3364,99 @@ function CTASection() {
               className="rounded-2xl border p-6"
               style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' }}
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30 mb-4">Built with</p>
-              <div className="flex flex-wrap gap-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30 mb-5">Built with</p>
+              <div className="space-y-4">
                 {[
-                  { label: 'Gemini Live API', color: BLUE },
-                  { label: 'Imagen 4', color: GREEN },
-                  { label: 'Veo 3', color: PURPLE },
-                  { label: 'Gemini 2.0 Flash', color: TEAL },
-                  { label: 'pgvector HNSW', color: ORANGE },
-                  { label: 'Supabase Realtime', color: ROSE },
-                ].map(({ label, color }) => (
-                  <div
-                    key={label}
-                    className="px-4 py-2 rounded-full border font-mono text-xs font-semibold"
-                    style={{ borderColor: `${color}30`, color: `${color}CC`, backgroundColor: `${color}10` }}
-                  >
-                    {label}
+                  {
+                    group: 'Gemini + Google Cloud',
+                    color: BLUE,
+                    items: [
+                      { label: 'gemini-2.5-flash-native-audio' },
+                      { label: 'gemini-3.1-flash-image-preview' },
+                      { label: 'gemini-3-pro-image-preview' },
+                      { label: 'gemini-2.0-flash' },
+                      { label: 'text-embedding-004' },
+                      { label: 'Veo 3' },
+                      { label: 'Cloud Run' },
+                      { label: 'Google GenAI SDK' },
+                      { label: 'Gemini Live API' },
+                      { label: '🍌 Nano Banana', customColor: '#F5C842' },
+                    ],
+                  },
+                  {
+                    group: 'Data + Backend',
+                    color: GREEN,
+                    items: [
+                      { label: '21 Supabase Edge Functions' },
+                      { label: 'PostgreSQL + pgvector' },
+                      { label: 'Supabase Realtime' },
+                      { label: 'Supabase Storage' },
+                    ],
+                  },
+                  {
+                    group: 'Client',
+                    color: PURPLE,
+                    items: [
+                      { label: 'React + TypeScript + Vite' },
+                      { label: 'Chrome Extension MV3' },
+                      { label: 'Capacitor iOS + Android' },
+                    ],
+                  },
+                ].map(({ group, color, items }) => (
+                  <div key={group}>
+                    <p className="font-mono text-[9px] uppercase tracking-widest mb-2" style={{ color: `${color}60` }}>{group}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {items.map(({ label, customColor }) => {
+                        const c = customColor ?? color;
+                        return (
+                          <div
+                            key={label}
+                            className="px-3 py-1.5 rounded-full border font-mono text-[11px] font-semibold"
+                            style={{ borderColor: `${c}25`, color: `${c}CC`, backgroundColor: `${c}10` }}
+                          >
+                            {label}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Four pillars */}
+            {/* Feature manifesto */}
             <div
-              className="rounded-2xl border p-6 grid grid-cols-2 gap-4"
+              className="rounded-2xl border overflow-hidden"
               style={{ borderColor: 'rgba(255,255,255,0.07)', backgroundColor: 'rgba(255,255,255,0.02)' }}
             >
-              {[
-                { icon: Mic, label: 'Voice-first', color: GREEN },
-                { icon: Globe, label: 'Chrome Extension', color: BLUE },
-                { icon: Smartphone, label: 'iOS + Android', color: PURPLE },
-                { icon: TrendingUp, label: 'Competitive Intel', color: ORANGE },
-              ].map(({ icon: Icon, label, color }) => (
-                <div key={label} className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}25` }}
-                  >
-                    <Icon className="w-5 h-5" />
+              <div className="px-6 pt-5 pb-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">What Vince does</p>
+              </div>
+              <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                {[
+                  { icon: Mic, color: GREEN, title: 'Brief by voice', desc: 'Talk. Campaign in your archive. Brand-aligned. Built in one conversation.' },
+                  { icon: TrendingUp, color: ORANGE, title: 'Beat any competitor', desc: 'Drop a URL. Get hooks, gaps, counter-direction — while you\'re still talking.' },
+                  { icon: Layers, color: BLUE, title: 'Interleaved copy + images', desc: 'One API call. Copy blocks and visuals alternating in a single response.' },
+                  { icon: Dna, color: GREEN, title: 'Invisible brand memory', desc: 'pgvector RAG retrieves the right rules before every generation. Zero settings panel.' },
+                  { icon: Globe, color: BLUE, title: 'Brand travels with the prompt', desc: 'Chrome Extension. Your team\'s existing tools. The brand slides in from the side.' },
+                  { icon: Smartphone, color: PURPLE, title: 'Walk. Talk. Campaign waiting.', desc: 'iOS + Android. Voice brief on the road. Full campaign at your desk.' },
+                  { icon: Camera, color: TEAL, title: 'Person-in-scene', desc: 'Upload a headshot. Vince puts you in the campaign. Face preserved exactly.' },
+                  { icon: BrainCircuit, color: PURPLE, title: '26 live tools', desc: 'Real-time voice orchestration across brand build, generate, analyze, and iterate.' },
+                ].map(({ icon: Icon, color, title, desc }) => (
+                  <div key={title} className="flex items-start gap-3 px-6 py-3.5">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                      style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}20` }}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white/80 leading-tight">{title}</p>
+                      <p className="text-xs text-white/35 mt-0.5 leading-relaxed">{desc}</p>
+                    </div>
                   </div>
-                  <span className="text-sm text-white/50 font-medium leading-tight">{label}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </Reveal>
@@ -2682,11 +3544,12 @@ export default function VinceShowcase() {
       <ShowcaseNav />
       <HeroSection />
       <ProblemSection />
+      <BrandTravelsSection />
       <BrandIntelligenceSection />
       <CreativeDirectorSection />
-      <DirectorModeSection />
       <BeatThisAdSection />
       <CampaignPackagesSection />
+      <DirectorModeSection />
       <AvailableEverywhereSection />
       <TechSection />
       <WhySection />

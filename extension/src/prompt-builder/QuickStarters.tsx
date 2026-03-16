@@ -359,8 +359,13 @@ export function QuickStarters({ categories, isLoading, brandColor, onSelect }: Q
               }}>
                 <Icon size={12} style={{ color: isExpanded ? accents.highlight : accents.primary }} />
               </div>
-              <div style={{ flex: 1, fontSize: '11px', fontWeight: 600, color: isExpanded ? accents.primary : accents.dark, lineHeight: 1.2 }}>
-                {cat.label}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: isExpanded ? accents.primary : accents.dark, lineHeight: 1.2 }}>
+                  {cat.label}
+                </div>
+                <div style={{ fontSize: '9px', color: isExpanded ? hexToRgba(accents.primary, 0.7) : '#9ca3af', lineHeight: 1.3, marginTop: '2px' }}>
+                  {cat.presets.length} {cat.presets.length === 1 ? 'template' : 'templates'}
+                </div>
               </div>
               <ChevronDown size={10} style={{
                 color: isExpanded ? accents.primary : '#9ca3af',

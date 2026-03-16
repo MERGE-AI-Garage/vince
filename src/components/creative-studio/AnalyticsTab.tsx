@@ -1131,7 +1131,7 @@ function MetricDrillDownDialog({
 
   return (
     <Dialog open={!!type} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col [&>button.absolute]:hidden">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col [&>button.absolute]:hidden brand-guidelines-panel">
         {info && (
           <>
             <DialogHeader className="shrink-0">
@@ -1346,7 +1346,7 @@ function UserActivityDialog({
   return (
     <>
       <Dialog open={!!user} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col [&>button.absolute]:hidden">
+        <DialogContent className="max-w-5xl max-h-[80vh] overflow-hidden flex flex-col [&>button.absolute]:hidden brand-guidelines-panel">
           {user && (
             <>
               <DialogHeader className="border-b pb-4 shrink-0">
@@ -1571,7 +1571,7 @@ function UserActivityDialog({
       {/* Full prompt text popup */}
       {promptPopup && (
         <Dialog open onOpenChange={(open) => !open && setPromptPopup(null)}>
-          <DialogContent className="max-w-2xl max-h-[60vh]">
+          <DialogContent className="max-w-2xl max-h-[60vh] brand-guidelines-panel">
             <DialogHeader>
               <DialogTitle>Full Prompt</DialogTitle>
             </DialogHeader>

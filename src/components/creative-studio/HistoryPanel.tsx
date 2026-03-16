@@ -243,7 +243,7 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
       (a, b) => new Date(b.gen.created_at).getTime() - new Date(a.gen.created_at).getTime()
     );
 
-    return [...visible, ...hiddenItems];
+    return [...hiddenItems, ...visible];
   }, [generations, aiMediaItems, showHidden, hiddenGenerations, hiddenMediaItems]);
 
   const [brokenThumbnails, setBrokenThumbnails] = useState<Set<string>>(new Set());
@@ -467,10 +467,10 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
                 onClick={() => setShowHidden(prev => !prev)}
                 className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border transition-colors ${
                   showHidden
-                    ? 'bg-muted text-foreground border-border'
+                    ? 'bg-primary/20 text-primary border-primary/40'
                     : 'text-muted-foreground border-transparent hover:border-border hover:text-foreground'
                 }`}
-                title={showHidden ? 'Hide hidden items' : 'Show hidden items'}
+                title={showHidden ? 'Back to full history' : `Show ${hiddenCount} hidden items`}
               >
                 <EyeOff className="h-2.5 w-2.5" />
                 {hiddenCount}
@@ -496,6 +496,12 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
 
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-2">
+          {showHidden && hiddenCount > 0 && (
+            <div className="flex items-center gap-2 px-1 pt-1">
+              <EyeOff className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[11px] font-medium text-muted-foreground">Hidden ({hiddenCount})</span>
+            </div>
+          )}
           {displayItems.length === 0 ? (
             <div className="text-center py-8 text-sm text-muted-foreground">
               <Image className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -510,15 +516,14 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
               const genToSelect = isPackageItem
                 ? { ...gen, output_urls: [displayUrl!, ...(gen.output_urls || [])] }
                 : gen;
-              const isFirstHidden = isHidden && (idx === 0 || !displayItems[idx - 1].isHidden);
+              // Divider appears before the first visible item when hidden items are shown at top
+              const isFirstVisible = !isHidden && idx > 0 && displayItems[idx - 1].isHidden;
               return (
                 <div key={item.key}>
-                  {isFirstHidden && (
+                  {isFirstVisible && (
                     <div className="flex items-center gap-2 py-1 px-1">
                       <div className="flex-1 h-px bg-border" />
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <EyeOff className="h-2.5 w-2.5" /> Hidden
-                      </span>
+                      <span className="text-[10px] text-muted-foreground">All</span>
                       <div className="flex-1 h-px bg-border" />
                     </div>
                   )}

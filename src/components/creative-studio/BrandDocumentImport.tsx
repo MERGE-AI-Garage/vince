@@ -564,7 +564,7 @@ export function BrandDocumentImport({ brandId, brandName, brandSlug, open, onOpe
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto brand-guidelines-panel">
         <DialogHeader className="pb-0">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">

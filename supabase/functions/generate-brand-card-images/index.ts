@@ -69,8 +69,20 @@ type PromptStyle = "stacked_acrylic" | "laser_cut" | "murano_glass";
 
 const STYLE_PRESETS: Record<PromptStyle, (b: BrandData) => string> = {
   stacked_acrylic: (b) => {
-    const base = b.secondary_color || b.primary_color;
-    return ` Built from 4 stacked laser-cut acrylic layers graduated from a deep dark variant of ${base} at the base to bright ${b.primary_color} at the top. Each layer offset casting a clean shadow on the one below. Matte acrylic with subtle edge translucency. Product photography, studio lighting, directional light from upper left. Dark background. No text, no people, no logos.`;
+    const palette = b.color_palette ?? [];
+    const seen = new Set<string>();
+    const layers: string[] = [];
+    for (const c of [b.primary_color, b.secondary_color, ...palette]) {
+      if (!c) continue;
+      const key = c.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); layers.push(c); }
+      if (layers.length === 4) break;
+    }
+    while (layers.length < 2) layers.push(layers[0]);
+    const layerDesc = layers.length >= 4
+      ? `${layers[3]} at the base, ${layers[2]}, ${layers[1]}, and ${layers[0]} at the top`
+      : `a deep dark variant of ${layers[layers.length - 1]} at the base graduating to bright ${layers[0]} at the top`;
+    return ` Built from ${layers.length} stacked laser-cut acrylic layers, each a distinct brand color: ${layerDesc}. Each layer offset casting a clean shadow on the one below. Matte acrylic with subtle edge translucency. Product photography, studio lighting, directional light from upper left. Dark background. No text, no people, no logos.`;
   },
   laser_cut: (b) => {
     const base = b.secondary_color || b.primary_color;

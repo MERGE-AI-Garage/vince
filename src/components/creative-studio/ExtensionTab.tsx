@@ -165,7 +165,7 @@ export function ExtensionTab() {
       {/* ── Section 1: Hero ── */}
       <section
         ref={heroRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-20 px-8"
+        className="preserve-dark relative overflow-hidden rounded-xl bg-gradient-to-br from-[#050d0b] via-[#0d4a3b] to-[#050d0b] py-20 px-8"
       >
         {/* Chrome watermark */}
         <Chrome className="absolute -bottom-6 -right-6 w-40 h-40 text-white/[0.04] transform -rotate-12" />
@@ -259,7 +259,7 @@ export function ExtensionTab() {
       {/* ── Section 3: Mobile Apps ── */}
       <section
         ref={mobileRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-16 px-8"
+        className="preserve-dark relative overflow-hidden rounded-xl bg-gradient-to-br from-[#050d0b] via-[#0d4a3b] to-[#050d0b] py-16 px-8"
       >
         <Smartphone className="absolute -top-4 -right-4 w-48 h-48 text-white/[0.03] transform rotate-12" />
 
@@ -443,7 +443,7 @@ export function ExtensionTab() {
       {/* ── Section 6: Supported Platforms + Final CTA ── */}
       <section
         ref={ctaRef}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#133B34] via-[#00856C] to-[#133B34] py-16 px-8"
+        className="preserve-dark relative overflow-hidden rounded-xl bg-gradient-to-br from-[#050d0b] via-[#0d4a3b] to-[#050d0b] py-16 px-8"
       >
 
         <div className="relative z-10 grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">

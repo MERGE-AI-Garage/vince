@@ -186,14 +186,19 @@ BRAND CONTEXT:
 ${brandContext}
 
 RULES:
-1. Generate 14-20 Quick Starters (minimum 12)
+1. Generate 40-55 Quick Starters (minimum 36)
 2. Each starter MUST reference specific brand products, materials, settings, voice attributes, or audience personas from the brand context — NO generic placeholders
-3. Starters should cover a MIX of these categories: ${JSON.stringify(VALID_CATEGORIES)}
-4. Include at least 1 starter from EACH of these category groups:
-   - Visual (product, hero, lifestyle, editorial)
-   - Video (cinematography)
-   - Social (social, campaign)
-   - Copy/Text (copy, brand-voice) — require at least 2 copy starters AND at least 2 brand-voice starters
+3. Starters should cover ALL of these categories: ${JSON.stringify(VALID_CATEGORIES)}
+4. MINIMUM PER CATEGORY — strictly enforce these counts:
+   - product: at least 5 starters (different angles, hero/detail/lifestyle/in-use/flat-lay)
+   - lifestyle: at least 5 starters (different personas, settings, cultural moments)
+   - campaign: at least 5 starters (launch, OOH, integrated, retargeting, sustainability)
+   - social: at least 5 starters (announcement, thought leadership, culture, results, UGC-style)
+   - hero: at least 4 starters (landing page, service page, vertical, manifesto)
+   - editorial: at least 4 starters (thought leadership, magazine spread, insight graphic, award feature)
+   - cinematography: at least 3 starters (brand film, product showcase, culture documentary)
+   - copy: at least 3 complete copy briefs (150-300 words each)
+   - brand-voice: at least 2 complete system prompts (300-500 words each)
 5. PROMPT LENGTH BY TYPE:
    - Visual starters (product, hero, lifestyle, editorial, campaign, social, cinematography): 2-4 sentences of vivid, specific creative direction
    - "copy" starters: complete structured brief, 150-300 words (see COPY BRIEF TEMPLATE below)

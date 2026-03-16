@@ -429,7 +429,7 @@ export function PromptHistoryTab() {
 
       {/* Promote dialog */}
       <Dialog open={!!promoteEntry} onOpenChange={(open) => !open && setPromoteEntry(null)}>
-        <DialogContent>
+        <DialogContent className="brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-500" />

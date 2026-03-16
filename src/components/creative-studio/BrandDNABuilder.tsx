@@ -497,7 +497,7 @@ export function BrandDNABuilder({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] p-0 gap-0 rounded-2xl overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl max-h-[90vh] p-0 gap-0 rounded-2xl overflow-hidden flex flex-col brand-guidelines-panel">
         {/* Branded gradient header */}
         <div
           className="relative overflow-hidden px-6 py-5 border-b"

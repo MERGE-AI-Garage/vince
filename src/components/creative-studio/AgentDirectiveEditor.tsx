@@ -128,7 +128,7 @@ export function AgentDirectiveEditor({ brandId, directive, open, onOpenChange }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-hidden brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-blue-500" />

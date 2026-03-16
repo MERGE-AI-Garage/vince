@@ -2,7 +2,6 @@
 // ABOUTME: Organizes options into 4 photography pillars with hardcoded educational content, manufacturer badges, and film swatches
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -85,10 +84,10 @@ const PILLARS: Pillar[] = [
     icon: Film,
     color: 'amber',
     accentClasses: {
-      bg: 'bg-amber-500/8',
-      border: 'border-amber-500/20',
-      text: 'text-amber-400',
-      icon: 'bg-amber-500/15',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      text: 'text-amber-600',
+      icon: 'bg-amber-100',
     },
     categories: ['camera_body', 'film_stock', 'frame_rate'],
   },
@@ -99,10 +98,10 @@ const PILLARS: Pillar[] = [
     icon: Focus,
     color: 'sky',
     accentClasses: {
-      bg: 'bg-sky-500/8',
-      border: 'border-sky-500/20',
-      text: 'text-sky-400',
-      icon: 'bg-sky-500/15',
+      bg: 'bg-sky-50',
+      border: 'border-sky-200',
+      text: 'text-sky-600',
+      icon: 'bg-sky-100',
     },
     categories: ['aperture', 'focal_length', 'depth_of_field'],
   },
@@ -113,10 +112,10 @@ const PILLARS: Pillar[] = [
     icon: Sun,
     color: 'emerald',
     accentClasses: {
-      bg: 'bg-emerald-500/8',
-      border: 'border-emerald-500/20',
-      text: 'text-emerald-400',
-      icon: 'bg-emerald-500/15',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      text: 'text-emerald-600',
+      icon: 'bg-emerald-100',
     },
     categories: ['lighting', 'composition', 'shot_type'],
   },
@@ -127,10 +126,10 @@ const PILLARS: Pillar[] = [
     icon: Palette,
     color: 'purple',
     accentClasses: {
-      bg: 'bg-purple-500/8',
-      border: 'border-purple-500/20',
-      text: 'text-purple-400',
-      icon: 'bg-purple-500/15',
+      bg: 'bg-purple-50',
+      border: 'border-purple-200',
+      text: 'text-purple-600',
+      icon: 'bg-purple-100',
     },
     categories: ['color_grade', 'film_effect', 'print_process', 'color_temperature'],
   },
@@ -450,11 +449,11 @@ export function CameraIntelligenceAdmin() {
 
       {/* Photography concept banner */}
       <div className="px-6 pt-5 pb-1">
-        <div className="flex gap-3 rounded-xl border border-[#00856C]/20 bg-[#00856C]/5 px-5 py-4">
-          <BookOpen className="h-4 w-4 text-[#1ED75F]/70 shrink-0 mt-0.5" />
+        <div className="flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+          <BookOpen className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="text-sm font-medium text-white/80">Photography vocabulary drives image quality</p>
-            <p className="text-xs text-white/45 leading-relaxed">
+            <p className="text-sm font-medium text-slate-700">Photography vocabulary drives image quality</p>
+            <p className="text-xs text-slate-500 leading-relaxed">
               Google Imagen and Gemini are trained on real photography terminology. Using f-stops, focal lengths,
               film stocks, and lighting setups in prompts produces dramatically more precise results than describing
               the effect you want. These settings translate directly into the prompt fragments sent to the model.
@@ -468,7 +467,7 @@ export function CameraIntelligenceAdmin() {
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-20 rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
+              <div key={i} className="h-20 rounded-xl border border-slate-200 bg-slate-100 animate-pulse" />
             ))}
           </div>
         ) : (
@@ -482,44 +481,44 @@ export function CameraIntelligenceAdmin() {
             return (
               <div
                 key={pillar.id}
-                className={`rounded-xl border transition-colors ${pillar.accentClasses.border} ${isExpanded ? pillar.accentClasses.bg : 'bg-white/[0.02] border-white/[0.07]'}`}
+                className={`rounded-xl border transition-colors ${pillar.accentClasses.border} ${isExpanded ? pillar.accentClasses.bg : 'bg-white border-slate-200'}`}
               >
                 {/* Pillar header */}
                 <button
                   className="w-full flex items-center gap-4 px-5 py-4 text-left"
                   onClick={() => togglePillar(pillar.id)}
                 >
-                  <div className={`w-10 h-10 rounded-xl ${isExpanded ? pillar.accentClasses.icon : 'bg-white/[0.06]'} flex items-center justify-center shrink-0 transition-colors`}>
-                    <PillarIcon className={`h-5 w-5 ${isExpanded ? pillar.accentClasses.text : 'text-white/40'} transition-colors`} />
+                  <div className={`w-10 h-10 rounded-xl ${isExpanded ? pillar.accentClasses.icon : 'bg-slate-100'} flex items-center justify-center shrink-0 transition-colors`}>
+                    <PillarIcon className={`h-5 w-5 ${isExpanded ? pillar.accentClasses.text : 'text-slate-400'} transition-colors`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-fraunces text-base font-semibold text-white/90">{pillar.title}</h3>
+                      <h3 className="font-fraunces text-base font-semibold text-slate-900">{pillar.title}</h3>
                       <div className="flex items-center gap-1">
                         <Badge variant="outline" className={`text-[9px] h-4 px-1.5 border-current ${pillar.accentClasses.text} font-mono`}>
                           {pillarActive}/{pillarTotal}
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-xs text-white/40 mt-0.5 font-epilogue leading-relaxed line-clamp-1">
+                    <p className="text-xs text-slate-500 mt-0.5 font-epilogue leading-relaxed line-clamp-1">
                       {pillar.description}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] text-white/25 font-epilogue">
+                    <span className="text-[10px] text-slate-400 font-epilogue">
                       {pillar.categories.length} categories
                     </span>
                     {isExpanded
-                      ? <ChevronDown className="h-4 w-4 text-white/30" />
-                      : <ChevronRight className="h-4 w-4 text-white/30" />
+                      ? <ChevronDown className="h-4 w-4 text-slate-400" />
+                      : <ChevronRight className="h-4 w-4 text-slate-400" />
                     }
                   </div>
                 </button>
 
                 {/* Expanded pillar content */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 space-y-2 border-t border-white/[0.06]">
-                    <p className="text-xs text-white/40 font-epilogue leading-relaxed pt-3 px-1">
+                  <div className="px-4 pb-4 space-y-2 border-t border-slate-200">
+                    <p className="text-xs text-slate-500 font-epilogue leading-relaxed pt-3 px-1">
                       {pillar.description}
                     </p>
                     {pillar.categories.map(cat => {
@@ -532,38 +531,38 @@ export function CameraIntelligenceAdmin() {
                       const isEduDismissed = educationDismissed.has(cat);
 
                       return (
-                        <div key={cat} className="rounded-lg border border-white/[0.07] bg-[#0D1B16]/60">
+                        <div key={cat} className="rounded-lg border border-slate-200 bg-white">
                           {/* Category header */}
                           <div className="flex items-center gap-3 px-4 py-3">
                             <button
                               className="flex items-center gap-3 flex-1 text-left"
                               onClick={() => toggleCategory(catKey)}
                             >
-                              <div className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0">
-                                <CategoryIcon className="h-3.5 w-3.5 text-white/50" />
+                              <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                                <CategoryIcon className="h-3.5 w-3.5 text-slate-500" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-white/80">{meta.label}</span>
-                                  <span className="text-[10px] text-white/30 font-mono">
+                                  <span className="text-sm font-medium text-slate-800">{meta.label}</span>
+                                  <span className="text-[10px] text-slate-400 font-mono">
                                     {activeCount}/{catOptions.length}
                                   </span>
                                   {catOptions.length === 0 && (
-                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-white/25 border-white/10">
+                                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-slate-400 border-slate-200">
                                       empty
                                     </Badge>
                                   )}
                                 </div>
                               </div>
                               {isCatExpanded
-                                ? <ChevronDown className="h-3.5 w-3.5 text-white/25 shrink-0" />
-                                : <ChevronRight className="h-3.5 w-3.5 text-white/25 shrink-0" />
+                                ? <ChevronDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                : <ChevronRight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                               }
                             </button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 text-white/30 hover:text-white/70 shrink-0"
+                              className="h-7 w-7 text-slate-400 hover:text-slate-700 shrink-0"
                               onClick={() => setCreateDialogCategory(cat)}
                               title={`Add ${meta.label} option`}
                             >
@@ -573,18 +572,18 @@ export function CameraIntelligenceAdmin() {
 
                           {/* Category content */}
                           {isCatExpanded && (
-                            <div className="px-4 pb-4 border-t border-white/[0.05] pt-3 space-y-3">
+                            <div className="px-4 pb-4 border-t border-slate-100 pt-3 space-y-3">
                               {/* Education callout */}
                               {!isEduDismissed && (
                                 <div className="flex gap-2.5 rounded-lg border border-blue-500/15 bg-blue-500/5 px-3.5 py-2.5">
                                   <Info className="h-3.5 w-3.5 text-blue-400/70 shrink-0 mt-0.5" />
                                   <div className="flex-1 min-w-0 space-y-1">
-                                    <p className="text-[11px] text-white/55 leading-relaxed">{meta.education}</p>
-                                    <p className="text-[10px] text-white/30 font-mono">{meta.promptNote}</p>
+                                    <p className="text-[11px] text-slate-600 leading-relaxed">{meta.education}</p>
+                                    <p className="text-[10px] text-slate-400 font-mono">{meta.promptNote}</p>
                                   </div>
                                   <button
                                     onClick={() => dismissEducation(cat)}
-                                    className="text-white/20 hover:text-white/50 transition-colors shrink-0"
+                                    className="text-slate-300 hover:text-slate-500 transition-colors shrink-0"
                                     title="Dismiss"
                                   >
                                     <X className="h-3 w-3" />
@@ -595,14 +594,14 @@ export function CameraIntelligenceAdmin() {
                               {/* Option tiles */}
                               {catOptions.length === 0 ? (
                                 <div className="flex flex-col items-center gap-2 py-6 text-center">
-                                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
-                                    <CategoryIcon className="h-5 w-5 text-white/20" />
+                                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                                    <CategoryIcon className="h-5 w-5 text-slate-300" />
                                   </div>
-                                  <p className="text-xs text-white/30">No {meta.label.toLowerCase()} options configured</p>
+                                  <p className="text-xs text-slate-400">No {meta.label.toLowerCase()} options configured</p>
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-7 text-[11px] gap-1 border-white/10 text-white/50 hover:text-white/80"
+                                    className="h-7 text-[11px] gap-1 border-slate-200 text-slate-500 hover:text-slate-800"
                                     onClick={() => setCreateDialogCategory(cat)}
                                   >
                                     <Plus className="h-3 w-3" />
@@ -650,7 +649,7 @@ export function CameraIntelligenceAdmin() {
 
       {/* Delete confirmation */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>Delete Camera Option</DialogTitle>
             <DialogDescription>
@@ -694,9 +693,9 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
   return (
     <div className={`rounded-lg border transition-all ${
       option.is_active
-        ? 'border-white/[0.09] bg-white/[0.03]'
-        : 'border-white/[0.04] bg-transparent opacity-40'
-    } ${expanded ? 'border-white/[0.14]' : ''}`}>
+        ? 'border-slate-200 bg-white'
+        : 'border-slate-100 bg-slate-50 opacity-60'
+    } ${expanded ? 'border-slate-300' : ''}`}>
       {/* Tile header */}
       <div className="flex items-start gap-2.5 p-3">
         {/* Film swatch or category icon */}
@@ -708,24 +707,24 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
               ))}
             </div>
           ) : (
-            <div className="w-6 h-6 rounded bg-white/[0.06] flex items-center justify-center">
+            <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center">
               {(() => {
                 const Icon = CATEGORY_META[category].icon;
-                return <Icon className="h-3 w-3 text-white/30" />;
+                return <Icon className="h-3 w-3 text-slate-400" />;
               })()}
             </div>
           )}
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-white/80 leading-tight">{option.display_name}</p>
+          <p className="text-xs font-medium text-slate-800 leading-tight">{option.display_name}</p>
           {mfgName && mfgStyle && (
             <div className={`inline-flex items-center mt-1 px-1.5 py-0.5 rounded text-[9px] font-medium border ${mfgStyle.bg} ${mfgStyle.text} ${mfgStyle.border}`}>
               {mfgName}
             </div>
           )}
           {!mfgName && option.description && (
-            <p className="text-[10px] text-white/30 mt-0.5 line-clamp-1 font-epilogue">{option.description}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1 font-epilogue">{option.description}</p>
           )}
         </div>
 
@@ -737,7 +736,7 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
           />
           <button
             onClick={onToggleExpand}
-            className="text-white/25 hover:text-white/60 transition-colors p-0.5"
+            className="text-slate-400 hover:text-slate-600 transition-colors p-0.5"
           >
             {expanded
               ? <ChevronDown className="h-3.5 w-3.5" />
@@ -749,14 +748,14 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
 
       {/* Expanded detail panel */}
       {expanded && (
-        <div className="px-3 pb-3 pt-0 border-t border-white/[0.06] space-y-3">
+        <div className="px-3 pb-3 pt-0 border-t border-slate-100 space-y-3">
           {/* Description */}
           <div className="space-y-1 pt-2">
-            <label className="text-[9px] font-medium text-white/30 uppercase tracking-wider">Description</label>
+            <label className="text-[9px] font-medium text-slate-400 uppercase tracking-wider">Description</label>
             <InlineEdit
               value={option.description || ''}
               onSave={(val) => onUpdate({ description: val || null })}
-              className="text-[11px] text-white/50"
+              className="text-[11px] text-slate-600"
               placeholder="Add a description…"
             />
           </div>
@@ -764,10 +763,10 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
           {/* Prompt fragment */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-[9px] font-medium text-white/30 uppercase tracking-wider">Prompt Fragment</label>
+              <label className="text-[9px] font-medium text-slate-400 uppercase tracking-wider">Prompt Fragment</label>
               <button
                 onClick={handleCopyFragment}
-                className="text-white/25 hover:text-white/60 transition-colors"
+                className="text-slate-400 hover:text-slate-600 transition-colors"
                 title="Copy prompt fragment"
               >
                 <Copy className="h-3 w-3" />
@@ -777,7 +776,7 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
               value={option.prompt_fragment}
               onSave={(val) => onUpdate({ prompt_fragment: val })}
               multiline
-              className="text-[10px] font-mono text-white/40"
+              className="text-[10px] font-mono text-slate-500"
             />
           </div>
 
@@ -787,7 +786,7 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
               value={option.media_type}
               onValueChange={(val: CameraMediaType) => onUpdate({ media_type: val })}
             >
-              <SelectTrigger className="h-6 text-[10px] w-20 bg-white/[0.04] border-white/[0.08]">
+              <SelectTrigger className="h-6 text-[10px] w-20 bg-white border-slate-200">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -796,7 +795,7 @@ function OptionTile({ option, category, expanded, onToggleExpand, onToggleActive
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-[9px] text-white/20 font-mono flex-1">
+            <span className="text-[9px] text-slate-300 font-mono flex-1">
               {option.category}/{option.slug}
             </span>
             <Button
@@ -961,7 +960,7 @@ function CreateOptionDialog({ openUntyped, defaultCategory, onClose, onSave, sav
 
   return (
     <Dialog open={openUntyped} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Camera className="w-4 h-4 text-[#1ED75F]" />

@@ -97,8 +97,8 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
   const displayName = brandName || 'Brand';
   const title = 'Prompt Studio';
   const intro = brandName
-    ? `Describe what you need for ${brandName}. Get a prompt grounded in the brand's voice, colors, and visual direction — consistent across every team and tool.`
-    : "Describe what you need. Get a prompt grounded in your brand's voice, colors, and visual direction — consistent across every team and tool.";
+    ? `Pick a quick start template or describe your own task — ${brandName}'s voice, colors, and visual system are woven in automatically to generate a ready-to-use AI prompt.`
+    : "Pick a quick start template or describe your own task — your brand's voice, colors, and visual system are woven in to generate a ready-to-use AI prompt.";
 
   return (
     <div style={{ fontFamily: 'Epilogue, system-ui, sans-serif' }}>
@@ -348,7 +348,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
 
       {/* Quick starters */}
       {!generatedPrompt && !isLoading && (
-        <div style={{ padding: '0 14px 16px' }}>
+        <div style={{ padding: '12px 14px 16px' }}>
           <div style={{
             borderRadius: '16px',
             background: 'rgba(255,255,255,0.72)',
@@ -371,7 +371,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
               letterSpacing: '0.08em',
               color: '#6b7280',
             }}>
-              Quick start
+              Quick start — {quickStarterCategories.reduce((sum, cat) => sum + cat.presets.length, 0)} templates
             </span>
             <div style={{
               flex: 1,

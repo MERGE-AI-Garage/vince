@@ -205,11 +205,23 @@ const FILTERS: { id: FileFilter; label: string }[] = [
   { id: 'document', label: 'Docs' },
 ];
 
-export function CompactMediaGrid() {
+export function CompactMediaGrid({ background }: { background?: string }) {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FileFilter>('all');
+
+  const dark = !!background;
+  const headerBg = background ?? '#ffffff';
+  const gridBg = background ?? '#f5f5f3';
+  const headerBorder = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+  const inputBg = dark ? 'rgba(255,255,255,0.07)' : '#f5f5f3';
+  const inputBorder = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  const inputColor = dark ? 'rgba(255,255,255,0.8)' : undefined;
+  const inactiveBtnBorder = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+  const inactiveBtnColor = dark ? 'rgba(255,255,255,0.5)' : '#6b7280';
+  const activeBtnBg = dark ? 'rgba(255,255,255,0.9)' : '#111';
+  const activeBtnColor = dark ? '#111' : '#fff';
 
   useEffect(() => {
     supabase
@@ -236,15 +248,15 @@ export function CompactMediaGrid() {
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%', fontFamily: 'Epilogue, system-ui, sans-serif' }}>
       {/* Search + filters */}
-      <div style={{ padding: '10px 12px 8px', borderBottom: '1px solid rgba(0,0,0,0.07)', flexShrink: 0, background: '#ffffff' }}>
+      <div style={{ padding: '10px 12px 8px', borderBottom: `1px solid ${headerBorder}`, flexShrink: 0, background: headerBg }}>
         <div style={{ position: 'relative', marginBottom: '8px' }}>
-          <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} />
+          <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: dark ? 'rgba(255,255,255,0.35)' : '#9ca3af', pointerEvents: 'none' }} />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search media…"
-            style={{ width: '100%', padding: '7px 10px 7px 30px', borderRadius: '7px', border: '1px solid rgba(0,0,0,0.1)', fontSize: '11px', outline: 'none', background: '#f5f5f3', boxSizing: 'border-box', fontFamily: 'Epilogue, system-ui, sans-serif' }}
+            style={{ width: '100%', padding: '7px 10px 7px 30px', borderRadius: '7px', border: `1px solid ${inputBorder}`, fontSize: '11px', outline: 'none', background: inputBg, color: inputColor, boxSizing: 'border-box', fontFamily: 'Epilogue, system-ui, sans-serif' }}
           />
         </div>
         <div style={{ display: 'flex', gap: '5px' }}>
@@ -252,9 +264,9 @@ export function CompactMediaGrid() {
             <button key={f.id} onClick={() => setFilter(f.id)}
               style={{
                 fontSize: '9px', fontWeight: 600, padding: '3px 8px', borderRadius: '999px',
-                border: `1px solid ${filter === f.id ? '#111' : 'rgba(0,0,0,0.1)'}`,
-                background: filter === f.id ? '#111' : 'transparent',
-                color: filter === f.id ? '#fff' : '#6b7280',
+                border: `1px solid ${filter === f.id ? activeBtnBg : inactiveBtnBorder}`,
+                background: filter === f.id ? activeBtnBg : 'transparent',
+                color: filter === f.id ? activeBtnColor : inactiveBtnColor,
                 cursor: 'pointer', fontFamily: 'Epilogue, system-ui, sans-serif',
               }}
             >
@@ -265,15 +277,15 @@ export function CompactMediaGrid() {
       </div>
 
       {/* Grid */}
-      <div style={{ flex: 1, overflowY: 'auto', background: '#f5f5f3', padding: '12px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', background: gridBg, padding: '12px' }}>
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} style={{ background: '#e8e8e6', borderRadius: '10px', aspectRatio: '1', animation: 'mediapulse 1.4s ease infinite' }} />
+              <div key={i} style={{ background: dark ? 'rgba(255,255,255,0.07)' : '#e8e8e6', borderRadius: '10px', aspectRatio: '1', animation: 'mediapulse 1.4s ease infinite' }} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', color: '#9ca3af', fontSize: '12px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 16px', color: dark ? 'rgba(255,255,255,0.35)' : '#9ca3af', fontSize: '12px', textAlign: 'center' }}>
             {search ? `No files matching "${search}"` : 'No media files yet'}
           </div>
         ) : (

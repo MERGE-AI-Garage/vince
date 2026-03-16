@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   FileText,
   TrendingUp,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,7 +57,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAllGenerations } from '@/hooks/useCreativeStudioGenerations';
+import { useAllGenerations, useDeleteGeneration } from '@/hooks/useCreativeStudioGenerations';
 import { useAllCreativeStudioModels } from '@/hooks/useCreativeStudioModels';
 import { useAllCreativeStudioBrands } from '@/hooks/useCreativeStudioBrands';
 import type { GenerationWithDetails, GenerationStatus, GenerationType } from '@/types/creative-studio';
@@ -687,6 +688,7 @@ export function GenerationsTab() {
       <GenerationDetailDialog
         generation={selectedGeneration}
         onClose={() => setSelectedGeneration(null)}
+        onDeleted={() => setSelectedGeneration(null)}
       />
     </div>
   );
@@ -733,12 +735,28 @@ function buildCopyText(gen: GenerationWithDetails): string {
 function GenerationDetailDialog({
   generation,
   onClose,
+  onDeleted,
 }: {
   generation: GenerationWithDetails | null;
   onClose: () => void;
+  onDeleted: () => void;
 }) {
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteGeneration = useDeleteGeneration();
+
+  const handleDelete = async () => {
+    if (!generation) return;
+    try {
+      await deleteGeneration.mutateAsync(generation.id);
+      setConfirmDelete(false);
+      onDeleted();
+      toast.success('Generation deleted');
+    } catch {
+      toast.error('Failed to delete generation');
+    }
+  };
 
   if (!generation) return null;
 
@@ -761,8 +779,9 @@ function GenerationDetailDialog({
   };
 
   return (
+    <>
     <Dialog open={!!generation} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col brand-guidelines-panel">
         <DialogHeader className="border-b pb-4">
           <div className="flex items-start gap-4">
             {/* User avatar */}
@@ -791,6 +810,14 @@ function GenerationDetailDialog({
                 ) : (
                   <><Copy className="h-3 w-3 mr-1" /> Copy All</>
                 )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-3 w-3 mr-1" /> Delete
               </Button>
               {getStatusBadge(generation.status)}
             </div>
@@ -989,6 +1016,24 @@ function GenerationDetailDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
+
+    {/* Delete confirmation */}
+    <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+      <DialogContent className="max-w-sm brand-guidelines-panel">
+        <DialogHeader>
+          <DialogTitle>Delete generation permanently?</DialogTitle>
+          <DialogDescription>This action cannot be undone.</DialogDescription>
+        </DialogHeader>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" size="sm" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleteGeneration.isPending}>
+            {deleteGeneration.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+            Delete
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

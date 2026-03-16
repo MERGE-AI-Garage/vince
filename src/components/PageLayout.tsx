@@ -14,9 +14,9 @@ interface PageLayoutProps {
 
 const PageLayout = ({ children, className = '' }: PageLayoutProps) => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className={cn("min-h-screen bg-background", className)}>
       <Navigation />
-      <div className={cn("pt-16 flex-1", className)}>
+      <div className="pt-16 flex-1">
         {children}
       </div>
     </div>

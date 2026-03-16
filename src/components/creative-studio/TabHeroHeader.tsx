@@ -43,20 +43,19 @@ export function TabHeroHeader({
     <div className={cn(
       'relative overflow-hidden rounded-xl bg-gradient-to-br p-6',
       gradientLight,
-      gradientDark,
     )}>
       {/* Large background watermark */}
       {watermark ? (
         <div className={cn(
           'absolute -bottom-4 -right-4 w-32 h-32 transform -rotate-12',
-          forceLightText ? 'text-white/[0.08]' : 'text-black/[0.04] dark:text-white/[0.04]',
+          forceLightText ? 'text-white/[0.08]' : 'text-black/[0.04]',
         )}>
           {watermark}
         </div>
       ) : (
         <MergeLogo className={cn(
           'absolute -bottom-4 -right-4 w-32 h-32 transform -rotate-12',
-          forceLightText ? 'text-white/[0.08]' : 'text-black/[0.04] dark:text-white/[0.04]',
+          forceLightText ? 'text-white/[0.08]' : 'text-black/[0.04]',
         )} />
       )}
 
@@ -64,7 +63,7 @@ export function TabHeroHeader({
       {watermarkSmall && (
         <div className={cn(
           'absolute top-3 right-3 w-8 h-8',
-          forceLightText ? 'text-white/[0.12]' : 'text-black/[0.08] dark:text-white/[0.08]',
+          forceLightText ? 'text-white/[0.12]' : 'text-black/[0.08]',
         )}>
           {watermarkSmall}
         </div>
@@ -77,7 +76,7 @@ export function TabHeroHeader({
               {badgeIcon}
               <span className={cn(
                 'text-[10px] font-semibold uppercase tracking-[0.15em]',
-                forceLightText ? 'text-white/50' : 'text-gray-500 dark:text-white/50',
+                forceLightText ? 'text-white/50' : 'text-gray-500',
               )}>
                 {badgeLabel}
               </span>
@@ -85,11 +84,11 @@ export function TabHeroHeader({
           )}
           <h2 className={cn(
             'text-xl font-semibold',
-            forceLightText ? 'text-white' : 'text-gray-900 dark:text-white',
+            forceLightText ? 'text-white' : 'text-gray-900',
           )}>{title}</h2>
           <p className={cn(
             'text-sm mt-0.5',
-            forceLightText ? 'text-white/60' : 'text-gray-600 dark:text-white/60',
+            forceLightText ? 'text-white/60' : 'text-gray-600',
           )}>{subtitle}</p>
         </div>
         {actions && <div className="flex gap-2">{actions}</div>}

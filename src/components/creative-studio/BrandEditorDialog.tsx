@@ -156,7 +156,7 @@ export function BrandEditorDialog({ open, brand, onClose, onSave, saving }: Bran
   if (isEditing) {
     return (
       <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-        <DialogContent className="max-w-5xl max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col">
+        <DialogContent className="max-w-5xl max-h-[90vh] p-0 gap-0 overflow-hidden flex flex-col brand-guidelines-panel">
           {/* Sticky header */}
           <DialogHeader className="px-6 py-4 border-b shrink-0">
             <DialogTitle>Edit Brand</DialogTitle>
@@ -198,7 +198,7 @@ export function BrandEditorDialog({ open, brand, onClose, onSave, saving }: Bran
   // --- Create mode — streamlined with educational callout ---
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle>Add Brand</DialogTitle>
           <DialogDescription>

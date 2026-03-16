@@ -296,7 +296,7 @@ function DetailView({ item, brandColor, onClose }: { item: Generation; brandColo
       </div>
 
       {/* Main image */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', minHeight: 0, overflow: 'auto', position: 'relative', touchAction: 'pinch-zoom' }}>
         {currentUrl && !isVideo && (
           <img src={currentUrl} alt={currentName || ''} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '10px' }} />
         )}
@@ -310,7 +310,7 @@ function DetailView({ item, brandColor, onClose }: { item: Generation; brandColo
 
       {/* Thumbnail strip — multi-image generations */}
       {urls.length > 1 && (
-        <div style={{ display: 'flex', gap: '6px', padding: '0 12px 10px', overflowX: 'auto', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: '6px', padding: '0 12px 10px', overflowX: 'auto', flexShrink: 0, WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
           {urls.map((url, i) => (
             <button key={i} onClick={() => setIdx(i)}
               style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -434,12 +434,20 @@ const FILTERS: { id: FilterType; label: string }[] = [
 interface CreationsTabProps {
   brandId: string | null;
   brandColor?: string;
+  background?: string;
 }
 
-export function CreationsTab({ brandId, brandColor = '#8b5cf6' }: CreationsTabProps) {
+export function CreationsTab({ brandId, brandColor = '#8b5cf6', background }: CreationsTabProps) {
   const { items, isLoading } = useCreations(brandId);
   const [filter, setFilter] = useState<FilterType>('all');
   const [selected, setSelected] = useState<Generation | null>(null);
+
+  const dark = !!background;
+  const stripBg = background ?? '#ffffff';
+  const gridBg = background ?? '#f5f5f3';
+  const inactiveText = dark ? 'rgba(255,255,255,0.5)' : '#6b7280';
+  const stripBorder = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+  const btnBorder = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.09)';
 
   const visibleFilters = FILTERS.filter(
     f => f.id === 'all' || items.some(i => i.generation_type === f.id)
@@ -458,12 +466,12 @@ export function CreationsTab({ brandId, brandColor = '#8b5cf6' }: CreationsTabPr
   return (
     <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
       {/* Filter strip */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.07)', padding: '10px 14px', display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: stripBg, borderBottom: `1px solid ${stripBorder}`, padding: '10px 14px', display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
         {visibleFilters.map(f => {
           const count = f.id === 'all' ? items.length : items.filter(i => i.generation_type === f.id).length;
           return (
             <button key={f.id} onClick={() => setFilter(f.id)}
-              style={{ fontSize: '10px', fontWeight: 600, padding: '4px 10px', borderRadius: '999px', border: `1px solid ${filter === f.id ? brandColor : 'rgba(0,0,0,0.09)'}`, background: filter === f.id ? brandColor : 'transparent', color: filter === f.id ? '#ffffff' : '#6b7280', cursor: 'pointer', fontFamily: 'Epilogue, system-ui, sans-serif', transition: 'all 0.1s ease' }}
+              style={{ fontSize: '10px', fontWeight: 600, padding: '4px 10px', borderRadius: '999px', border: `1px solid ${filter === f.id ? brandColor : btnBorder}`, background: filter === f.id ? brandColor : 'transparent', color: filter === f.id ? '#ffffff' : inactiveText, cursor: 'pointer', fontFamily: 'Epilogue, system-ui, sans-serif', transition: 'all 0.1s ease' }}
             >
               {f.label} <span style={{ opacity: 0.65 }}>({count})</span>
             </button>
@@ -472,18 +480,18 @@ export function CreationsTab({ brandId, brandColor = '#8b5cf6' }: CreationsTabPr
       </div>
 
       {/* Grid */}
-      <div style={{ flex: 1, overflowY: 'auto', background: '#f5f5f3' }}>
+      <div style={{ flex: 1, overflowY: 'auto', background: gridBg }}>
         {isLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', padding: '14px' }}>
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} style={{ background: '#e8e8e6', borderRadius: '14px', height: '190px', animation: `createpulse 1.5s ease ${i * 0.08}s infinite` }} />
+              <div key={i} style={{ background: dark ? 'rgba(255,255,255,0.07)' : '#e8e8e6', borderRadius: '14px', height: '190px', animation: `createpulse 1.5s ease ${i * 0.08}s infinite` }} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '64px 24px', gap: '12px' }}>
-            <Sparkles size={32} style={{ color: '#d8d8d5' }} />
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#6b7280', fontFamily: 'Epilogue, system-ui, sans-serif' }}>No creations yet</div>
-            <div style={{ fontSize: '11px', color: '#9ca3af', textAlign: 'center', maxWidth: '200px', fontFamily: 'Epilogue, system-ui, sans-serif', lineHeight: 1.5 }}>
+            <Sparkles size={32} style={{ color: dark ? 'rgba(255,255,255,0.2)' : '#d8d8d5' }} />
+            <div style={{ fontSize: '13px', fontWeight: 600, color: dark ? 'rgba(255,255,255,0.5)' : '#6b7280', fontFamily: 'Epilogue, system-ui, sans-serif' }}>No creations yet</div>
+            <div style={{ fontSize: '11px', color: dark ? 'rgba(255,255,255,0.35)' : '#9ca3af', textAlign: 'center', maxWidth: '200px', fontFamily: 'Epilogue, system-ui, sans-serif', lineHeight: 1.5 }}>
               Generate images and campaigns in Creative Studio to see them here
             </div>
           </div>

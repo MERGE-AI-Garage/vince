@@ -937,51 +937,99 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
     }
   };
 
+  const brandColor = gen.brand?.primary_color || '#1ED75F';
+  const brandLogoUrl = gen.brand?.logo_url;
+
   return (
     <>
     <div className="space-y-6">
-      {/* Header card */}
-      <div className="bg-card border border-border/50 rounded-xl p-5">
-        {/* Breadcrumb row */}
-        <div className="flex items-center gap-1.5 mb-4">
-          <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 h-7 px-2 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-3.5 h-3.5" />Campaigns
-          </Button>
-          <span className="text-muted-foreground/40 text-xs">/</span>
-          <span className="text-xs text-muted-foreground truncate max-w-[200px]">{brandName}</span>
-          <span className="text-muted-foreground/40 text-xs">/</span>
-          <span className="text-xs text-foreground/60">Campaign</span>
-        </div>
-        {/* Hero block */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2 className="text-xl font-bold text-foreground leading-tight">{brandName} Campaign</h2>
-            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-              <span className="text-sm text-muted-foreground">
-                {format(new Date(gen.created_at), 'MMMM d, yyyy')}
-              </span>
-              {userName && (
-                <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <User className="w-3 h-3" />{userName}
-                </span>
-              )}
-              <Badge variant="outline" className="gap-1 text-[10px] border-emerald-500/30 text-emerald-400/80">
-                <Layers className="w-2.5 h-2.5" />{resolvedNames.length} deliverable{resolvedNames.length !== 1 ? 's' : ''}
-              </Badge>
-              {gen.generation_time_ms && (
-                <Badge variant="outline" className="gap-1 text-[10px]">
-                  <Clock className="w-2.5 h-2.5" />{(gen.generation_time_ms / 1000).toFixed(1)}s
-                </Badge>
-              )}
+      {/* Campaign header */}
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+        {/* Brand color accent stripe */}
+        <div className="h-1 w-full" style={{ backgroundColor: brandColor }} />
+        <div className="p-5">
+          {/* Back nav */}
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-700 transition-colors mb-4"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            All Campaigns
+          </button>
+
+          {/* Hero row */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0">
+              {/* Brand identity mark */}
+              <div
+                className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center overflow-hidden border border-slate-200/60"
+                style={{ backgroundColor: brandLogoUrl ? '#fff' : `${brandColor}18` }}
+              >
+                {brandLogoUrl ? (
+                  <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 object-contain" />
+                ) : (
+                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: brandColor }} />
+                )}
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-0.5">
+                  {brandName}
+                </p>
+                <h2 className="font-fraunces text-xl font-semibold text-slate-900 leading-tight">
+                  Creative Campaign
+                </h2>
+
+                {/* Metadata row */}
+                <div className="flex items-center gap-1 mt-2 flex-wrap">
+                  <span className="font-epilogue text-xs text-slate-400 tabular-nums">
+                    {format(new Date(gen.created_at), 'MMMM d, yyyy')}
+                  </span>
+                  {userName && (
+                    <>
+                      <span className="text-slate-300 text-xs">·</span>
+                      <span className="font-epilogue text-xs text-slate-400 flex items-center gap-1">
+                        <User className="w-3 h-3" />{userName}
+                      </span>
+                    </>
+                  )}
+                  <span className="text-slate-300 text-xs">·</span>
+                  <span className="font-epilogue text-xs text-slate-500 font-semibold">
+                    {resolvedNames.length}
+                  </span>
+                  <span className="font-epilogue text-xs text-slate-400">
+                    {resolvedNames.length !== 1 ? 'deliverables' : 'deliverable'}
+                  </span>
+                  {gen.generation_time_ms && (
+                    <>
+                      <span className="text-slate-300 text-xs">·</span>
+                      <span className="font-epilogue text-xs text-slate-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />{(gen.generation_time_ms / 1000).toFixed(1)}s
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {brief && (
+                  <p className="font-epilogue text-xs text-slate-500 mt-2.5 leading-relaxed max-w-2xl line-clamp-2">
+                    {brief}
+                  </p>
+                )}
+              </div>
             </div>
-            {brief && (
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed max-w-2xl">{brief}</p>
-            )}
+
+            {/* Actions */}
+            <Button
+              size="sm"
+              className="gap-1.5 shrink-0 rounded-full px-4 text-xs text-white"
+              style={{ backgroundColor: brandColor }}
+              onClick={handleZip}
+              disabled={zipping}
+            >
+              {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+              Download ZIP
+            </Button>
           </div>
-          <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={handleZip} disabled={zipping}>
-            {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
-            Download ZIP
-          </Button>
         </div>
       </div>
 
@@ -1077,19 +1125,20 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
         </div>
 
         {/* Right: Metadata panel */}
-        <div className="lg:sticky lg:top-6 bg-card border border-border/50 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">Campaign Info</span>
-            <div className="flex-1 h-px bg-border/30" />
+        <div className="lg:sticky lg:top-6 rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50/80">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Campaign Info</span>
           </div>
-          <CampaignMetadataPanel gen={gen} resolvedNames={resolvedNames} />
+          <div className="p-4">
+            <CampaignMetadataPanel gen={gen} resolvedNames={resolvedNames} />
+          </div>
         </div>
       </div>
     </div>
 
     {/* Per-image info dialog */}
     <Dialog open={!!imageInfo} onOpenChange={(open) => { if (!open) setImageInfo(null); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold">
             {imageInfo ? resolvedNames[imageInfo.index] || `Deliverable ${imageInfo.index + 1}` : ''}
@@ -1407,7 +1456,7 @@ export function CampaignsTab() {
 
       {/* Archive confirmation */}
       <Dialog open={!!archiveTarget} onOpenChange={(open) => { if (!open) setArchiveTarget(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>Archive campaign?</DialogTitle>
           </DialogHeader>
@@ -1424,7 +1473,7 @@ export function CampaignsTab() {
 
       {/* Delete confirmation */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>Delete campaign permanently?</DialogTitle>
           </DialogHeader>

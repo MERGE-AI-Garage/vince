@@ -262,7 +262,7 @@ const VINCE_TOOLS = [
   },
   {
     name: 'synthesize_brand_profile',
-    description: 'Synthesize all raw brand intelligence (website analysis, uploaded documents, image analysis) into a unified Brand DNA profile. Run this after any combination of analyze_brand_website, import_brand_document, or analyze_brand_images — it merges all sources with intelligent weighting (logos have highest authority for colors, brand guidelines PDFs have highest authority for rules). Should be run before generating guardrails or the generation prompt for best results.',
+    description: 'Merge all raw brand intelligence into a unified Brand DNA profile. Call this ONLY during brand onboarding after completing a round of intelligence gathering (website analysis, documents) — or when the user explicitly asks to update or rebuild the brand profile. Never call this during active creative sessions. Typical triggers: user finishes uploading brand guidelines PDFs during onboarding, or explicitly says "rebuild the brand profile".',
     parameters: {
       type: 'object',
       properties: {},
@@ -522,11 +522,11 @@ const VINCE_TOOLS = [
   },
   {
     name: 'check_job_status',
-    description: 'Check the status of a video or image analysis job. Call this after generate_video or analyze_brand_image to check if the job completed. Poll until status is \'completed\' or \'failed\'. Returns status, output_urls, error_message, and created_at.',
+    description: 'Check the status of a video generation job. Call this only after generate_video when the user asks if their video is ready. analyze_brand_image runs in the background automatically — there is no job ID to check for it.',
     parameters: {
       type: 'object',
       properties: {
-        job_id: { type: 'string', description: 'The generation job ID to check (returned by generate_video).' },
+        job_id: { type: 'string', description: 'The generation job ID (UUID) returned by generate_video. Do not pass filenames, URLs, or other values.' },
       },
       required: ['job_id'],
     },
@@ -1092,6 +1092,14 @@ async function checkJobStatus(
   params: Record<string, unknown>,
   supabase: ReturnType<typeof createClient>,
 ) {
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_REGEX.test(params.job_id as string)) {
+    return {
+      found: false,
+      message: `"${params.job_id}" is not a valid job ID. Job IDs are UUIDs returned by generate_video. analyze_brand_image runs in the background with no checkable status.`,
+    };
+  }
+
   const { data, error } = await supabase
     .from('creative_studio_generations')
     .select('id, status, output_urls, error_message, created_at, completed_at, generation_type, model_used')
@@ -1223,7 +1231,7 @@ REQUIREMENTS:
       ],
     }],
     generationConfig: {
-      responseModalities: ['IMAGE'],
+      responseModalities: ['TEXT', 'IMAGE'],
     },
   };
 
@@ -2061,9 +2069,10 @@ When a user says "create a new brand", "add a brand", "I need a new brand", "new
 2. Call create_brand immediately with the name and website_url. Do NOT call it without a website URL.
 3. Website analysis is triggered AUTOMATICALLY after brand creation — you do NOT need to call analyze_brand_website yourself. The system chains it for you. Tell the user: "I've created the brand and kicked off the website analysis — it takes about 30 seconds to extract colors, fonts, and visual identity."
 4. If they provide documents (PDFs, brand guidelines, style guides), call import_brand_document for each one.
-   After ALL documents are imported, ALWAYS call synthesize_brand_profile to merge the intelligence,
+   After ALL documents are imported, call synthesize_brand_profile to merge the intelligence,
    then call generate_brand_playbook to generate directives, generation prompt, starters, and cards.
    Tell the user: "I've imported your documents and rebuilt the brand intelligence — running the full playbook now."
+   Do NOT call synthesize_brand_profile or generate_brand_playbook outside of this onboarding flow. These are expensive setup operations (2+ minutes), not routine creative tools.
 5. After DNA is loaded and profile looks solid, offer to generate the brand visuals: "Want me to build out the brand visuals? I'll generate the header image and card icons using your brand colors."
 6. When the user confirms (or says "build it out", "finish the brand", "generate the brand images"), call generate_brand_header and generate_brand_cards to complete the brand setup.
 
@@ -2094,6 +2103,7 @@ BEHAVIORAL RULES:
 5. When you use a tool, briefly explain what you did and the result.
 6. NEVER include brand names, product model names, or any text you want rendered onto the image in generation prompts. Describe products by their visual characteristics instead: "brushed chrome commercial flushometer" rather than "[Brand] product name". Image generation models will hallucinate text onto images if you mention brand/product names.
 7. ALWAYS call list_camera_options before every image generation. Never invent camera equipment — only use equipment names and prompt_fragments that exist in the inventory.
+8. NEVER call synthesize_brand_profile or generate_brand_playbook in response to conversational mentions of "brand", "new", "update", or similar words during a creative session. These are setup operations, not creative tools. Only call them when: (a) in the middle of brand onboarding after importing new intelligence, OR (b) the user explicitly says "rebuild the brand profile", "run the playbook", "update brand intelligence", or an equivalent direct setup command.
 
 BRAND COACHING MODE:
 You are not just a generation tool — you are a creative director, brand strategist, and photography expert. You have deep knowledge of this brand loaded in your context right now: visual DNA, photography standards, color profile, composition rules, brand identity, tone of voice, typography, product catalog, and all governance directives. When a user signals they want to learn, get briefed, or get up to speed — on any aspect of this brand — shift into coaching mode naturally.

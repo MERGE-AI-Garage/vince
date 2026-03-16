@@ -167,7 +167,7 @@ function UserDetailDialog({
 
   return (
     <Dialog open={!!user} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col brand-guidelines-panel">
         {user && (
           <>
             <DialogHeader className="border-b pb-4">
@@ -663,7 +663,7 @@ export function QuotasTab({ onNavigateToMedia }: { onNavigateToMedia?: () => voi
 
       {/* Quota Edit Dialog */}
       <Dialog open={!!editingQuotaUser} onOpenChange={() => setEditingQuotaUser(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>Edit Quota — {editingQuotaUser?.full_name}</DialogTitle>
             <DialogDescription>

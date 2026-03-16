@@ -550,7 +550,7 @@ function SystemWelcome({
                 <span className="text-white">Director.</span>
               </h1>
               <p className="font-epilogue text-[15px] text-white/50 leading-relaxed max-w-[420px]">
-                Talk to Vince. He already knows your brand — copy and images together, every format, in seconds.
+                Vince doesn't reference your brand guidelines. He becomes them. Brief by voice — copy and images together, every format.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -686,7 +686,7 @@ function SystemWelcome({
 
         {/* ── Powered by ── */}
         <div className="flex items-center justify-center gap-2 flex-wrap">
-          <span className="font-epilogue text-[9px] text-white/30 uppercase tracking-wider shrink-0">Powered by</span>
+          <span className="font-epilogue text-[9px] uppercase tracking-wider shrink-0" style={{ color: '#4ade80' }}>Powered by</span>
           <ModelBadges />
         </div>
         </motion.div>
@@ -890,14 +890,14 @@ function BrandWelcome({
             <div className="flex-1 p-5 space-y-3 relative overflow-hidden">
               {/* Watermark: card image bleeds in from the right, screen-blended to eliminate dark background */}
               {brand.card_images?.brand_dna ? (
-                <div className="absolute inset-y-0 right-0 w-3/5 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
                   <img
                     src={brand.card_images.brand_dna}
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
-                    style={{ mixBlendMode: 'screen', opacity: 0.6 }}
+                    style={{ mixBlendMode: 'screen', opacity: 0.5 }}
                   />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 40%, transparent 100%)' }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0.5) 55%, transparent 100%)' }} />
                 </div>
               ) : (
                 <div
@@ -956,14 +956,14 @@ function BrandWelcome({
             <div className="flex-1 p-5 space-y-3 relative overflow-hidden">
               {/* Watermark: card image bleeds in from the right, screen-blended to eliminate dark background */}
               {brand.card_images?.ai_guidelines ? (
-                <div className="absolute inset-y-0 right-0 w-3/5 pointer-events-none overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
                   <img
                     src={brand.card_images.ai_guidelines}
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover"
-                    style={{ mixBlendMode: 'screen', opacity: 0.6 }}
+                    style={{ mixBlendMode: 'screen', opacity: 0.5 }}
                   />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 40%, transparent 100%)' }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0.5) 55%, transparent 100%)' }} />
                 </div>
               ) : (
                 <div

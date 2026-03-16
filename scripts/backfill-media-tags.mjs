@@ -29,7 +29,7 @@ const fileEnv = loadEnv();
 
 const SUPABASE_URL = process.env.SUPABASE_URL || fileEnv.VITE_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || fileEnv.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // Delay between Gemini calls — stays well under free-tier rate limits
 const DELAY_MS = 300;

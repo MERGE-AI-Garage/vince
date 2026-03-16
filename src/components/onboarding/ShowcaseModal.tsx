@@ -544,8 +544,8 @@ const SLIDES: SlideData[] = [
   {
     icon: Mic,
     label: 'CREATIVE DIRECTOR',
-    headline: 'Meet Vince.\nYour AI Creative Director.',
-    sub: "Powered by Gemini Live native audio. Vince knows your brand cold — every photography spec, color rule, tone of voice. Brief him out loud. Get a complete campaign.",
+    headline: "Vince doesn't reference your brand guidelines.\nHe becomes them.",
+    sub: "Brief by voice. Copy and images together, every format, grounded in your brand's DNA — automatically.",
     visual: <VoiceSpectrumVisual />,
     fullWidth: true,
   },

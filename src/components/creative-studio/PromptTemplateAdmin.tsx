@@ -411,7 +411,7 @@ export function PromptTemplateAdmin({ brandId }: PromptTemplateAdminProps) {
 
       {/* Delete Confirmation */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <DialogContent>
+        <DialogContent className="brand-guidelines-panel">
           <DialogHeader>
             <DialogTitle>Delete Template</DialogTitle>
             <DialogDescription>
@@ -547,7 +547,7 @@ function PromptEditorDialog({ open, prompt, brandId, onClose, onSave, saving }: 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <BookMarked className="w-4 h-4 text-primary" />
@@ -1101,7 +1101,7 @@ function StarterPreviewDialog({ starters, brandId, onClose, createMutation }: St
 
   return (
     <Dialog open={!!starters && starters.length > 0} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col brand-guidelines-panel">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Wand2 className="w-4 h-4 text-purple-500" />
@@ -1124,7 +1124,7 @@ function StarterPreviewDialog({ starters, brandId, onClose, createMutation }: St
           </span>
         </div>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <ScrollArea className="flex-1 min-h-0 -mx-6 px-6">
           <div className="space-y-2 pb-2">
             {starters?.map((starter, index) => (
               <div
