@@ -1,0 +1,20 @@
+# ABOUTME: Cloud Build config for Vince — builds React app + VitePress docs into a single nginx image.
+# ABOUTME: Pass Supabase credentials as substitutions (--substitutions flag) to bake them into the Vite bundle.
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - --build-arg
+      - VITE_SUPABASE_URL=$_VITE_SUPABASE_URL
+      - --build-arg
+      - VITE_SUPABASE_ANON_KEY=$_VITE_SUPABASE_ANON_KEY
+      - -t
+      - gcr.io/$PROJECT_ID/vince
+      - .
+
+images:
+  - gcr.io/$PROJECT_ID/vince
+
+options:
+  logging: CLOUD_LOGGING_ONLY

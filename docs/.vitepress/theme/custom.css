@@ -1,0 +1,526 @@
+/* ABOUTME: Custom styling for Vince documentation site */
+/* ABOUTME: Enhances VitePress theme with professional design, animations, and visual polish */
+
+/* ============================================
+   CUSTOM COLOR PALETTE
+   ============================================ */
+
+:root {
+  /* Vince Brand Colors — Emerald */
+  --vp-c-brand-1: #10b981;
+  --vp-c-brand-2: #059669;
+  --vp-c-brand-3: #047857;
+  --vp-c-brand-soft: rgba(16, 185, 129, 0.14);
+
+  /* Accent Colors */
+  --vp-c-accent-1: #34d399;
+  --vp-c-accent-soft: rgba(52, 211, 153, 0.14);
+
+  /* Custom gradients */
+  --vp-gradient-brand: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --vp-gradient-accent: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  --vp-gradient-hero: linear-gradient(135deg,
+    rgba(16, 185, 129, 0.05) 0%,
+    rgba(52, 211, 153, 0.05) 100%);
+
+  /* Improved spacing */
+  --vp-space-micro: 0.25rem;
+  --vp-space-small: 0.5rem;
+  --vp-space-base: 1rem;
+  --vp-space-medium: 1.5rem;
+  --vp-space-large: 2rem;
+  --vp-space-xl: 3rem;
+
+  /* Enhanced shadows */
+  --vp-shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --vp-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --vp-shadow-large: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --vp-shadow-brand: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+
+.dark {
+  --vp-c-brand-1: #34d399;
+  --vp-c-brand-2: #10b981;
+  --vp-c-brand-3: #059669;
+  --vp-shadow-brand: 0 8px 24px rgba(52, 211, 153, 0.3);
+}
+
+/* ============================================
+   HERO SECTION ENHANCEMENTS
+   ============================================ */
+
+.VPHero {
+  padding-top: 6rem !important;
+  padding-bottom: 4rem !important;
+  position: relative;
+  min-height: auto;
+  margin-top: 0;
+}
+
+.VPHero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--vp-gradient-hero);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.VPHero .container {
+  position: relative;
+  z-index: 1;
+}
+
+.VPHero .name {
+  background: var(--vp-gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
+.VPHero .text {
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+
+.VPHero .tagline {
+  font-size: 1.25rem;
+  line-height: 1.7;
+  max-width: 650px;
+  margin: 0 auto;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+}
+
+.VPHero .actions {
+  gap: 1rem;
+  padding-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.VPHero .image {
+  margin-top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.VPHero .image img {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 100%;
+  height: auto;
+}
+
+.VPButton {
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+}
+
+.VPButton.brand {
+  background: var(--vp-gradient-brand);
+  border: none;
+  box-shadow: var(--vp-shadow-brand);
+  color: #0a2a1e !important;
+}
+
+.VPButton.brand:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+  color: #0a2a1e !important;
+}
+
+.VPButton.alt {
+  border: 2px solid var(--vp-c-brand-1);
+  background: transparent;
+}
+
+.VPButton.alt:hover {
+  background: var(--vp-c-brand-soft);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   FEATURE CARDS ENHANCEMENTS
+   ============================================ */
+
+.VPFeatures {
+  padding-top: 12rem;
+  padding-bottom: 5rem;
+}
+
+.VPFeatures .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.VPFeature {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 16px;
+  padding: var(--vp-space-medium);
+  background: var(--vp-c-bg-soft);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.VPFeature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--vp-gradient-brand);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-1);
+  box-shadow: var(--vp-shadow-large);
+  transform: translateY(-6px);
+}
+
+.VPFeature:hover::before {
+  opacity: 1;
+}
+
+.VPFeature .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(52, 211, 153, 0.15) 100%);
+}
+
+/* Match feature icons to Vince brand color (emerald #10b981) */
+.VPFeatures img,
+.VPFeature img,
+.vp-features img,
+.vp-feature img {
+  filter: brightness(0) saturate(100%) invert(59%) sepia(58%) saturate(491%) hue-rotate(108deg) brightness(94%) contrast(89%) !important;
+}
+
+.VPFeature .icon img {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.VPFeature .title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: var(--vp-space-small);
+  color: var(--vp-c-text-1);
+}
+
+.VPFeature .details {
+  line-height: 1.7;
+  color: var(--vp-c-text-2);
+}
+
+.VPFeature .link-text {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: var(--vp-space-small);
+  transition: gap 0.3s ease;
+}
+
+.VPFeature .link-text:hover {
+  gap: 0.5rem;
+}
+
+/* ============================================
+   NAVIGATION ENHANCEMENTS
+   ============================================ */
+
+.VPNav {
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.dark .VPNav {
+  background: rgba(26, 26, 26, 0.85);
+}
+
+.VPNavBar {
+  padding: 0.75rem 2rem;
+}
+
+.VPNavBarTitle .title {
+  font-weight: 700;
+  background: var(--vp-gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.VPNavBarMenu .VPLink {
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.VPNavBarMenu .VPLink:hover {
+  color: var(--vp-c-brand-1);
+}
+
+/* ============================================
+   SIDEBAR ENHANCEMENTS
+   ============================================ */
+
+.VPSidebar {
+  padding: var(--vp-space-medium);
+}
+
+.VPSidebarGroup .title {
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vp-c-text-2);
+  padding: var(--vp-space-small) var(--vp-space-base);
+}
+
+.VPSidebarItem .link {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  padding: 0.5rem var(--vp-space-base);
+  margin: 2px 0;
+}
+
+.VPSidebarItem .link:hover {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+.VPSidebarItem.active .link {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+  border-left: 3px solid var(--vp-c-brand-1);
+  padding-left: calc(var(--vp-space-base) - 3px);
+}
+
+/* ============================================
+   CONTENT ENHANCEMENTS
+   ============================================ */
+
+.VPDoc {
+  padding-top: var(--vp-space-large);
+}
+
+.VPDoc h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--vp-space-medium);
+  background: var(--vp-gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.VPDoc h2 {
+  font-weight: 700;
+  margin-top: var(--vp-space-xl);
+  margin-bottom: var(--vp-space-medium);
+  padding-bottom: var(--vp-space-small);
+  border-bottom: 2px solid var(--vp-c-divider);
+}
+
+.VPDoc h3 {
+  font-weight: 600;
+  margin-top: var(--vp-space-large);
+  margin-bottom: var(--vp-space-base);
+}
+
+.VPDoc p {
+  line-height: 1.8;
+  margin: var(--vp-space-base) 0;
+}
+
+.VPDoc a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.VPDoc a:hover {
+  border-bottom-color: var(--vp-c-brand-1);
+}
+
+/* ============================================
+   CODE BLOCKS ENHANCEMENTS
+   ============================================ */
+
+.VPDoc div[class*='language-'] {
+  border-radius: 12px;
+  margin: var(--vp-space-medium) 0;
+  box-shadow: var(--vp-shadow-subtle);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.VPDoc div[class*='language-'] code {
+  line-height: 1.7;
+}
+
+.VPDoc div[class*='language-'] .line-numbers-wrapper {
+  padding-right: var(--vp-space-base);
+  border-right: 1px solid var(--vp-c-divider);
+}
+
+/* ============================================
+   CUSTOM COMPONENTS & UTILITIES
+   ============================================ */
+
+.custom-block {
+  border-radius: 12px;
+  padding: var(--vp-space-medium);
+  margin: var(--vp-space-medium) 0;
+  border-left: 4px solid;
+}
+
+.custom-block.tip {
+  background: rgba(95, 103, 238, 0.08);
+  border-left-color: var(--vp-c-brand-1);
+}
+
+.custom-block.warning {
+  background: rgba(255, 193, 7, 0.08);
+  border-left-color: #ffc107;
+}
+
+.custom-block.danger {
+  background: rgba(244, 67, 54, 0.08);
+  border-left-color: #f44336;
+}
+
+.custom-block .custom-block-title {
+  font-weight: 700;
+  margin-bottom: var(--vp-space-small);
+}
+
+/* ============================================
+   MERMAID DIAGRAM STYLING
+   ============================================ */
+
+.mermaid {
+  margin: var(--vp-space-large) 0;
+  padding: var(--vp-space-medium);
+  background: var(--vp-c-bg-soft);
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-divider);
+  overflow-x: auto;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+  .VPHero .name {
+    font-size: 2.5rem;
+  }
+
+  .VPHero .text {
+    font-size: 1.5rem;
+  }
+
+  .VPHero .tagline {
+    font-size: 1rem;
+  }
+
+  .VPButton {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9375rem;
+  }
+}
+
+/* ============================================
+   SCROLL BEHAVIOR & ANIMATIONS
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .VPFeature,
+  .VPButton,
+  .VPSidebarItem .link {
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================ */
+
+.VPButton:focus-visible,
+.VPSidebarItem .link:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Ensure sufficient contrast */
+.VPDoc strong {
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+}
+
+/* ============================================
+   SEARCH ENHANCEMENTS
+   ============================================ */
+
+.VPLocalSearchBox {
+  border-radius: 12px;
+  box-shadow: var(--vp-shadow-large);
+}
+
+/* ============================================
+   FOOTER STYLING
+   ============================================ */
+
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider);
+  padding: var(--vp-space-xl) 0;
+  text-align: center;
+}
+
+.VPFooter .message {
+  font-weight: 500;
+}

@@ -4,8 +4,10 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, Palette, Settings, FolderOpen } from "lucide-react";
+import { LogOut, Palette, Settings, FolderOpen, BookOpen } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+
+const DOCS_URL = '/docs/';
 
 const Navigation = () => {
   const { signOut, user } = useAuth();
@@ -36,6 +38,11 @@ const Navigation = () => {
                 <Link to="/admin"><Settings className="w-4 h-4 mr-1.5" />Admin</Link>
               </Button>
             )}
+            <Button variant="ghost" size="sm" asChild>
+              <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
+                <BookOpen className="w-4 h-4 mr-1.5" />Docs
+              </a>
+            </Button>
           </div>
         </div>
         <div className="flex items-center gap-2">

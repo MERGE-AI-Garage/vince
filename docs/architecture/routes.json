@@ -1,0 +1,80 @@
+{
+  "appName": "Vince — AI Creative Director",
+  "baseUrl": "https://vince.run",
+  "extractedAt": "2026-03-15T00:00:00Z",
+  "stats": {
+    "totalRoutes": 7,
+    "capturableRoutes": 5,
+    "routesWithTabs": 2
+  },
+  "routes": [
+    {
+      "path": "/login",
+      "component": "Login",
+      "category": "System",
+      "protected": false,
+      "tabs": [],
+      "componentFile": "pages/Login.tsx",
+      "notes": "Redirects to / if already authenticated"
+    },
+    {
+      "path": "/",
+      "component": "CreativeStudio",
+      "category": "Home",
+      "protected": true,
+      "tabs": [],
+      "componentFile": "pages/CreativeStudio.tsx",
+      "notes": "Same component as /studio"
+    },
+    {
+      "path": "/studio",
+      "component": "CreativeStudio",
+      "category": "Home",
+      "protected": true,
+      "tabs": [],
+      "componentFile": "pages/CreativeStudio.tsx",
+      "notes": "Alias of /"
+    },
+    {
+      "path": "/campaigns",
+      "component": "MyCampaigns",
+      "category": "Public",
+      "protected": true,
+      "tabs": [],
+      "componentFile": "pages/MyCampaigns.tsx"
+    },
+    {
+      "path": "/admin",
+      "component": "CreativeStudioAdmin",
+      "category": "Admin",
+      "protected": true,
+      "tabs": ["brands", "intelligence", "campaigns", "generations", "media", "downloads", "welcome", "settings", "vince"],
+      "componentFile": "pages/CreativeStudioAdmin.tsx",
+      "tabParam": "tab"
+    },
+    {
+      "path": "/vince",
+      "component": "VinceControlPanel",
+      "category": "Public",
+      "protected": true,
+      "tabs": ["voice", "chat", "prompts", "brand-intel", "conversations"],
+      "componentFile": "pages/VinceControlPanel.tsx",
+      "tabParam": "tab",
+      "notes": "VALID_TABS = ['voice', 'chat', 'prompts', 'brand-intel', 'conversations']; default tab is 'voice'"
+    },
+    {
+      "path": "/showcase",
+      "component": "VinceShowcase",
+      "category": "Public",
+      "protected": false,
+      "tabs": [],
+      "componentFile": "pages/VinceShowcase.tsx",
+      "notes": "Public route — no auth required"
+    }
+  ],
+  "extractedFrom": [
+    "src/App.tsx",
+    "src/pages/VinceControlPanel.tsx (VALID_TABS)",
+    "src/pages/CreativeStudioAdmin.tsx (TabsTrigger values)"
+  ]
+}

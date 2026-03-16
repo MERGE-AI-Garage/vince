@@ -8,5 +8,8 @@ scripts/output/
 *.log
 .DS_Store
 *.tsbuildinfo
-docs/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/visual-manual/screenshots/
+docs/visual-manual/*.html
 supabase/.temp/
