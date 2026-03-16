@@ -30,7 +30,7 @@ Before hitting record on ANY take:
 
 ### 0:00–0:20 — Hook (voiceover, hold on app logo or dark screen)
 
-> "Brand teams spend days briefing agencies. Every asset goes through rounds of approval. What if your AI creative director already knew your brand — and could put a real person into a campaign in seconds?"
+> "I'm the Director of AI Enablement at a marketing agency. 700 people. 50 AI tools. Every single person prompting our brand slightly differently. I've watched that problem for years. This is what I built to fix it."
 
 ---
 
@@ -62,10 +62,10 @@ Say:
 > "Generate a LinkedIn post celebrating them as a Google AI power user."
 
 While it generates, narrate:
-> "This isn't just dropping a photo into a template. Vince is placing this face into a professional Google-aligned environment using Gemini's image editing model — face preserved exactly. Then generate_creative_package wraps designed copy around it. Google brand colors, headline text rendered on the image, Google logo placed in the composition. One conversation."
+> "What's happening right now: Vince is placing that face into a Google-aligned scene — using Gemini's image editing model with face preservation. Then a second call wraps designed copy around that specific image. Google brand colors, headline, logo — all generated together. The brand was already loaded. I didn't brief it. It was just there."
 
 When the result appears:
-> "Notice it's a designed marketing asset — not just a photo. Text, logo, brand treatment, all generated together. The person's face is preserved. We used their actual headshot as a reference ingredient."
+> "That's a designed asset. Not a photo with a caption. Text rendered on the image, brand treatment applied, face intact. One conversation. No tools switched. No separate requests."
 
 ---
 
@@ -75,7 +75,7 @@ Say:
 > "Now make a video of them presenting on stage at Google Next — blazer, dramatic stage lighting, large audience."
 
 While the video queues:
-> "This goes directly to Veo 3 with the headshot as a native reference image. Not a workaround — Veo's first-class API for subject consistency. The person from the headshot appears in the video."
+> "That goes straight to Veo 3. The headshot is a native reference image — subject consistency is built into Veo's API. This isn't a workaround. That's how it's supposed to work."
 
 Video appears in History panel. Show it.
 
@@ -83,17 +83,17 @@ Video appears in History panel. Show it.
 
 ### 2:45–3:30 — Architecture (switch to diagram tab)
 
-> "Three Gemini models in one workflow. The Live API handles voice and all 26 tool calls — it's what makes this a conversation instead of a form. Gemini 3.1 Flash Image handles interleaved copy and image output — one API call, alternating blocks of text and images. Veo handles video with the subject as a reference ingredient."
+> "Three Gemini models. The Live API handles voice and all 26 tool calls — that's what makes this a conversation instead of a form. Gemini 3.1 Flash Image handles interleaved copy and images — one API call, alternating text and image blocks. Veo handles video with the subject reference."
 
 Pause. Then:
 
-> "Image generation models don't support function calling. That's not a limitation — it's a design signal. The moment I stopped fighting it, the architecture got cleaner. Voice session as pure orchestration. Generation call as pure creative execution. The constraint made it better."
+> "Here's the thing I didn't expect: image generation models don't support function calling. I hit that wall and had two choices — fight it or design around it. Designing around it gave me something cleaner than what I would have built on purpose. Voice session handles orchestration. Generation call handles output. Each model doing exactly what it's built for. The constraint made it better."
 
 ---
 
 ### 3:30–4:00 — Close
 
-> "Vince. Doesn't reference your brand guidelines. Becomes them."
+> "I'm not a developer. I'm an IT systems guy who moved into AI strategy. I built this in three weeks — nights and weekends — because I understood the problem. Vince doesn't reference your brand guidelines. He becomes them."
 
 Hold on the app or showcase URL. Fade.
 
@@ -121,7 +121,7 @@ Hold on the app or showcase URL. Fade.
 
 ### 0:00–0:30 — Hook
 
-> "Brand teams lose days briefing agencies. What if your creative director already knew your brand before the first conversation — and never needed to be told again?"
+> "I manage AI across a 700-person marketing agency. The brand consistency problem is real — and every new tool makes it worse, not better. This is what I built to fix it."
 
 ---
 
@@ -131,10 +131,10 @@ Activate voice mode. Say:
 > "Hey Vince, set up Google as a brand — the website is google.com."
 
 Website crawl starts. Narrate the wait:
-> "Vince is crawling the website, extracting visual identity, color profile, photography style, tone of voice. This takes about 30 seconds. He's not reading a style guide — he's synthesizing it."
+> "Right now Vince is crawling google.com. Pulling visual identity, color profile, photography style, tone of voice. This takes about 30 seconds. He's not storing a document — he's building a model of the brand. When this is done, every generation just knows it. You don't ask. It's already there."
 
 When synthesis completes, show the Brand DNA result briefly.
-> "From this point on, every generation knows this brand. Automatically. Without asking."
+> "That's the brand profile. That's what gets injected automatically before every generation from this point forward."
 
 ---
 
@@ -144,10 +144,10 @@ Say:
 > "Build a LinkedIn campaign for the Google AI Champion launch. Executive tone."
 
 While it generates:
-> "One voice command. Vince fires a tool call to generate_creative_package. A separate generateContent call with responseModalities TEXT and IMAGE runs on the backend — one API call returning alternating copy blocks and images. Strategy. Headline. LinkedIn post. Product shot. Woven together. While Vince keeps talking."
+> "One voice command. On the backend, Vince fires a tool call to generate_creative_package. That triggers a single generateContent call — responseModalities TEXT and IMAGE — and what comes back is alternating copy blocks and images in one response. Strategy, headline, LinkedIn post, product shot. Not assembled from separate requests. Woven together in a single call. While Vince keeps talking."
 
 When the result appears — slow down and show it:
-> "This is the interleaved output. Copy and image alternating in a single response. Not assembled from separate requests. Not a text response with an attachment. One call."
+> "That's what interleaved output looks like. Copy and image alternating. One API call. The brand DNA was already in the brief — retrieved automatically from vector memory before the call ran."
 
 ---
 
@@ -157,19 +157,23 @@ Say:
 > "Generate photography guardrails for the brand."
 
 Narrate:
-> "Brand compliance isn't a settings panel in Vince. It's conversational. He generates governance directives from the brand DNA — you activate them in the AI Guidelines panel. The brand IS the guardrails."
+> "This is the part that matters operationally. Brand compliance isn't a settings panel. Vince generates governance directives from the brand DNA — photography rules, tone constraints, usage guidelines. You activate them in the AI Guidelines panel and they inject into every subsequent generation. The brand becomes the guardrails."
 
 ---
 
 ### 3:00–3:40 — Architecture (switch to diagram tab)
 
-> "Two models. One conversation. Gemini Live API handles voice and tool orchestration. Gemini 3.1 Flash Image handles creative execution — interleaved copy and images in a single call. Image models don't support function calling. That constraint produced a cleaner architecture than anything I would have designed intentionally."
+> "Three Gemini models. Live API handles voice and the 26 tool calls — that's what makes this feel like a conversation instead of a form. Gemini 3.1 Flash Image handles creative execution — interleaved copy and images in a single call. Gemini 2.0 Flash handles video analysis when you drop in a competitor URL."
+
+Pause. Then:
+
+> "Image models don't support function calling. I hit that wall and had to design around it. That constraint gave me something cleaner than I would have built on purpose — voice session as pure orchestration, generation call as pure execution. I wouldn't have separated them by choice. The constraint made it better."
 
 ---
 
 ### 3:40–4:00 — Close
 
-> "Vince. Doesn't reference your brand guidelines. Becomes them."
+> "I'm not a developer. I'm a systems person who understood the problem deeply enough to build the solution. Three weeks. Nights and weekends. Vince doesn't reference your brand guidelines. He becomes them."
 
 Hold on URL. Fade.
 
