@@ -32,15 +32,6 @@ function isLightColor(hex: string | null | undefined): boolean {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55;
 }
 
-function hexToRgba(hex: string | null | undefined, alpha: number): string {
-  if (!hex) return `rgba(51, 51, 51, ${alpha})`;
-  const clean = hex.replace('#', '');
-  const r = parseInt(clean.slice(0, 2), 16);
-  const g = parseInt(clean.slice(2, 4), 16);
-  const b = parseInt(clean.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 function darkenHex(hex: string | null | undefined, amount: number): string {
   if (!hex) return `rgb(51, 51, 51)`;
   const clean = hex.replace('#', '');
@@ -138,7 +129,7 @@ export function BrandIntelligenceDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[1400px] max-h-[88vh] p-0 gap-0 rounded-2xl sm:rounded-2xl overflow-hidden font-product-sans [&>button:last-child]:hidden"
+        className="max-w-[1400px] max-h-[88vh] p-0 gap-0 rounded-2xl sm:rounded-2xl overflow-hidden font-product-sans [&>button:last-child]:hidden brand-guidelines-panel"
         style={{
           backgroundColor: 'hsl(var(--cs-surface-2))',
           borderColor: 'hsl(var(--cs-border-mid))',
@@ -263,7 +254,7 @@ export function BrandIntelligenceDialog({
         <ScrollArea
           key={activeView}
           className="h-[calc(88vh-130px)]"
-          style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
+          style={{ backgroundColor: 'hsl(0 0% 96%)' }}
         >
           {activeView === 'brand-dna' && (
             <BrandDNAViewContent

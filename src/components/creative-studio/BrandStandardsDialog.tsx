@@ -42,15 +42,6 @@ function isLightColor(hex: string | null | undefined): boolean {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55;
 }
 
-function hexToRgba(hex: string | null | undefined, alpha: number): string {
-  if (!hex) return `rgba(51, 51, 51, ${alpha})`;
-  const clean = hex.replace('#', '');
-  const r = parseInt(clean.slice(0, 2), 16);
-  const g = parseInt(clean.slice(2, 4), 16);
-  const b = parseInt(clean.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 // ── Reusable card component ───────────────────────────────────────────────
 
 function BentoCard({
@@ -70,8 +61,11 @@ function BentoCard({
     <div
       className={`rounded-xl p-3 ${className}`}
       style={{
-        backgroundColor: 'hsl(var(--cs-surface-1))',
-        border: '1px solid hsl(var(--cs-border-subtle))',
+        backgroundColor: 'rgba(255, 255, 255, 0.75)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 255, 255, 0.9)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)',
       }}
     >
       <div className="flex items-center gap-2 mb-2">
@@ -1118,7 +1112,7 @@ export function BrandStandardsDialog({ brand, open, onOpenChange, onNavigate }: 
         {/* ── Content with brand-tinted background ── */}
         <ScrollArea
           className="h-[calc(88vh-130px)]"
-          style={{ backgroundColor: hexToRgba(brand.primary_color, 0.04) }}
+          style={{ backgroundColor: 'hsl(0 0% 96%)' }}
         >
           <BrandStandardsViewContent brand={brand} profile={profile} isLoading={isLoading} />
         </ScrollArea>
