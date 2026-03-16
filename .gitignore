@@ -11,4 +11,5 @@ scripts/output/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/visual-manual/*.html
+docs/public/visual-manual/*.html
 supabase/.temp/

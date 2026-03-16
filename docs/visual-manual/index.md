@@ -45,38 +45,6 @@ This visual guide shows screenshots and descriptions of every page in the applic
 />
 
 <ScreenshotCard
-  title="VinceControlPanel - chat"
-  route="/vince?tab=chat"
-  imagePath="/visual-manual/screenshots/06-vince-tab-chat.png"
-  description="Page at /vince (chat tab)"
-  icon="📸"
-/>
-
-<ScreenshotCard
-  title="VinceControlPanel - prompts"
-  route="/vince?tab=prompts"
-  imagePath="/visual-manual/screenshots/07-vince-tab-prompts.png"
-  description="Page at /vince (prompts tab)"
-  icon="📸"
-/>
-
-<ScreenshotCard
-  title="VinceControlPanel - brand-intel"
-  route="/vince?tab=brand-intel"
-  imagePath="/visual-manual/screenshots/08-vince-tab-brand-intel.png"
-  description="Page at /vince (brand-intel tab)"
-  icon="📸"
-/>
-
-<ScreenshotCard
-  title="VinceControlPanel - conversations"
-  route="/vince?tab=conversations"
-  imagePath="/visual-manual/screenshots/09-vince-tab-conversations.png"
-  description="Page at /vince (conversations tab)"
-  icon="📸"
-/>
-
-<ScreenshotCard
   title="VinceShowcase"
   route="/showcase"
   imagePath="/visual-manual/screenshots/10-showcase.png"
