@@ -279,7 +279,7 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
   return (
     <div className="space-y-4 text-sm">
       {/* Who created this */}
-      <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
+      <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <User className="w-3.5 h-3.5 text-violet-400 shrink-0" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400">Created By</span>
@@ -291,7 +291,7 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
       </div>
 
       {/* Generation info */}
-      <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
+      <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Cpu className="w-3.5 h-3.5 text-purple-400 shrink-0" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400">Generation Info</span>
@@ -310,7 +310,7 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
 
       {/* Brand */}
       {gen.brand && (
-        <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
+        <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400">Brand</span>
@@ -332,7 +332,7 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
       )}
 
       {/* Deliverables */}
-      <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
+      <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Layers className="w-3.5 h-3.5 text-blue-400 shrink-0" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Deliverables</span>
@@ -364,7 +364,7 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
 
       {/* Brand alignment */}
       {brandAlignment && (
-        <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-2">
+        <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-3.5 h-3.5 text-purple-400 shrink-0" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400">Brand Alignment</span>
@@ -384,7 +384,7 @@ function CampaignMetadataPanel({ gen, resolvedNames }: { gen: GenerationWithDeta
       )}
 
       {/* Record ID */}
-      <div className="rounded-lg border border-border/40 bg-muted/10 p-4 space-y-3">
+      <div className="rounded-lg border border-border/60 bg-muted/30 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Hash className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Record</span>
@@ -942,16 +942,16 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
 
   return (
     <>
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ ['--foreground' as string]: '140 10% 92%', ['--muted-foreground' as string]: '150 10% 65%', ['--muted' as string]: '165 14% 14%', ['--border' as string]: '165 16% 20%' } as React.CSSProperties}>
       {/* Campaign header */}
-      <div className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(15,34,25,0.85)', border: '1px solid rgba(0,133,108,0.25)' }}>
         {/* Brand color accent stripe */}
         <div className="h-1 w-full" style={{ backgroundColor: brandColor }} />
         <div className="p-5">
           {/* Back nav */}
           <button
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-slate-700 transition-colors mb-4"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground/40 hover:text-foreground/70 transition-colors mb-4"
           >
             <ArrowLeft className="w-3 h-3" />
             All Campaigns
@@ -962,7 +962,7 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
             <div className="flex items-start gap-3 min-w-0">
               {/* Brand identity mark */}
               <div
-                className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center overflow-hidden border border-slate-200/60"
+                className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center overflow-hidden border border-white/10"
                 style={{ backgroundColor: brandLogoUrl ? '#fff' : `${brandColor}18` }}
               >
                 {brandLogoUrl ? (
@@ -973,37 +973,37 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
               </div>
 
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-0.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70 mb-0.5">
                   {brandName}
                 </p>
-                <h2 className="font-fraunces text-xl font-semibold text-slate-900 leading-tight">
+                <h2 className="font-fraunces text-xl font-semibold text-foreground leading-tight">
                   Creative Campaign
                 </h2>
 
                 {/* Metadata row */}
                 <div className="flex items-center gap-1 mt-2 flex-wrap">
-                  <span className="font-epilogue text-xs text-slate-400 tabular-nums">
+                  <span className="font-epilogue text-xs text-foreground/45 tabular-nums">
                     {format(new Date(gen.created_at), 'MMMM d, yyyy')}
                   </span>
                   {userName && (
                     <>
-                      <span className="text-slate-300 text-xs">·</span>
-                      <span className="font-epilogue text-xs text-slate-400 flex items-center gap-1">
+                      <span className="text-foreground/20 text-xs">·</span>
+                      <span className="font-epilogue text-xs text-foreground/45 flex items-center gap-1">
                         <User className="w-3 h-3" />{userName}
                       </span>
                     </>
                   )}
-                  <span className="text-slate-300 text-xs">·</span>
-                  <span className="font-epilogue text-xs text-slate-500 font-semibold">
+                  <span className="text-foreground/20 text-xs">·</span>
+                  <span className="font-epilogue text-xs text-foreground/60 font-semibold">
                     {resolvedNames.length}
                   </span>
-                  <span className="font-epilogue text-xs text-slate-400">
+                  <span className="font-epilogue text-xs text-foreground/45">
                     {resolvedNames.length !== 1 ? 'deliverables' : 'deliverable'}
                   </span>
                   {gen.generation_time_ms && (
                     <>
-                      <span className="text-slate-300 text-xs">·</span>
-                      <span className="font-epilogue text-xs text-slate-400 flex items-center gap-1">
+                      <span className="text-foreground/20 text-xs">·</span>
+                      <span className="font-epilogue text-xs text-foreground/45 flex items-center gap-1">
                         <Clock className="w-3 h-3" />{(gen.generation_time_ms / 1000).toFixed(1)}s
                       </span>
                     </>
@@ -1011,7 +1011,7 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
                 </div>
 
                 {brief && (
-                  <p className="font-epilogue text-xs text-slate-500 mt-2.5 leading-relaxed max-w-2xl line-clamp-2">
+                  <p className="font-epilogue text-xs text-muted-foreground mt-2.5 leading-relaxed max-w-2xl line-clamp-2">
                     {brief}
                   </p>
                 )}
@@ -1053,7 +1053,7 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
 
             <TabsContent value="campaign">
               {hasCopy ? (
-                <div className="dark preserve-dark p-3 bg-[#0F2219]/70 border border-[#00856C]/30 rounded-lg">
+                <div style={{ padding: '12px', background: 'rgba(15,34,25,0.9)', border: '1px solid rgba(0,133,108,0.3)', borderRadius: '8px', ['--foreground' as string]: '140 10% 92%', ['--muted-foreground' as string]: '150 10% 65%', ['--muted' as string]: '165 14% 14%', ['--border' as string]: '165 16% 20%' } as React.CSSProperties}>
                   <CreativePackageDisplay
                     parts={copyBlocks}
                     imageUrls={gen.output_urls || []}
@@ -1127,9 +1127,9 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
         </div>
 
         {/* Right: Metadata panel */}
-        <div className="lg:sticky lg:top-6 rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50/80">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Campaign Info</span>
+        <div className="lg:sticky lg:top-6 rounded-xl overflow-hidden" style={{ background: 'rgba(15,34,25,0.85)', border: '1px solid rgba(0,133,108,0.25)' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,133,108,0.2)', background: 'rgba(15,34,25,0.4)' }}>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">Campaign Info</span>
           </div>
           <div className="p-4">
             <CampaignMetadataPanel gen={gen} resolvedNames={resolvedNames} />
