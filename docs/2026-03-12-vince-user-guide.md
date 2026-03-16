@@ -327,7 +327,6 @@ When Vince generates something you love, say "save that prompt." It goes into th
 
 ## What Vince Can't Do (Yet)
 
-- **Check the status of a video render in progress** — videos are fire-and-forget; check the library for completion
 - **Tell you which brand guardrails are currently active** — use the AI Guidelines panel in the UI
 - **Add a reference image mid-conversation** — use the brand reference manager in the UI
 - **Give a cost estimate before generating** — quota remaining is available, dollar cost is not

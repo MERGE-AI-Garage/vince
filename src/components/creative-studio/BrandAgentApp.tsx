@@ -1657,7 +1657,7 @@ export function BrandAgentApp({
 
                 {/* Creative Package (interleaved text + images) */}
                 {agentResponses[message.id].creative_package && (
-                  <div className="p-3 bg-[#00856C]/[0.05] border border-[#00856C]/20 rounded-lg">
+                  <div className="dark p-3 bg-[#0F2219]/70 border border-[#00856C]/30 rounded-lg">
                     <CreativePackageDisplay
                       parts={agentResponses[message.id].creative_package!.parts}
                       imageUrls={agentResponses[message.id].creative_package!.image_urls}

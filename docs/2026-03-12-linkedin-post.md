@@ -1,48 +1,37 @@
-# LinkedIn Post — March 15, 2026
+# LinkedIn Post — Vince Launch
 
 ---
 
-I just shipped Vince for the Gemini Live Agent Challenge. Here's what I actually learned building it.
+I'm not a developer. I'm an IT systems guy who became the Director of AI Enablement at a marketing agency. My job is teaching people how to actually use AI tools — not in demos, in the real deadline-driven world of creative work.
 
-**The problem:** Brand teams spend days briefing agencies because AI has no idea what your brand is. Generic image tools generate things that look great and are completely off-brand. The issue isn't generation quality — it's the absence of brand intelligence.
+For a long time I've been walking around with an idea I couldn't shake.
 
-**Vince:** A voice-driven AI creative director who already knows your brand. Brief him by voice. Get complete campaigns — copy and images together — in a single response.
+I take walks. I hit record on Gemini and just think out loud — raw architecture, what should exist but doesn't. And the thing I kept coming back to: what if a creative director could direct on the go? Voice-brief a campaign. Brand-aware from the first word. Assets waiting when you get back to your desk.
 
----
-
-**The technical insight that drove everything:**
-
-Gemini Live API handles real-time voice and tool calling. Gemini 3.1 Flash Image handles interleaved output — one API call that returns alternating text blocks and images. These are deliberately two separate models, and that separation isn't a compromise. It's the architecture.
-
-Image models don't support function calling. I couldn't have one model do both. When I hit that constraint, I had two choices: fight it or design around it. Designing around it meant the voice session became a pure orchestration layer and the generation call became a pure creative execution layer. Cleaner than anything I would have designed if I'd had the choice.
-
-The flow: Vince is listening via Live API → you brief a campaign → he calls `generate_creative_package` mid-conversation → a separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']` runs on the backend → interleaved copy and images render on the frontend while Vince keeps talking.
+That became Vince. Built for the Gemini Live Agent Challenge.
 
 ---
 
-**Invisible RAG:**
+**What he does:**
 
-Every generation is brand-aware without the user asking for it. Before any creative package runs, `recall_brand_guidelines` does a semantic search against the brand's vector memory and injects the relevant rules — visual identity standards, photography directives, tone constraints — directly into the generation prompt. The user never touches a settings panel. Brand context is always already there.
-
----
-
-**The hardest engineering problem:**
-
-The Gemini Live API expects tool results back fast. Brand website analysis takes 30-60 seconds. A slow tool call stalls the WebSocket.
-
-The fix: fire-and-forget for async operations. Vince acknowledges the call immediately, returns a stub result so the session stays alive, and pushes the real result to the frontend via Supabase Realtime when the operation completes. The voice session never waits.
-
-I used the GenAI SDK directly (not ADK) for exactly this kind of control — audio resampling to 16kHz PCM, tool injection timing, session resumption. More code, but we own the session lifecycle.
+- *"Hey Vince, set up Google as a brand."* He crawls the website, extracts the visual DNA, synthesizes it. Knows the brand.
+- *"Build a LinkedIn campaign for the AI Champion launch."* One voice command. Strategy, copy, and designed images — interleaved in a single response. Not assembled from separate requests.
+- *"Put me in this campaign."* Upload a headshot. Your actual face, placed in a brand-aligned scene, wrapped in campaign copy. One conversation.
+- *"Beat this Apple ad — here's the link."* Vince analyzes the video, surfaces the weaknesses, proposes three counter-campaign directions. While the voice session stays open.
 
 ---
 
-**What I'd do differently:**
+**The architecture insight:**
 
-Start with the constraint inventory. I spent time early trying to make the Live API do image generation before I understood why that can't work. Reading the model capability docs first would have saved days.
+Gemini Live API handles voice and tool calling. Gemini 3.1 Flash Image handles interleaved output — one call returning alternating copy blocks and images. Two models, deliberately separated.
+
+Image models don't support function calling. That constraint forced a cleaner split than I would have designed intentionally. Voice session = pure orchestration. Generation call = pure creative execution. Each at its ceiling.
+
+The hardest problem: brand website analysis takes 30–60 seconds. The Live API wants results fast. Fix: fire-and-forget — Vince acknowledges immediately, pushes the real result via Supabase Realtime when done. Voice session never waits.
 
 ---
 
-Try Vince: https://vince-359575203061.us-central1.run.app
+Try Vince: https://vince-359575203061.us-central1.run.app/showcase
 DevPost: [link]
 
 #GeminiLiveAgentChallenge #GoogleCloud #GeminiAPI #BuildWithGemini

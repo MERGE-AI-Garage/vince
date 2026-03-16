@@ -83,7 +83,7 @@ function renderCopyText(text: string): React.ReactNode {
             return (
               <div key={i}>
                 <span className="text-[9px] font-bold uppercase tracking-widest text-purple-400/60 block mb-0.5">{label}</span>
-                <p className={isHeadline ? 'text-sm font-bold text-slate-800 leading-tight' : isCTA ? 'text-xs font-semibold text-purple-600' : 'text-xs text-slate-600 leading-relaxed'}>
+                <p className={isHeadline ? 'text-sm font-bold text-foreground leading-tight' : isCTA ? 'text-xs font-semibold text-purple-300' : 'text-xs text-foreground/85 leading-relaxed'}>
                   {value}
                 </p>
               </div>
@@ -91,7 +91,7 @@ function renderCopyText(text: string): React.ReactNode {
           }
           // Plain text before the first field
           const stripped = line.replace(/\*{1,2}/g, '').trim();
-          return stripped ? <p key={i} className="text-xs text-slate-600 leading-relaxed">{stripped}</p> : null;
+          return stripped ? <p key={i} className="text-xs text-foreground/85 leading-relaxed">{stripped}</p> : null;
         })}
       </div>
     );
@@ -100,10 +100,10 @@ function renderCopyText(text: string): React.ReactNode {
   // Plain copy — render bold spans inline, preserve line breaks
   const parts = text.split(/(\*{1,2}[^*]+\*{1,2})/g);
   return (
-    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
+    <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-wrap">
       {parts.map((part, i) => {
         const bold = part.match(/^\*{1,2}([^*]+)\*{1,2}$/);
-        return bold ? <strong key={i} className="font-semibold text-slate-800">{bold[1]}</strong> : <Fragment key={i}>{part}</Fragment>;
+        return bold ? <strong key={i} className="font-semibold text-foreground/95">{bold[1]}</strong> : <Fragment key={i}>{part}</Fragment>;
       })}
     </p>
   );
@@ -204,7 +204,7 @@ export function CreativePackageDisplay({
               Creative Package
             </span>
           </div>
-          <p className="text-sm font-semibold text-slate-800">{brandName}</p>
+          <p className="text-sm font-semibold text-foreground">{brandName}</p>
           {brief && (
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{brief}</p>
           )}
@@ -245,7 +245,7 @@ export function CreativePackageDisplay({
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${iconCls}`} />
-                <span className="text-xs font-medium text-slate-700 truncate">Brand Alignment</span>
+                <span className="text-xs font-medium text-foreground/80 truncate">Brand Alignment</span>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <div className="flex items-center gap-1 flex-nowrap">
@@ -286,113 +286,111 @@ export function CreativePackageDisplay({
       })()}
 
       {/* Deliverable sections */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {groups.map((group, groupIdx) => (
-          <div key={groupIdx} className="rounded-xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-            {/* Card header */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50/80">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          <div key={groupIdx} className="space-y-2">
+            {/* Section label */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-purple-400 shrink-0">
                 {group.name}
               </span>
-              <span className="text-[9px] font-mono text-slate-400 tabular-nums">
-                {String(groupIdx + 1).padStart(2, '0')} / {String(groups.length).padStart(2, '0')}
+              <div className="flex-1 h-px bg-purple-500/20" />
+              <span className="text-[9px] text-muted-foreground/40 shrink-0">
+                {groupIdx + 1}/{groups.length}
               </span>
             </div>
 
-            {/* Card body */}
-            <div className="p-4 space-y-3">
-              {/* Copy block */}
-              {group.text && (
-                <div className="relative group/text">
-                  <div className="bg-slate-50 rounded-lg p-3 pr-10 border border-slate-100">
-                    {renderCopyText(group.text)}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover/text:opacity-100 transition-opacity"
-                    onClick={() => handleCopyText(group.text!, group.index)}
-                  >
-                    {copiedIndex === group.index ? (
-                      <Check className="w-3 h-3 text-green-500" />
-                    ) : (
-                      <Copy className="w-3 h-3" />
-                    )}
-                  </Button>
+            {/* Copy block */}
+            {group.text && (
+              <div className="relative group/text">
+                <div className="bg-muted/10 rounded-md p-3 pr-10 border border-border/20">
+                  {renderCopyText(group.text)}
                 </div>
-              )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover/text:opacity-100 transition-opacity"
+                  onClick={() => handleCopyText(group.text!, group.index)}
+                >
+                  {copiedIndex === group.index ? (
+                    <Check className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <Copy className="w-3 h-3" />
+                  )}
+                </Button>
+              </div>
+            )}
 
-              {/* Image */}
-              {group.imageUrl && (
-                <div className="relative group/image rounded-lg overflow-hidden border border-slate-200/60 bg-slate-50">
-                  <img
-                    src={group.imageUrl}
-                    alt={group.name}
-                    className="w-full h-auto block"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity">
-                    <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-                      <span className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">
-                        {group.name}
-                      </span>
-                      {(imageUrls[group.index] || group.imageUrl) && (
-                        <div className="flex items-center gap-1.5">
-                          {onLoadToCanvas && (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              className="h-7 gap-1.5 text-xs bg-slate-700 hover:bg-slate-600"
-                              onClick={() => {
-                                onLoadToCanvas(imageUrls[group.index] || group.imageUrl!);
-                                toast.success('Loaded to canvas');
-                              }}
-                            >
-                              <MonitorPlay className="w-3 h-3" />
-                              Use in Canvas
-                            </Button>
-                          )}
-                          {onImageInfo && (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-7 w-7 p-0"
-                              title="Image info"
-                              onClick={() => onImageInfo(group.index, group.name, imageUrls[group.index] || group.imageUrl!)}
-                            >
-                              <Info className="w-3 h-3" />
-                            </Button>
-                          )}
-                          {onIterate && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 gap-1.5 text-xs"
-                              onClick={() => onIterate(group.name, imageUrls[group.index] || group.imageUrl!)}
-                            >
-                              Iterate
-                            </Button>
-                          )}
+            {/* Image */}
+            {group.imageUrl && (
+              <div className="relative group/image rounded-lg overflow-hidden border border-border/30 bg-muted/10">
+                <img
+                  src={group.imageUrl}
+                  alt={group.name}
+                  className="w-full h-auto block"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity">
+                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                    <span className="text-[10px] font-semibold text-white/60 uppercase tracking-wider">
+                      {group.name}
+                    </span>
+                    {(imageUrls[group.index] || group.imageUrl) && (
+                      <div className="flex items-center gap-1.5">
+                        {onLoadToCanvas && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 gap-1.5 text-xs bg-purple-600 hover:bg-purple-500"
+                            onClick={() => {
+                              onLoadToCanvas(imageUrls[group.index] || group.imageUrl!);
+                              toast.success('Loaded to canvas');
+                            }}
+                          >
+                            <MonitorPlay className="w-3 h-3" />
+                            Use in Canvas
+                          </Button>
+                        )}
+                        {onImageInfo && (
                           <Button
                             size="sm"
                             variant="secondary"
-                            className="h-7 gap-1.5 text-xs"
-                            onClick={() => handleDownloadImage(
-                              imageUrls[group.index] || group.imageUrl!,
-                              group.name,
-                              group.index
-                            )}
+                            className="h-7 w-7 p-0"
+                            title="Image info"
+                            onClick={() => onImageInfo(group.index, group.name, imageUrls[group.index] || group.imageUrl!)}
                           >
-                            <Download className="w-3 h-3" />
-                            Save
+                            <Info className="w-3 h-3" />
                           </Button>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                        {onIterate && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 gap-1.5 text-xs"
+                            onClick={() => onIterate(group.name, imageUrls[group.index] || group.imageUrl!)}
+                          >
+                            Iterate
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-7 gap-1.5 text-xs"
+                          onClick={() => handleDownloadImage(
+                            imageUrls[group.index] || group.imageUrl!,
+                            group.name,
+                            group.index
+                          )}
+                        >
+                          <Download className="w-3 h-3" />
+                          Save
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

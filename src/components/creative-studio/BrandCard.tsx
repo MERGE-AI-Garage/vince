@@ -38,8 +38,8 @@ const BrandCard = memo(({
     <div
       className={cn(
         'group relative overflow-hidden rounded-2xl cursor-pointer',
-        'shadow-[0_2px_8px_rgba(0,0,0,0.08)]',
-        'hover:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.25)] hover:-translate-y-1.5',
+        'shadow-[0_4px_20px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.08)]',
+        'hover:shadow-[0_24px_64px_-8px_rgba(0,0,0,0.28),0_4px_16px_rgba(0,0,0,0.12)] hover:-translate-y-2',
         'transition-all duration-500',
         !brand.is_active && 'opacity-50',
         brand.is_default && 'ring-2 ring-primary/30',

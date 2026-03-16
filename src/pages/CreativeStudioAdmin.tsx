@@ -480,7 +480,7 @@ export default function CreativeStudioAdmin() {
         icon={LayoutDashboard}
         eyebrow="CREATIVE PLATFORM"
         title="Intelligence Console"
-        description="Configure brand identities and DNA, tune AI models, manage team quotas, monitor generation costs, and analyze creative performance"
+        description="Your AI creative platform's command center. Manage brand identities and DNA profiles, configure AI model access and camera presets, set per-user generation quotas, monitor 30-day costs, and analyze creative output — everything needed to run Vince at scale. Use the Brands tab to build and manage client identities, Brand DNA to run AI analysis, Campaigns and Generations to review output, and Settings for model config, access control, and audit trails."
         backTo={{ path: '/', label: 'Back to Studio' }}
         actions={
           <div className="flex items-center gap-2">
@@ -541,46 +541,34 @@ export default function CreativeStudioAdmin() {
       <div className="container mx-auto px-6 py-6 space-y-6">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex justify-center">
-            <TabsList>
-              <TabsTrigger value="brands" data-tour="admin-brands-tab">
-                <Palette className="h-3.5 w-3.5" />
-                Brands
-              </TabsTrigger>
-              <TabsTrigger value="intelligence" data-tour="admin-intelligence-tab">
-                <Brain className="h-3.5 w-3.5" />
-                Brand DNA
-              </TabsTrigger>
-              <TabsTrigger value="campaigns">
-                <Layers className="h-3.5 w-3.5" />
-                Campaigns
-              </TabsTrigger>
-              <TabsTrigger value="generations">
-                <Image className="h-3.5 w-3.5" />
-                Generations
-              </TabsTrigger>
-              <TabsTrigger value="media">
-                <FileImage className="h-3.5 w-3.5" />
-                Media
-              </TabsTrigger>
-              <TabsTrigger value="downloads">
-                <Package className="h-3.5 w-3.5" />
-                Downloads
-              </TabsTrigger>
-              <TabsTrigger value="welcome">
-                <Image className="h-3.5 w-3.5" />
-                Welcome Page
-              </TabsTrigger>
-              <TabsTrigger value="settings">
-                <Settings className="h-3.5 w-3.5" />
-                Settings
-              </TabsTrigger>
-              <TabsTrigger value="vince">
-                <Bot className="h-3.5 w-3.5" />
-                Vince
-              </TabsTrigger>
-            </TabsList>
-
+          <div className="flex justify-center pb-1">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-1.5 shadow-[0_2px_12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(15,23,42,0.06)]">
+              <TabsList className="bg-transparent h-auto p-0 gap-0.5 flex-wrap justify-center">
+                {(
+                  [
+                    { value: 'brands', icon: Palette, label: 'Brands', tourId: 'admin-brands-tab' },
+                    { value: 'intelligence', icon: Brain, label: 'Brand DNA', tourId: 'admin-intelligence-tab' },
+                    { value: 'campaigns', icon: Layers, label: 'Campaigns' },
+                    { value: 'generations', icon: Image, label: 'Generations' },
+                    { value: 'media', icon: FileImage, label: 'Media' },
+                    { value: 'downloads', icon: Package, label: 'Downloads' },
+                    { value: 'welcome', icon: Image, label: 'Welcome Page' },
+                    { value: 'settings', icon: Settings, label: 'Settings' },
+                    { value: 'vince', icon: Bot, label: 'Vince' },
+                  ] as const
+                ).map(({ value, icon: Icon, label, tourId }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    {...(tourId ? { 'data-tour': tourId } : {})}
+                    className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 h-auto text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100/80 data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all duration-150"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           </div>
 
           {/* Brands Tab */}

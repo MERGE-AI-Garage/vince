@@ -1053,16 +1053,18 @@ function CampaignDetail({ gen, onBack }: { gen: GenerationWithDetails; onBack: (
 
             <TabsContent value="campaign">
               {hasCopy ? (
-                <CreativePackageDisplay
-                  parts={copyBlocks}
-                  imageUrls={gen.output_urls || []}
-                  latencyMs={gen.generation_time_ms || 0}
-                  brandName={brandName}
-                  model={gen.model_used}
-                  brief={gen.prompt_text || undefined}
-                  deliverableNames={resolvedNames}
-                  onImageInfo={(index, name, imageUrl) => setImageInfo({ index, name, imageUrl })}
-                />
+                <div className="dark preserve-dark p-3 bg-[#0F2219]/70 border border-[#00856C]/30 rounded-lg">
+                  <CreativePackageDisplay
+                    parts={copyBlocks}
+                    imageUrls={gen.output_urls || []}
+                    latencyMs={gen.generation_time_ms || 0}
+                    brandName={brandName}
+                    model={gen.model_used}
+                    brief={gen.prompt_text || undefined}
+                    deliverableNames={resolvedNames}
+                    onImageInfo={(index, name, imageUrl) => setImageInfo({ index, name, imageUrl })}
+                  />
+                </div>
               ) : (
                 <div className="space-y-6">
                   <div className="rounded-md border border-amber-500/20 bg-amber-500/5 px-4 py-3">

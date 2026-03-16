@@ -278,8 +278,7 @@ The ideas I've had forever are real now.
 
 ---
 
-**Try it:** https://vince-359575203061.us-central1.run.app
-**Demo login:** demo@vince.ai
+**Try it:** https://vince-359575203061.us-central1.run.app/showcase
 
 If you're working on brand intelligence, voice agents, or AI for creative teams — I'd like to compare notes.
 
