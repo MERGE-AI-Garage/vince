@@ -46,23 +46,23 @@ export function CampaignHistoryPanel({ brandId, onSelectPrompt }: Props) {
         display: 'flex',
         alignItems: 'center',
         padding: '10px 12px 8px',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(224,222,217,0.7)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(0,0,0,0.45)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
           Campaign Archive
         </span>
       </div>
 
       {/* List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0', scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 0', scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.12) transparent' }}>
         {isLoading && (
-          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(224,222,217,0.3)', fontSize: '11px' }}>
+          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: '11px' }}>
             Loading…
           </div>
         )}
         {!isLoading && items.length === 0 && (
-          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(224,222,217,0.3)', fontSize: '11px' }}>
+          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: '11px' }}>
             No campaigns yet
           </div>
         )}
@@ -82,7 +82,7 @@ export function CampaignHistoryPanel({ brandId, onSelectPrompt }: Props) {
                 padding: '8px 12px',
                 background: 'none',
                 border: 'none',
-                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                borderBottom: '1px solid rgba(0,0,0,0.05)',
                 cursor: item.prompt_text ? 'pointer' : 'default',
                 textAlign: 'left',
                 transition: 'background 0.1s',
@@ -115,14 +115,14 @@ export function CampaignHistoryPanel({ brandId, onSelectPrompt }: Props) {
                   }}>
                     {label}
                   </span>
-                  <span style={{ fontSize: '9px', color: 'rgba(224,222,217,0.3)', flexShrink: 0 }}>
+                  <span style={{ fontSize: '9px', color: 'rgba(0,0,0,0.35)', flexShrink: 0 }}>
                     {relativeTime(item.created_at)}
                   </span>
                 </div>
                 <p style={{
                   margin: 0,
                   fontSize: '10px',
-                  color: item.prompt_text ? 'rgba(224,222,217,0.7)' : 'rgba(224,222,217,0.3)',
+                  color: item.prompt_text ? '#333333' : 'rgba(0,0,0,0.35)',
                   lineHeight: 1.4,
                   overflow: 'hidden',
                   display: '-webkit-box',

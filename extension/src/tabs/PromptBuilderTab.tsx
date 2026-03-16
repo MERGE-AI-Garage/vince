@@ -95,7 +95,7 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
   const accentGreen = '#8b5cf6';
 
   const displayName = brandName || 'Brand';
-  const title = `${displayName} Prompt Studio`;
+  const title = 'Prompt Studio';
   const intro = brandName
     ? `Describe what you need for ${brandName}. Get a prompt grounded in the brand's voice, colors, and visual direction — consistent across every team and tool.`
     : "Describe what you need. Get a prompt grounded in your brand's voice, colors, and visual direction — consistent across every team and tool.";
@@ -119,32 +119,20 @@ export function PromptBuilderTab({ detectedPlatform, brandId, brandName, brandCo
           justifyContent: 'space-between',
           marginBottom: '6px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {brandLogoUrl ? (
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '6px',
-                background: '#fff',
-                border: `1px solid ${hexToRgba(accentDark, 0.1)}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}>
-                <img src={brandLogoUrl} alt="" style={{ maxWidth: '18px', maxHeight: '18px', objectFit: 'contain' }} />
-              </div>
+              <img src={brandLogoUrl} alt={displayName} style={{ maxHeight: '32px', maxWidth: '80px', objectFit: 'contain', display: 'block' }} />
             ) : (
               <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '7px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
                 background: `linear-gradient(135deg, ${accentDark} 0%, ${accentLight} 100%)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}>
-                <Sparkles size={12} style={{ color: accentGreen }} />
+                <Sparkles size={14} style={{ color: accentGreen }} />
               </div>
             )}
             <h2 style={{

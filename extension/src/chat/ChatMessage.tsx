@@ -43,17 +43,17 @@ export function ChatMessage({ message, onSelectCampaignDirection, brandColor }: 
           padding: '8px 11px',
           borderRadius: isUser ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
           background: isUser
-            ? `rgba(${accentRgb}, 0.18)`
+            ? `rgba(${accentRgb}, 0.14)`
             : isVoice
-            ? 'rgba(255,255,255,0.03)'
-            : 'rgba(255,255,255,0.05)',
-          border: `1px solid ${isUser ? `rgba(${accentRgb}, 0.4)` : 'rgba(255,255,255,0.07)'}`,
+            ? 'rgba(0,0,0,0.03)'
+            : '#ffffff',
+          border: `1px solid ${isUser ? `rgba(${accentRgb}, 0.35)` : 'rgba(0,0,0,0.08)'}`,
           fontSize: '12px',
-          color: isUser ? '#e0ded9' : 'rgba(224,222,217,0.88)',
+          color: '#111111',
           lineHeight: 1.5,
           fontFamily: 'Epilogue, system-ui, sans-serif',
           opacity: isVoice && !message.isFinal ? 0.65 : 1,
-          borderLeft: !isUser && isVoice ? `2px solid rgba(${PURPLE_RGB}, 0.4)` : undefined,
+          borderLeft: !isUser && isVoice ? `2px solid rgba(${PURPLE_RGB}, 0.5)` : undefined,
         }}>
           {message.isLoading ? (
             <span style={{ display: 'inline-flex', gap: '3px', alignItems: 'center' }}>

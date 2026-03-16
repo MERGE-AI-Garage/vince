@@ -64,10 +64,10 @@ export function ConversationHistoryPanel({ onRestoreConversation, onNewChat }: P
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px 12px 8px',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        borderBottom: '1px solid rgba(0,0,0,0.07)',
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(224,222,217,0.7)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(0,0,0,0.45)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
           Chat History
         </span>
         <button
@@ -93,15 +93,15 @@ export function ConversationHistoryPanel({ onRestoreConversation, onNewChat }: P
         flex: 1,
         overflowY: 'auto',
         scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(255,255,255,0.08) transparent',
+        scrollbarColor: 'rgba(0,0,0,0.12) transparent',
       }}>
         {loading && (
-          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(224,222,217,0.3)', fontSize: '12px' }}>
+          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: '12px' }}>
             Loading…
           </div>
         )}
         {!loading && conversations.length === 0 && (
-          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(224,222,217,0.3)', fontSize: '12px' }}>
+          <div style={{ padding: '32px 12px', textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: '12px' }}>
             No past conversations yet.
           </div>
         )}
@@ -116,15 +116,15 @@ export function ConversationHistoryPanel({ onRestoreConversation, onNewChat }: P
               width: '100%',
               padding: '9px 12px',
               gap: '6px',
-              background: loadingId === conv.id ? 'rgba(255,255,255,0.04)' : 'none',
+              background: loadingId === conv.id ? 'rgba(0,0,0,0.04)' : 'none',
               border: 'none',
-              borderBottom: '1px solid rgba(255,255,255,0.04)',
+              borderBottom: '1px solid rgba(0,0,0,0.05)',
               cursor: 'pointer',
               textAlign: 'left',
               fontFamily: 'Epilogue, system-ui, sans-serif',
               transition: 'background 0.15s',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)'; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = loadingId === conv.id ? 'rgba(255,255,255,0.04)' : 'none'; }}
           >
             {/* Top row: text + time */}
@@ -132,7 +132,7 @@ export function ConversationHistoryPanel({ onRestoreConversation, onNewChat }: P
               <span style={{
                 flex: 1,
                 fontSize: '12px',
-                color: 'rgba(224,222,217,0.85)',
+                color: '#111111',
                 lineHeight: 1.4,
                 overflow: 'hidden',
                 display: '-webkit-box',
@@ -141,7 +141,7 @@ export function ConversationHistoryPanel({ onRestoreConversation, onNewChat }: P
               }}>
                 {conv.firstUserMessage}
               </span>
-              <span style={{ fontSize: '10px', color: 'rgba(224,222,217,0.3)', flexShrink: 0, paddingTop: '1px' }}>
+              <span style={{ fontSize: '10px', color: 'rgba(0,0,0,0.35)', flexShrink: 0, paddingTop: '1px' }}>
                 {relativeTime(conv.updatedAt)}
               </span>
             </div>
@@ -159,7 +159,7 @@ export function ConversationHistoryPanel({ onRestoreConversation, onNewChat }: P
                       height: '36px',
                       borderRadius: '4px',
                       objectFit: 'cover',
-                      border: '1px solid rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(0,0,0,0.08)',
                       flexShrink: 0,
                     }}
                     onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}

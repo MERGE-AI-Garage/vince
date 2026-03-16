@@ -280,7 +280,7 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
             borderRadius: '5px',
             padding: '3px 7px',
             cursor: 'pointer',
-            color: showCampaigns ? PURPLE : 'rgba(224,222,217,0.3)',
+            color: showCampaigns ? PURPLE : 'rgba(0,0,0,0.35)',
             fontSize: '10px',
             fontFamily: 'Epilogue, system-ui, sans-serif',
             transition: 'all 0.15s',
@@ -301,7 +301,7 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
             borderRadius: '5px',
             padding: '3px 7px',
             cursor: 'pointer',
-            color: showHistory ? PURPLE : 'rgba(224,222,217,0.3)',
+            color: showHistory ? PURPLE : 'rgba(0,0,0,0.35)',
             fontSize: '10px',
             fontFamily: 'Epilogue, system-ui, sans-serif',
             transition: 'all 0.15s',
@@ -338,12 +338,12 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
           flexDirection: 'column',
           gap: '8px',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255,255,255,0.08) transparent',
+          scrollbarColor: 'rgba(0,0,0,0.12) transparent',
         }}
       >
         {messages.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '48px', gap: '6px' }}>
-            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(224,222,217,0.4)', textAlign: 'center', lineHeight: 1.6, maxWidth: '220px' }}>
+            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(0,0,0,0.35)', textAlign: 'center', lineHeight: 1.6, maxWidth: '220px' }}>
               Ask Vince to generate a campaign, analyze a competitor, or create brand assets.
             </p>
           </div>
@@ -417,8 +417,8 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
       {!showHistory && !showCampaigns && <>
       <div style={{
         padding: '5px 10px',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        background: 'rgba(0,0,0,0.08)',
+        borderTop: '1px solid rgba(0,0,0,0.07)',
+        background: '#ece9e4',
         display: 'flex',
         gap: '6px',
         alignItems: 'center',
@@ -438,10 +438,10 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
           title="Attach image or video"
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', flexShrink: 0 }}
         >
-          <Paperclip size={11} style={{ color: isUploading ? PURPLE : (attachedFileName ? PURPLE : 'rgba(224,222,217,0.3)') }} />
+          <Paperclip size={11} style={{ color: isUploading ? PURPLE : (attachedFileName ? PURPLE : 'rgba(0,0,0,0.3)') }} />
         </button>
         {/* Link icon — URL paste */}
-        <Link size={10} style={{ color: attachedUrl && !attachedFileName ? PURPLE : 'rgba(224,222,217,0.2)', flexShrink: 0 }} />
+        <Link size={10} style={{ color: attachedUrl && !attachedFileName ? PURPLE : 'rgba(0,0,0,0.25)', flexShrink: 0 }} />
         {attachedFileName ? (
           /* Show uploaded filename pill */
           <span style={{ flex: 1, fontSize: '10px', color: PURPLE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -455,7 +455,7 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
             placeholder="Paste reference image or video URL…"
             style={{
               flex: 1, background: 'none', border: 'none', outline: 'none',
-              fontSize: '10px', color: attachedUrl ? '#e0ded9' : 'rgba(224,222,217,0.35)',
+              fontSize: '10px', color: attachedUrl ? '#111111' : 'rgba(0,0,0,0.35)',
               fontFamily: 'Epilogue, system-ui, sans-serif',
             }}
             onKeyDown={e => {
@@ -471,7 +471,7 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
             onClick={() => { setAttachedUrl(''); setAttachedFileName(''); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', display: 'flex' }}
           >
-            <XIcon size={11} style={{ color: 'rgba(224,222,217,0.3)' }} />
+            <XIcon size={11} style={{ color: 'rgba(0,0,0,0.3)' }} />
           </button>
         )}
       </div>
@@ -479,8 +479,8 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
       {/* Input row */}
       <div style={{
         padding: '8px 10px',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        background: 'rgba(0,0,0,0.15)',
+        borderTop: '1px solid rgba(0,0,0,0.07)',
+        background: '#ece9e4',
         display: 'flex',
         gap: '6px',
         alignItems: 'flex-end',
@@ -497,8 +497,8 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: '50%',
-            border: isVoiceActive ? `1.5px solid ${PURPLE}` : '1.5px solid rgba(234,232,227,0.2)',
-            background: isVoiceActive ? `rgba(${PURPLE_RGB}, 0.18)` : 'rgba(234,232,227,0.06)',
+            border: isVoiceActive ? `1.5px solid ${PURPLE}` : '1.5px solid rgba(0,0,0,0.15)',
+            background: isVoiceActive ? `rgba(${PURPLE_RGB}, 0.12)` : 'rgba(0,0,0,0.06)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             animation: voiceState === 'active' ? 'vinceChatMicPulse 2s ease-in-out infinite' : undefined,
@@ -506,7 +506,7 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
         >
           {isVoiceActive
             ? <MicOff size={13} style={{ color: PURPLE }} />
-            : <Mic size={13} style={{ color: 'rgba(234,232,227,0.5)' }} />
+            : <Mic size={13} style={{ color: 'rgba(0,0,0,0.35)' }} />
           }
         </button>
 
@@ -522,12 +522,12 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
           style={{
             flex: 1,
             resize: 'none',
-            background: 'rgba(255,255,255,0.05)',
-            border: `1px solid ${attachedUrl ? `rgba(${PURPLE_RGB}, 0.35)` : 'rgba(255,255,255,0.09)'}`,
+            background: '#ffffff',
+            border: `1px solid ${attachedUrl ? `rgba(${PURPLE_RGB}, 0.35)` : 'rgba(0,0,0,0.12)'}`,
             borderRadius: '8px',
             padding: '7px 10px',
             fontSize: '12px',
-            color: '#e0ded9',
+            color: '#111111',
             fontFamily: 'Epilogue, system-ui, sans-serif',
             lineHeight: 1.5,
             outline: 'none',
@@ -541,7 +541,7 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
             t.style.height = `${Math.min(t.scrollHeight, 80)}px`;
           }}
           onFocus={e => { e.currentTarget.style.borderColor = `rgba(${PURPLE_RGB}, 0.45)`; }}
-          onBlur={e => { e.currentTarget.style.borderColor = attachedUrl ? `rgba(${PURPLE_RGB}, 0.35)` : 'rgba(255,255,255,0.09)'; }}
+          onBlur={e => { e.currentTarget.style.borderColor = attachedUrl ? `rgba(${PURPLE_RGB}, 0.35)` : 'rgba(0,0,0,0.12)'; }}
         />
 
         {/* Send button */}
@@ -557,12 +557,12 @@ export function ChatTab({ brandId, brandColor, voiceState, isMuted, voiceTranscr
             justifyContent: 'center',
             borderRadius: '8px',
             border: 'none',
-            background: input.trim() && !isSending ? PURPLE : 'rgba(255,255,255,0.07)',
+            background: input.trim() && !isSending ? PURPLE : 'rgba(0,0,0,0.08)',
             cursor: input.trim() && !isSending ? 'pointer' : 'not-allowed',
             transition: 'background 0.2s ease',
           }}
         >
-          <Send size={13} style={{ color: input.trim() && !isSending ? '#fff' : 'rgba(224,222,217,0.25)' }} />
+          <Send size={13} style={{ color: input.trim() && !isSending ? '#fff' : 'rgba(0,0,0,0.25)' }} />
         </button>
       </div>
       </>}
