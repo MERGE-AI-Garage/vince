@@ -2,7 +2,7 @@
 // ABOUTME: Server-side aggregation via Postgres RPCs, real-time subscriptions, budget tracking
 
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type {
@@ -26,6 +26,7 @@ interface GenerationFilters {
   brandId?: string;
   limit?: number;
   offset?: number;
+  archived?: boolean; // undefined = active only, true = archived only
 }
 
 // ── Real-time subscription ───────────────────────────────────────────────────
@@ -87,6 +88,7 @@ export function useMyGenerations(limit = 50) {
           user:profiles!user_id(full_name, avatar_url)
         `)
         .or(`user_id.eq.${profile.id},user_id.is.null`)
+        .eq('hidden_from_history', false)
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -127,7 +129,14 @@ export function useAllGenerations(filters: GenerationFilters = {}) {
           brand:creative_studio_brands(*),
           user:profiles!user_id(full_name, avatar_url)
         `)
+        .eq('hidden_from_history', false)
         .order('created_at', { ascending: false });
+
+      if (filters.archived) {
+        query = query.not('archived_at', 'is', null);
+      } else {
+        query = query.is('archived_at', null);
+      }
 
       if (filters.status) {
         query = query.eq('status', filters.status);
@@ -498,4 +507,40 @@ export function useInvalidateGenerations() {
   return () => {
     queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
   };
+}
+
+// ── Archive a generation (soft delete) ───────────────────────────────────────
+
+export function useArchiveGeneration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('creative_studio_generations')
+        .update({ archived_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
+}
+
+// ── Permanently delete a generation ──────────────────────────────────────────
+
+export function useDeleteGeneration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('creative_studio_generations')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });
+    },
+  });
 }

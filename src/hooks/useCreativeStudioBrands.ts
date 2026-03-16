@@ -209,10 +209,14 @@ export function useUpdateBrand() {
         })
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         throw error;
+      }
+
+      if (!data) {
+        throw new Error('Brand not found or you do not have permission to update it');
       }
 
       return {

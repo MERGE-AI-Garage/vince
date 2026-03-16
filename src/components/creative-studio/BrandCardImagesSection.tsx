@@ -31,6 +31,14 @@ const ALL_CARD_KEYS: BrandCardImageKey[] = [
   'brand_dna', 'ai_guidelines', 'generation_prompt', 'templates', 'brand_agent', 'art_direction',
 ];
 
+type PromptStyle = 'stacked_acrylic' | 'laser_cut' | 'murano_glass';
+
+const STYLE_OPTIONS: { value: PromptStyle; label: string }[] = [
+  { value: 'stacked_acrylic', label: 'Stacked Acrylic' },
+  { value: 'laser_cut',       label: 'Laser Cut Metal' },
+  { value: 'murano_glass',    label: 'Murano Glass' },
+];
+
 interface BrandCardImagesSectionProps {
   brand: CreativeStudioBrand;
   onUpdate: (data: { card_images?: Record<string, string>; card_image_prompts?: Record<string, string> }) => Promise<void>;
@@ -42,19 +50,36 @@ export function BrandCardImagesSection({ brand, onUpdate }: BrandCardImagesSecti
   const [selectedKey, setSelectedKey] = useState<BrandCardImageKey | null>(null);
   const [pendingGen, setPendingGen] = useState<PendingImageGeneration | null>(null);
   const [mediaPickerKey, setMediaPickerKey] = useState<BrandCardImageKey | null>(null);
+  const [selectedStyle, setSelectedStyle] = useState<PromptStyle>('stacked_acrylic');
 
   const { data: liveBrand } = useBrand(brand.id);
   const images = ((liveBrand?.card_images ?? brand.card_images) || {}) as Record<string, string>;
   const presentCount = ALL_CARD_KEYS.filter(k => images[k]).length;
   const missingCount = ALL_CARD_KEYS.length - presentCount;
 
+  const applyResultsToCache = (results: Record<string, { status: string; url?: string }>) => {
+    const newUrls: Record<string, string> = {};
+    for (const [k, r] of Object.entries(results)) {
+      if (r.status === 'success' && r.url) newUrls[k] = r.url;
+    }
+    if (Object.keys(newUrls).length === 0) return;
+    const patch = (b: any) => b?.id === brand.id
+      ? { ...b, card_images: { ...(b.card_images || {}), ...newUrls } }
+      : b;
+    queryClient.setQueryData(['creative-studio-brands', brand.id], patch);
+    queryClient.setQueryData(['creative-studio-brands'], (old: any) =>
+      Array.isArray(old) ? old.map(patch) : old,
+    );
+  };
+
   const handleRegenerate = async (key: BrandCardImageKey) => {
     setRegeneratingKeys(prev => new Set([...prev, key]));
     try {
-      const { error } = await supabase.functions.invoke('generate-brand-card-images', {
-        body: { brand_id: brand.id, card_keys: [key] },
+      const { data, error } = await supabase.functions.invoke('generate-brand-card-images', {
+        body: { brand_id: brand.id, card_keys: [key], prompt_style: selectedStyle },
       });
       if (error) throw error;
+      applyResultsToCache(data?.results || {});
       queryClient.invalidateQueries({ queryKey: ['creative-studio-brands'] });
       queryClient.invalidateQueries({ queryKey: ['brand-card-image-history', brand.id, key] });
       toast.success(`${BRAND_CARD_IMAGE_LABELS[key].label} regenerated`);
@@ -100,10 +125,11 @@ export function BrandCardImagesSection({ brand, onUpdate }: BrandCardImagesSecti
     }
     setRegeneratingKeys(new Set(keys));
     try {
-      const { error } = await supabase.functions.invoke('generate-brand-card-images', {
-        body: { brand_id: brand.id, card_keys: keys },
+      const { data, error } = await supabase.functions.invoke('generate-brand-card-images', {
+        body: { brand_id: brand.id, card_keys: keys, prompt_style: selectedStyle },
       });
       if (error) throw error;
+      applyResultsToCache(data?.results || {});
       queryClient.invalidateQueries({ queryKey: ['creative-studio-brands'] });
       queryClient.invalidateQueries({ queryKey: ['brand-card-image-history'] });
       toast.success(`${keys.length} card image${keys.length > 1 ? 's' : ''} generated`);
@@ -161,6 +187,27 @@ export function BrandCardImagesSection({ brand, onUpdate }: BrandCardImagesSecti
       <p className="text-xs text-muted-foreground">
         Stylized 3D icon images for the brand welcome screen. Generated from brand colors using Gemini.
       </p>
+
+      {/* Style preset selector */}
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground shrink-0">Style</span>
+        <div className="flex items-center gap-1">
+          {STYLE_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setSelectedStyle(opt.value)}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors border',
+                selectedStyle === opt.value
+                  ? 'bg-purple-600 border-purple-600 text-white'
+                  : 'border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground',
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Grid of card image slots */}
       <div className="grid grid-cols-3 gap-2.5">

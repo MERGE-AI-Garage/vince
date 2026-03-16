@@ -16,7 +16,6 @@ import {
   XCircle,
   Lock,
   FileText,
-  ExternalLink,
   Eye,
   Scale,
 } from 'lucide-react';
@@ -339,14 +338,14 @@ export function AIGuidelinesDialog({ brand, open, onOpenChange }: AIGuidelinesDi
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground pt-1">
-                    <strong>Questions?</strong> Contact the{' '}
-                    <a href="/admin" className="text-primary hover:underline inline-flex items-center gap-0.5">
-                      Vince team <ExternalLink className="w-3 h-3" />
-                    </a>{' '}
-                    or check the{' '}
-                    <a href="/admin" className="text-primary hover:underline inline-flex items-center gap-0.5">
-                      Brand Guidelines <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <strong>Questions?</strong>{' '}
+                    <button
+                      onClick={() => onOpenChange(false)}
+                      className="text-primary hover:underline inline-flex items-center gap-0.5"
+                    >
+                      Return to Brand DNA
+                    </button>{' '}
+                    for full visual identity and governance guidelines.
                   </p>
                 </div>
 

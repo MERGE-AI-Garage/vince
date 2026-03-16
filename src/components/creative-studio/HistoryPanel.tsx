@@ -16,8 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Image, Video, Clock, Loader2, ImageOff, Trash2, Info, PanelLeftClose } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { Image, Video, Clock, Loader2, ImageOff, Trash2, Info, PanelLeftClose, EyeOff, Eye } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMyGenerations, useAllGenerations, useInvalidateGenerations, useRealtimeGenerations } from '@/hooks/useCreativeStudioGenerations';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,13 +32,14 @@ interface HistoryPanelProps {
 }
 
 export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: HistoryPanelProps) {
-  const { userRole } = useAuth();
+  const { userRole, profile } = useAuth();
   const isAdmin = userRole === 'admin';
   const { data: myGenerations, isLoading: myLoading } = useMyGenerations(100);
   const { data: allGenerations, isLoading: allLoading } = useAllGenerations({ limit: 100 });
   const generations = isAdmin ? allGenerations : myGenerations;
   const isLoading = isAdmin ? allLoading : myLoading;
   const invalidateGenerations = useInvalidateGenerations();
+  const queryClient = useQueryClient();
   useRealtimeGenerations();
 
   // Fetch AI-generated media items as a fallback for generations that never got DB records
@@ -49,6 +50,7 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
         .from('media')
         .select('id, url, title, filename, created_at, custom_metadata')
         .is('deleted_at', null)
+        .eq('hidden_from_history', false)
         .contains('auto_tags', ['ai-generated'])
         .order('created_at', { ascending: false })
         .limit(500);
@@ -56,6 +58,52 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
       return data || [];
     },
   });
+
+  const [showHidden, setShowHidden] = useState(false);
+
+  // Fetch hidden generations (for count + show-hidden mode)
+  const { data: hiddenGenerations } = useQuery({
+    queryKey: ['history-hidden-generations', profile?.id, isAdmin],
+    queryFn: async () => {
+      let q = supabase
+        .from('creative_studio_generations')
+        .select('id, output_urls, generation_type, status, created_at, prompt_text, model_used, parameters, metadata, completed_at, media_ids')
+        .eq('hidden_from_history', true)
+        .is('archived_at', null)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (!isAdmin && profile?.id) {
+        q = q.or(`user_id.eq.${profile.id},user_id.is.null`);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data || []).map(gen => ({
+        ...gen,
+        parameters: gen.parameters as Record<string, unknown>,
+        metadata: gen.metadata as Record<string, unknown>,
+      })) as GenerationWithDetails[];
+    },
+    enabled: !!(profile?.id || isAdmin),
+  });
+
+  // Fetch hidden media items (for count + show-hidden mode)
+  const { data: hiddenMediaItems } = useQuery({
+    queryKey: ['history-hidden-media'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('media')
+        .select('id, url, title, filename, created_at, custom_metadata')
+        .is('deleted_at', null)
+        .eq('hidden_from_history', true)
+        .contains('auto_tags', ['ai-generated'])
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const hiddenCount = (hiddenGenerations?.length || 0) + (hiddenMediaItems?.length || 0);
 
   // item.key is `${gen.id}-${idx}` for package expansions, gen.id otherwise
   interface DisplayItem {
@@ -65,6 +113,8 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
     label: string;
     isPackageItem: boolean;
     fromMedia: boolean;
+    mediaId?: string;
+    isHidden?: boolean;
   }
 
   const displayItems = useMemo<DisplayItem[]>(() => {
@@ -122,14 +172,79 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
           label: m.title || m.filename || 'Generated image',
           isPackageItem: genType === 'creative_package',
           fromMedia: true,
+          mediaId: m.id,
         };
       });
 
-    // Merge and sort by created_at descending
-    return [...genItems, ...mediaItems].sort(
+    const visible = [...genItems, ...mediaItems].sort(
       (a, b) => new Date(b.gen.created_at).getTime() - new Date(a.gen.created_at).getTime()
     );
-  }, [generations, aiMediaItems]);
+
+    if (!showHidden) return visible;
+
+    // Build hidden items from both sources, sorted descending
+    const hiddenGenItems: DisplayItem[] = (hiddenGenerations || []).flatMap<DisplayItem>(gen => {
+      if (gen.generation_type === 'creative_package' && gen.output_urls && gen.output_urls.length > 1) {
+        const names = gen.metadata?.deliverable_names as string[] | undefined;
+        return gen.output_urls.map((url, idx) => ({
+          key: `hidden-${gen.id}-${idx}`,
+          gen,
+          displayUrl: url,
+          label: names?.[idx] || `Deliverable ${idx + 1}`,
+          isPackageItem: true,
+          fromMedia: false,
+          isHidden: true,
+        }));
+      }
+      return [{
+        key: `hidden-${gen.id}`,
+        gen,
+        displayUrl: gen.output_urls?.[0],
+        label: gen.prompt_text || 'No prompt',
+        isPackageItem: false,
+        fromMedia: false,
+        isHidden: true,
+      }];
+    });
+
+    const coveredHiddenUrls = new Set<string>((hiddenGenerations || []).flatMap(g => g.output_urls || []));
+    const hiddenMediaDisplayItems: DisplayItem[] = (hiddenMediaItems || [])
+      .filter(m => !coveredHiddenUrls.has(m.url))
+      .map(m => {
+        const meta = m.custom_metadata as Record<string, unknown> | null;
+        const genType = (meta?.generation_type as string) || 'text_to_image';
+        const brandName = (meta?.brand_name as string) || '';
+        const syntheticGen: GenerationWithDetails = {
+          id: `media-${m.id}`,
+          generation_type: genType as GenerationWithDetails['generation_type'],
+          status: 'completed',
+          output_urls: [m.url],
+          media_ids: [],
+          created_at: m.created_at,
+          prompt_text: brandName ? `${brandName} creative package` : undefined,
+          model_used: '',
+          parameters: {},
+          metadata: (meta as Record<string, unknown>) ?? {},
+          completed_at: m.created_at,
+        };
+        return {
+          key: `hidden-media-${m.id}`,
+          gen: syntheticGen,
+          displayUrl: m.url,
+          label: m.title || m.filename || 'Generated image',
+          isPackageItem: genType === 'creative_package',
+          fromMedia: true,
+          mediaId: m.id,
+          isHidden: true,
+        };
+      });
+
+    const hiddenItems = [...hiddenGenItems, ...hiddenMediaDisplayItems].sort(
+      (a, b) => new Date(b.gen.created_at).getTime() - new Date(a.gen.created_at).getTime()
+    );
+
+    return [...visible, ...hiddenItems];
+  }, [generations, aiMediaItems, showHidden, hiddenGenerations, hiddenMediaItems]);
 
   const [brokenThumbnails, setBrokenThumbnails] = useState<Set<string>>(new Set());
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
@@ -164,10 +279,71 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
     }
   }, [invalidateGenerations]);
 
-  const handleDeleteClick = useCallback((e: React.MouseEvent, generationId: string) => {
+  const handleDeleteClick = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setConfirmDeleteId(generationId);
+    setConfirmDeleteId(id);
   }, []);
+
+  const handleDeleteConfirmedMedia = useCallback(async (mediaId: string) => {
+    setDeletingIds(prev => new Set(prev).add(`media-${mediaId}`));
+    try {
+      const { error } = await supabase.rpc('admin_soft_delete_media', { media_ids: [mediaId] });
+      if (error) {
+        toast.error('Delete failed: ' + error.message);
+        return;
+      }
+      invalidateGenerations();
+      toast.success('Deleted');
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(`media-${mediaId}`);
+        return next;
+      });
+    }
+  }, [invalidateGenerations]);
+
+  const handleHideClick = useCallback(async (e: React.MouseEvent, item: DisplayItem) => {
+    e.stopPropagation();
+    if (item.fromMedia && item.mediaId) {
+      const { error } = await supabase.rpc('hide_media_from_history', {
+        p_media_id: item.mediaId,
+        p_hidden: true,
+      });
+      if (error) { toast.error('Failed to hide: ' + error.message); return; }
+      queryClient.invalidateQueries({ queryKey: ['history-media-fallback'] });
+      queryClient.invalidateQueries({ queryKey: ['history-hidden-media'] });
+    } else {
+      const { error } = await supabase.rpc('hide_generation_from_history', {
+        p_generation_id: item.gen.id,
+        p_hidden: true,
+      });
+      if (error) { toast.error('Failed to hide: ' + error.message); return; }
+      invalidateGenerations();
+      queryClient.invalidateQueries({ queryKey: ['history-hidden-generations'] });
+    }
+  }, [invalidateGenerations, queryClient]);
+
+  const handleUnhideClick = useCallback(async (e: React.MouseEvent, item: DisplayItem) => {
+    e.stopPropagation();
+    if (item.fromMedia && item.mediaId) {
+      const { error } = await supabase.rpc('hide_media_from_history', {
+        p_media_id: item.mediaId,
+        p_hidden: false,
+      });
+      if (error) { toast.error('Failed to restore: ' + error.message); return; }
+      queryClient.invalidateQueries({ queryKey: ['history-media-fallback'] });
+      queryClient.invalidateQueries({ queryKey: ['history-hidden-media'] });
+    } else {
+      const { error } = await supabase.rpc('hide_generation_from_history', {
+        p_generation_id: item.gen.id,
+        p_hidden: false,
+      });
+      if (error) { toast.error('Failed to restore: ' + error.message); return; }
+      invalidateGenerations();
+      queryClient.invalidateQueries({ queryKey: ['history-hidden-generations'] });
+    }
+  }, [invalidateGenerations, queryClient]);
 
   const handleInfoClick = useCallback((e: React.MouseEvent, gen: GenerationWithDetails) => {
     e.stopPropagation();
@@ -286,8 +462,22 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
                 <Trash2 className="h-3 w-3 text-muted-foreground" />
               </Button>
             )}
+            {hiddenCount > 0 && (
+              <button
+                onClick={() => setShowHidden(prev => !prev)}
+                className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full border transition-colors ${
+                  showHidden
+                    ? 'bg-muted text-foreground border-border'
+                    : 'text-muted-foreground border-transparent hover:border-border hover:text-foreground'
+                }`}
+                title={showHidden ? 'Hide hidden items' : 'Show hidden items'}
+              >
+                <EyeOff className="h-2.5 w-2.5" />
+                {hiddenCount}
+              </button>
+            )}
             <Badge variant="secondary" className="text-xs">
-              {displayItems.length || 0}
+              {showHidden ? displayItems.filter(i => !i.isHidden).length : displayItems.length}
             </Badge>
             {onClose && (
               <Button
@@ -313,18 +503,28 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
               <p className="text-xs mt-1">Start creating!</p>
             </div>
           ) : (
-            displayItems.map((item) => {
-              const { gen, displayUrl, label, isPackageItem, fromMedia } = item;
+            displayItems.map((item, idx) => {
+              const { gen, displayUrl, label, isPackageItem, fromMedia, mediaId, isHidden } = item;
               const isBroken = brokenThumbnails.has(item.key);
-              const isDeleting = deletingIds.has(gen.id);
+              const isDeleting = deletingIds.has(fromMedia ? `media-${mediaId}` : gen.id);
               const genToSelect = isPackageItem
                 ? { ...gen, output_urls: [displayUrl!, ...(gen.output_urls || [])] }
                 : gen;
+              const isFirstHidden = isHidden && (idx === 0 || !displayItems[idx - 1].isHidden);
               return (
+                <div key={item.key}>
+                  {isFirstHidden && (
+                    <div className="flex items-center gap-2 py-1 px-1">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <EyeOff className="h-2.5 w-2.5" /> Hidden
+                      </span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                  )}
                 <button
-                  key={item.key}
                   onClick={() => onSelectGeneration?.(genToSelect)}
-                  draggable={!!displayUrl}
+                  draggable={!!displayUrl && !isHidden}
                   onDragStart={(e) => {
                     if (!displayUrl) return;
                     const publicUrl = convertGcsUri(displayUrl);
@@ -333,6 +533,8 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
                     e.dataTransfer.effectAllowed = 'copy';
                   }}
                   className={`w-full text-left rounded-lg overflow-hidden border transition-all hover:border-primary cursor-grab active:cursor-grabbing ${
+                    isHidden ? 'opacity-50' : ''
+                  } ${
                     selectedId === gen.id
                       ? 'border-primary ring-2 ring-primary/20'
                       : 'border-transparent'
@@ -390,9 +592,26 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
                       >
                         <Info className="h-2.5 w-2.5" />
                       </button>
-                      {!fromMedia && (
+                      {isHidden ? (
                         <button
-                          onClick={(e) => handleDeleteClick(e, gen.id)}
+                          onClick={(e) => handleUnhideClick(e, item)}
+                          className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-green-600"
+                          title="Restore to history"
+                        >
+                          <Eye className="h-2.5 w-2.5" />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => handleHideClick(e, item)}
+                          className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-yellow-600"
+                          title="Hide from history"
+                        >
+                          <EyeOff className="h-2.5 w-2.5" />
+                        </button>
+                      )}
+                      {(fromMedia ? !!mediaId : true) && (
+                        <button
+                          onClick={(e) => handleDeleteClick(e, fromMedia ? `media-${mediaId}` : gen.id)}
                           disabled={isDeleting}
                           className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-600"
                           title="Delete generation"
@@ -436,6 +655,7 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
                     </div>
                   </div>
                 </button>
+                </div>
               );
             })
           )}
@@ -456,7 +676,13 @@ export function HistoryPanel({ onSelectGeneration, selectedId, onClose }: Histor
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
-                if (confirmDeleteId) handleDeleteConfirmed(confirmDeleteId);
+                if (confirmDeleteId) {
+                  if (confirmDeleteId.startsWith('media-')) {
+                    handleDeleteConfirmedMedia(confirmDeleteId.slice(6));
+                  } else {
+                    handleDeleteConfirmed(confirmDeleteId);
+                  }
+                }
                 setConfirmDeleteId(null);
               }}
             >

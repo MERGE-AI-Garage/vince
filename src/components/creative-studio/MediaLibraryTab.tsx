@@ -1,7 +1,7 @@
 // ABOUTME: Full media library browser tab for the Creative Studio admin panel.
 // ABOUTME: Supports hierarchical folders, tagging, search, bulk operations, drag-drop, and image preview.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +75,7 @@ const getFolderIcon = (iconName: string) => {
   return iconMap[iconName] || Folder;
 };
 
-export function MediaLibraryTab() {
+export function MediaLibraryTab({ compact = false }: { compact?: boolean }) {
   const [media, setMedia] = useState<MediaFile[]>([]);
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [tags, setTags] = useState<MediaTag[]>([]);
@@ -87,9 +87,10 @@ export function MediaLibraryTab() {
   const [fileTypeFilter, setFileTypeFilter] = useState<FileType | 'all'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name-asc' | 'name-desc' | 'size-desc' | 'size-asc' | 'type-asc' | 'type-desc'>('newest');
   const [uploaderFilter, setUploaderFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>(compact ? 'list' : 'grid');
   const [stats, setStats] = useState<MediaStats | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const lastSelectedIndexRef = useRef<number | null>(null);
 
   const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
   const [showFolderDialog, setShowFolderDialog] = useState(false);
@@ -119,7 +120,11 @@ export function MediaLibraryTab() {
 
     const baseMediaQuery = () => {
       let q = supabase.from('media').select(mediaSelect).is('deleted_at', null).order('created_at', { ascending: false });
-      if (currentFolderId) q = q.eq('folder_id', currentFolderId);
+      if (currentFolderId) {
+        q = q.eq('folder_id', currentFolderId);
+      } else {
+        q = q.is('folder_id', null);
+      }
       if (fileTypeFilter !== 'all') q = q.eq('file_type', fileTypeFilter);
       return q;
     };
@@ -312,7 +317,17 @@ export function MediaLibraryTab() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      const deriveParentId = (data: Partial<MediaFolder>) =>
+        data.parent_id !== undefined ? data.parent_id : (currentFolderId ?? null);
+
+      const derivePath = (name: string | undefined, parentId: string | null) => {
+        if (!name) return '/';
+        const parent = parentId ? allFolders.find((f) => f.id === parentId) : null;
+        return parent ? `${parent.path}/${name}` : `/${name}`;
+      };
+
       if (folderData.id) {
+        const parentId = deriveParentId(folderData);
         const { error } = await supabase
           .from('media_folders')
           .update({
@@ -320,13 +335,15 @@ export function MediaLibraryTab() {
             description: folderData.description,
             color: folderData.color,
             icon: folderData.icon,
-            parent_id: folderData.parent_id,
+            parent_id: parentId,
+            path: derivePath(folderData.name, parentId),
             updated_by: user.id,
           })
           .eq('id', folderData.id);
         if (error) throw error;
         toast.success('Folder updated');
       } else {
+        const parentId = deriveParentId(folderData);
         const { error } = await supabase
           .from('media_folders')
           .insert({
@@ -334,7 +351,8 @@ export function MediaLibraryTab() {
             description: folderData.description,
             color: folderData.color || '#3b82f6',
             icon: folderData.icon || 'folder',
-            parent_id: folderData.parent_id || currentFolderId,
+            parent_id: parentId,
+            path: derivePath(folderData.name, parentId),
             created_by: user.id,
           });
         if (error) throw error;
@@ -347,18 +365,32 @@ export function MediaLibraryTab() {
     }
   };
 
-  const toggleFileSelection = (fileId: string) => {
-    setSelectedFiles((prev) => {
-      const next = new Set(prev);
-      if (next.has(fileId)) next.delete(fileId);
-      else next.add(fileId);
-      return next;
-    });
+  const handleFileSelect = (fileId: string, index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (e.shiftKey && lastSelectedIndexRef.current !== null) {
+      const start = Math.min(lastSelectedIndexRef.current, index);
+      const end = Math.max(lastSelectedIndexRef.current, index);
+      const rangeIds = filteredMedia.slice(start, end + 1).map((f) => f.id);
+      setSelectedFiles((prev) => {
+        const next = new Set(prev);
+        rangeIds.forEach((id) => next.add(id));
+        return next;
+      });
+    } else {
+      setSelectedFiles((prev) => {
+        const next = new Set(prev);
+        if (next.has(fileId)) next.delete(fileId);
+        else next.add(fileId);
+        return next;
+      });
+      lastSelectedIndexRef.current = index;
+    }
   };
 
   const toggleSelectAll = () => {
     if (selectedFiles.size === filteredMedia.length) {
       setSelectedFiles(new Set());
+      lastSelectedIndexRef.current = null;
     } else {
       setSelectedFiles(new Set(filteredMedia.map((f) => f.id)));
     }
@@ -524,11 +556,11 @@ export function MediaLibraryTab() {
         </div>
       </div>
 
-      {/* Stats */}
-      {stats && (
+      {/* Stats — hidden in compact mode */}
+      {stats && !compact && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Card
-            className={`border-l-4 border-l-blue-500 cursor-pointer transition-colors hover:bg-accent ${fileTypeFilter === 'all' ? 'ring-2 ring-blue-500/40' : ''}`}
+            className={`border-l-4 border-l-blue-500 cursor-pointer transition-colors hover:bg-muted/50 ${fileTypeFilter === 'all' ? 'ring-2 ring-blue-500/40' : ''}`}
             onClick={() => setFileTypeFilter('all')}
           >
             <CardContent className="p-3 flex items-center justify-between">
@@ -549,7 +581,7 @@ export function MediaLibraryTab() {
             </CardContent>
           </Card>
           <Card
-            className={`border-l-4 border-l-green-500 cursor-pointer transition-colors hover:bg-accent ${fileTypeFilter === 'image' ? 'ring-2 ring-green-500/40' : ''}`}
+            className={`border-l-4 border-l-green-500 cursor-pointer transition-colors hover:bg-muted/50 ${fileTypeFilter === 'image' ? 'ring-2 ring-green-500/40' : ''}`}
             onClick={() => setFileTypeFilter(fileTypeFilter === 'image' ? 'all' : 'image')}
           >
             <CardContent className="p-3 flex items-center justify-between">
@@ -561,7 +593,7 @@ export function MediaLibraryTab() {
             </CardContent>
           </Card>
           <Card
-            className={`border-l-4 border-l-orange-500 cursor-pointer transition-colors hover:bg-accent ${fileTypeFilter === 'video' ? 'ring-2 ring-orange-500/40' : ''}`}
+            className={`border-l-4 border-l-orange-500 cursor-pointer transition-colors hover:bg-muted/50 ${fileTypeFilter === 'video' ? 'ring-2 ring-orange-500/40' : ''}`}
             onClick={() => setFileTypeFilter(fileTypeFilter === 'video' ? 'all' : 'video')}
           >
             <CardContent className="p-3 flex items-center justify-between">
@@ -613,23 +645,25 @@ export function MediaLibraryTab() {
             </SelectContent>
           </Select>
 
-          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-              <SelectItem value="size-desc">Largest First</SelectItem>
-              <SelectItem value="size-asc">Smallest First</SelectItem>
-              <SelectItem value="type-asc">Type (A-Z)</SelectItem>
-              <SelectItem value="type-desc">Type (Z-A)</SelectItem>
-            </SelectContent>
-          </Select>
+          {!compact && (
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                <SelectItem value="size-desc">Largest First</SelectItem>
+                <SelectItem value="size-asc">Smallest First</SelectItem>
+                <SelectItem value="type-asc">Type (A-Z)</SelectItem>
+                <SelectItem value="type-desc">Type (Z-A)</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
-          {uniqueUploaders.length > 0 && (
+          {!compact && uniqueUploaders.length > 0 && (
             <Select value={uploaderFilter} onValueChange={setUploaderFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue />
@@ -758,14 +792,13 @@ export function MediaLibraryTab() {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`group hover:shadow-lg transition-all cursor-pointer ${snapshot.isDragging ? 'opacity-50 shadow-2xl' : ''}`}
+                          className={`group hover:shadow-lg transition-all cursor-pointer ${snapshot.isDragging ? 'opacity-50 shadow-2xl' : ''} ${selectedFiles.has(file.id) ? 'ring-2 ring-primary/50' : ''}`}
                         >
-                          <CardContent className="p-3" onClick={() => setPreviewFile(file)}>
+                          <CardContent className="p-3" onClick={(e) => selectedFiles.size > 0 ? handleFileSelect(file.id, index, e) : setPreviewFile(file)}>
                             <div className="aspect-square bg-muted rounded-lg mb-2 overflow-hidden relative">
-                              <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+                              <div className="absolute top-2 left-2 z-10" onClick={(e) => handleFileSelect(file.id, index, e)}>
                                 <Checkbox
                                   checked={selectedFiles.has(file.id)}
-                                  onCheckedChange={() => toggleFileSelection(file.id)}
                                   className="bg-white border-2"
                                 />
                               </div>
@@ -868,11 +901,11 @@ export function MediaLibraryTab() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`flex items-center gap-4 p-4 hover:bg-accent transition-colors cursor-pointer ${snapshot.isDragging ? 'opacity-50 bg-accent' : ''}`}
-                              onClick={() => setPreviewFile(file)}
+                              className={`flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors cursor-pointer ${snapshot.isDragging ? 'opacity-50 bg-muted/50' : ''} ${selectedFiles.has(file.id) ? 'bg-muted/30' : ''}`}
+                              onClick={(e) => selectedFiles.size > 0 ? handleFileSelect(file.id, index, e) : setPreviewFile(file)}
                             >
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <Checkbox checked={selectedFiles.has(file.id)} onCheckedChange={() => toggleFileSelection(file.id)} />
+                              <div onClick={(e) => handleFileSelect(file.id, index, e)}>
+                                <Checkbox checked={selectedFiles.has(file.id)} />
                               </div>
                               <div className="w-12 h-12 rounded bg-muted flex items-center justify-center flex-shrink-0">
                                 {file.file_type === 'image' ? (

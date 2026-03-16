@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import JSZip from 'jszip';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
-  ArrowLeft, Download, Layers, Archive, FileText, Loader2,
+  ArrowLeft, Download, Layers, Archive, ArchiveX, Trash2, FileText, Loader2,
   FolderOpen, Clock, Cpu, Hash, Sparkles, Calendar, ShieldCheck,
   Image, LayoutGrid, List, Search, User, MessageSquare, BarChart2,
   SortAsc, SortDesc, Bot, Link as LinkIcon, Play, Copy,
@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { useAllGenerations } from '@/hooks/useCreativeStudioGenerations';
+import { useAllGenerations, useArchiveGeneration, useDeleteGeneration } from '@/hooks/useCreativeStudioGenerations';
 import { CreativePackageDisplay, PackagePart } from './CreativePackageDisplay';
 import { loadConversationMessages } from '@/services/vinceConversationHistory';
 import { supabase } from '@/integrations/supabase/client';
@@ -632,10 +632,12 @@ function AnalysisPanel({ gen, resolvedNames }: { gen: GenerationWithDetails; res
 
 // ── Campaign Grid Card ────────────────────────────────────────────────────────
 
-function CampaignGridCard({ gen, resolvedNames, onOpen }: {
+function CampaignGridCard({ gen, resolvedNames, onOpen, onArchive, onDelete }: {
   gen: GenerationWithDetails;
   resolvedNames: string[];
   onOpen: () => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
 }) {
   const [zipping, setZipping] = useState(false);
   const images = gen.output_urls || [];
@@ -741,6 +743,16 @@ function CampaignGridCard({ gen, resolvedNames, onOpen }: {
             <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={handleZip} disabled={zipping} title="Download ZIP">
               {zipping ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
             </Button>
+            {onArchive && (
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground/50 hover:text-amber-400" onClick={(e) => { e.stopPropagation(); onArchive(); }} title="Archive campaign">
+                <ArchiveX className="w-3 h-3" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground/50 hover:text-red-400" onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Delete permanently">
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -750,10 +762,12 @@ function CampaignGridCard({ gen, resolvedNames, onOpen }: {
 
 // ── Campaign List Row ─────────────────────────────────────────────────────────
 
-function CampaignListRow({ gen, resolvedNames, onOpen }: {
+function CampaignListRow({ gen, resolvedNames, onOpen, onArchive, onDelete }: {
   gen: GenerationWithDetails;
   resolvedNames: string[];
   onOpen: () => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
 }) {
   const [zipping, setZipping] = useState(false);
   const images = gen.output_urls || [];
@@ -817,6 +831,16 @@ function CampaignListRow({ gen, resolvedNames, onOpen }: {
             <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleZip} disabled={zipping} title="Download ZIP">
               {zipping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
             </Button>
+            {onArchive && (
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground/50 hover:text-amber-400" onClick={(e) => { e.stopPropagation(); onArchive(); }} title="Archive campaign">
+                <ArchiveX className="w-3.5 h-3.5" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground/50 hover:text-red-400" onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Delete permanently">
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -1153,8 +1177,38 @@ export function CampaignsTab() {
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [view, setView] = useState<'active' | 'archived'>('active');
+  const [archiveTarget, setArchiveTarget] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const { data: campaigns = [], isLoading } = useAllGenerations({ type: 'creative_package', limit: 500 });
+  const archiveGeneration = useArchiveGeneration();
+  const deleteGeneration = useDeleteGeneration();
+
+  const { data: campaigns = [], isLoading } = useAllGenerations({ type: 'creative_package', limit: 500, archived: view === 'archived' });
+  const { data: archivedCampaigns = [] } = useAllGenerations({ type: 'creative_package', limit: 500, archived: true });
+  const archivedCount = archivedCampaigns.length;
+
+  const handleArchive = async () => {
+    if (!archiveTarget) return;
+    try {
+      await archiveGeneration.mutateAsync(archiveTarget);
+      setArchiveTarget(null);
+      toast.success('Campaign archived');
+    } catch {
+      toast.error('Failed to archive campaign');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteGeneration.mutateAsync(deleteTarget);
+      setDeleteTarget(null);
+      toast.success('Campaign deleted');
+    } catch {
+      toast.error('Failed to delete campaign');
+    }
+  };
 
   const brands = Array.from(
     new Map(campaigns.filter(g => g.brand).map(g => [g.brand!.id, g.brand!] as const)).values()
@@ -1266,6 +1320,22 @@ export function CampaignsTab() {
           {sortDir === 'desc' ? 'Newest' : 'Oldest'}
         </Button>
 
+        {/* Archive toggle */}
+        <Button
+          variant={view === 'archived' ? 'secondary' : 'outline'}
+          size="sm"
+          className="h-9 gap-1.5 text-xs"
+          onClick={() => setView(v => v === 'active' ? 'archived' : 'active')}
+        >
+          <Archive className="w-3.5 h-3.5" />
+          Archived
+          {archivedCount > 0 && (
+            <span className="ml-0.5 bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
+              {archivedCount}
+            </span>
+          )}
+        </Button>
+
         {/* View toggle */}
         <div className="flex items-center border border-border/40 rounded-lg overflow-hidden">
           <button onClick={() => setViewMode('card')} className={`p-2 transition-colors ${viewMode === 'card' ? 'bg-violet-500/15 text-violet-400' : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted/30'}`} title="Grid view">
@@ -1289,9 +1359,11 @@ export function CampaignsTab() {
             <Sparkles className="w-7 h-7 text-violet-400/30" />
           </div>
           <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground/60">{searchTerm || brandFilter !== 'all' ? 'No campaigns match your filters' : 'No campaigns yet'}</p>
+            <p className="text-sm font-semibold text-foreground/60">
+              {view === 'archived' ? 'No archived campaigns' : (searchTerm || brandFilter !== 'all' ? 'No campaigns match your filters' : 'No campaigns yet')}
+            </p>
             <p className="text-xs text-muted-foreground/40 max-w-xs">
-              {searchTerm || brandFilter !== 'all' ? 'Try adjusting your search or filter.' : 'Ask Vince to create a campaign and it will appear here with full copy and images.'}
+              {view === 'archived' ? 'Campaigns you archive will appear here.' : (searchTerm || brandFilter !== 'all' ? 'Try adjusting your search or filter.' : 'Ask Vince to create a campaign and it will appear here with full copy and images.')}
             </p>
           </div>
         </div>
@@ -1301,7 +1373,16 @@ export function CampaignsTab() {
             const copyBlocks = (gen.copy_blocks as PackagePart[] | undefined) || [];
             const storedNames = (gen.metadata?.deliverable_names as string[] | undefined) || [];
             const resolvedNames = copyBlocks.some(p => p.type === 'text') ? resolveDeliverableNames(copyBlocks, storedNames) : storedNames;
-            return <CampaignGridCard key={gen.id} gen={gen} resolvedNames={resolvedNames} onOpen={() => setSelectedId(gen.id)} />;
+            return (
+              <CampaignGridCard
+                key={gen.id}
+                gen={gen}
+                resolvedNames={resolvedNames}
+                onOpen={() => setSelectedId(gen.id)}
+                onArchive={view === 'active' ? () => setArchiveTarget(gen.id) : undefined}
+                onDelete={view === 'archived' ? () => setDeleteTarget(gen.id) : undefined}
+              />
+            );
           })}
         </div>
       ) : (
@@ -1310,10 +1391,53 @@ export function CampaignsTab() {
             const copyBlocks = (gen.copy_blocks as PackagePart[] | undefined) || [];
             const storedNames = (gen.metadata?.deliverable_names as string[] | undefined) || [];
             const resolvedNames = copyBlocks.some(p => p.type === 'text') ? resolveDeliverableNames(copyBlocks, storedNames) : storedNames;
-            return <CampaignListRow key={gen.id} gen={gen} resolvedNames={resolvedNames} onOpen={() => setSelectedId(gen.id)} />;
+            return (
+              <CampaignListRow
+                key={gen.id}
+                gen={gen}
+                resolvedNames={resolvedNames}
+                onOpen={() => setSelectedId(gen.id)}
+                onArchive={view === 'active' ? () => setArchiveTarget(gen.id) : undefined}
+                onDelete={view === 'archived' ? () => setDeleteTarget(gen.id) : undefined}
+              />
+            );
           })}
         </div>
       )}
+
+      {/* Archive confirmation */}
+      <Dialog open={!!archiveTarget} onOpenChange={(open) => { if (!open) setArchiveTarget(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Archive campaign?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">This campaign will be moved to the archive. You can access it anytime from the Archived view.</p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setArchiveTarget(null)}>Cancel</Button>
+            <Button size="sm" onClick={handleArchive} disabled={archiveGeneration.isPending}>
+              {archiveGeneration.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+              Archive
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete campaign permanently?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">This will permanently delete the campaign record. This action cannot be undone.</p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleteGeneration.isPending}>
+              {deleteGeneration.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
