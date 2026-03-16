@@ -1,4 +1,4 @@
-// ABOUTME: Comprehensive showcase page for Vince — AI Creative Director by MERGE.
+// ABOUTME: Comprehensive showcase page for Vince — AI Creative Director.
 // ABOUTME: Apple/Google product-launch aesthetic. Full-bleed sections. Every feature.
 
 import { useEffect, useRef, useState } from 'react';

@@ -4,7 +4,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.merge.brandlens',
+  appId: 'io.vince.app',
   appName: 'Vince',
   webDir: 'dist',
   server: {
@@ -20,7 +20,7 @@ const config: CapacitorConfig = {
   backgroundColor: '#0f0a1e',
   ios: {
     scheme: 'Vince',
-    contentInset: 'automatic',
+    contentInset: 'never',
     backgroundColor: '#0f0a1e',
   },
   android: {

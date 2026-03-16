@@ -1,8 +1,12 @@
 node_modules
 dist
+extension/dist
+mobile/dist
 .env
 .env.local
 scripts/output/
 *.log
 .DS_Store
 *.tsbuildinfo
+docs/
+supabase/.temp/

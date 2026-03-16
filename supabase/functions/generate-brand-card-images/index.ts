@@ -50,47 +50,39 @@ function buildPaletteString(b: BrandData): string {
   return colors.join(", ");
 }
 
-// ── Default prompt builders per card key ──────────────────────────────────
-// Each produces a polished 3D icon on a dark background — bold, centered,
-// minimal detail, readable at 100×100px. Brand colors and name are interpolated
-// for brand-accurate output.
+// ── Subject descriptions per card key ────────────────────────────────────
+// Returns only the subject; the style suffix is appended at generation time.
 
-const CARD_PROMPT_BUILDERS: Record<
-  string,
-  (b: BrandData) => string
-> = {
-  brand_dna: (b) => {
-    const palette = buildPaletteString(b);
-    return `A polished 3D icon representing brand identity — a glowing DNA double helix with precisely structured strands rendered in vivid, highly luminous ${palette} against a pure black (#000000) background. The helix suggests a systematic, codified visual language — not biological, but architectural. Large subject filling 75% of the frame with brilliant, saturated brand colors that glow against the dark background. Premium icon aesthetic like a high-resolution system icon from a top-tier design system (SF Symbols, Material Symbols, Fluent Icons). No text, no additional elements. Strong overhead studio lighting with intense ambient glow on the strands — maximum brightness and contrast.`;
+const CARD_SUBJECTS: Record<string, string> = {
+  brand_dna:          "Product photography, studio lighting. A DNA double helix icon — two intertwined strands with evenly spaced connecting rungs.",
+  ai_guidelines:      "Product photography, studio lighting. A shield icon with a small checkmark centered on the face — clean rounded-top geometric form.",
+  generation_prompt:  "Product photography, studio lighting. A magic wand icon with a small four-pointed star at its tip — tapered elegant form.",
+  templates:          "Product photography, studio lighting. Three overlapping rectangular cards or panels slightly offset at depth — clean layered form suggesting reusable structure.",
+  brand_agent:        "Product photography, studio lighting. A rounded square face form with two circular eyes and a subtle arc — abstract friendly AI agent icon.",
+  art_direction:      "Product photography, studio lighting. A camera aperture iris — concentric precision blades forming a circular opening, like a lens diagram.",
+};
+
+// ── Image style presets ───────────────────────────────────────────────────
+// Each preset is a suffix appended to the subject description.
+
+type PromptStyle = "stacked_acrylic" | "laser_cut" | "murano_glass";
+
+const STYLE_PRESETS: Record<PromptStyle, (b: BrandData) => string> = {
+  stacked_acrylic: (b) => {
+    const base = b.secondary_color || b.primary_color;
+    return ` Built from 4 stacked laser-cut acrylic layers graduated from a deep dark variant of ${base} at the base to bright ${b.primary_color} at the top. Each layer offset casting a clean shadow on the one below. Matte acrylic with subtle edge translucency. Product photography, studio lighting, directional light from upper left. Dark background. No text, no people, no logos.`;
   },
-
-  ai_guidelines: (b) => {
-    const palette = buildPaletteString(b);
-    return `A polished 3D icon of a precision crystalline shield — faceted surfaces with a subtle geometric checkmark motif embossed on the face, rendered in vivid, highly luminous ${palette} against a pure black (#000000) background. The shield reads as governance and compliance — authoritative but modern. Large subject filling 75% of the frame with brilliant, saturated brand colors. Glass-like polished surfaces with intense refractive highlights. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols). No text, no logos. Dramatic side lighting with sharp, bright specular highlights — maximum brightness and contrast.`;
+  laser_cut: (b) => {
+    const base = b.secondary_color || b.primary_color;
+    return ` Precision laser-cut from 6 stacked metal plates in a graduated fade from dark ${base} at the back to polished ${b.primary_color} at the front. Hard crisp edges, no rounding. Each plate casts a sharp geometric shadow on the one behind it. Machined metal surface with hairline finish. Product photography, directional studio lighting from upper left. Pure black background. No text, no people, no logos.`;
   },
-
-  generation_prompt: (b) => {
-    const palette = buildPaletteString(b);
-    return `A polished 3D icon of a sleek stylus or fine-tipped pen emitting a luminous arc of sparkling particles from its tip — the particles drift into a dramatic swirl pattern, rendered in vivid, highly luminous ${palette} against a pure black (#000000) background. Large subject filling 75% of the frame with brilliant, saturated brand colors that glow against the dark background. The image evokes precision prompt engineering and creative injection. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols, Fluent Icons). No text, no additional elements. Intense overhead studio lighting — maximum brightness and contrast.`;
-  },
-
-  templates: (b) => {
-    const palette = buildPaletteString(b);
-    return `A polished 3D icon of three overlapping layout panels or cards stacked at slight depth angles, each with subtle grid lines and alignment guides suggesting reusable structure, rendered in vivid, highly luminous ${palette} against a pure black (#000000) background. Large subject filling 75% of the frame with brilliant, saturated brand colors. The icon suggests modularity and systematic production. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols). No text. Polished matte surfaces with bright specular highlights, dramatic drop shadows between layers. Strong studio lighting — maximum brightness and contrast.`;
-  },
-
-  brand_agent: (b) => {
-    const palette = buildPaletteString(b);
-    return `A polished 3D icon of an abstract AI agent — a compact geometric form suggesting intelligence: a smooth rounded head shape with two brilliantly glowing circular apertures as eyes, and bold signal-arc lines radiating outward, rendered in vivid, highly luminous ${palette} against a pure black (#000000) background. Large subject filling 75% of the frame with brilliant, saturated brand colors that glow intensely against the dark background. The design is sophisticated and capable, not cartoonish. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols). No text. Strong ambient glow. Intense studio lighting — maximum brightness and contrast.`;
-  },
-
-  art_direction: (b) => {
-    const palette = buildPaletteString(b);
-    return `A polished 3D icon of a professional cinema camera lens — precise concentric aperture blades partially open around a sharp focal point, with a beveled focusing ring, rendered in vivid, highly luminous ${palette} against a pure black (#000000) background. Large subject filling 75% of the frame with brilliant, saturated brand colors that glow intensely. The icon evokes precision composition, art direction, and visual production — technical and purposeful. Premium icon aesthetic like a high-resolution system icon (SF Symbols, Material Symbols, Fluent Icons). No text. Dramatic side lighting with blazing specular highlights on the glass element — maximum brightness and contrast.`;
+  murano_glass: (b) => {
+    const base = b.secondary_color || b.primary_color;
+    return ` Handblown Murano glass sculpture in translucent ${b.primary_color} fading to deep ${base} at the base. Internal caustic light refractions and color bloom through the glass body. Smooth organic surface with subtle bubble inclusions catching the studio light. Product photography, soft overhead studio lighting with a single specular highlight. Black velvet background. No text, no people, no logos.`;
   },
 };
 
-const ALL_CARD_KEYS = Object.keys(CARD_PROMPT_BUILDERS);
+const ALL_CARD_KEYS = Object.keys(CARD_SUBJECTS);
 const ASPECT_RATIO = "1:1";
 
 // ── Gemini image generation ──────────────────────────────────────────────
@@ -145,8 +137,8 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { brand_id, card_keys: requestedKeys } = await req.json().catch(
-      () => ({ brand_id: null, card_keys: null }),
+    const { brand_id, card_keys: requestedKeys, prompt_style: requestedStyle } = await req.json().catch(
+      () => ({ brand_id: null, card_keys: null, prompt_style: null }),
     );
 
     if (!brand_id) {
@@ -174,18 +166,22 @@ serve(async (req) => {
 
     const brandData = brand as unknown as BrandData;
     const keysToGenerate: string[] = requestedKeys || ALL_CARD_KEYS;
+    const styleKey: PromptStyle = (requestedStyle && requestedStyle in STYLE_PRESETS)
+      ? (requestedStyle as PromptStyle)
+      : "stacked_acrylic";
+    const styleSuffix = STYLE_PRESETS[styleKey];
 
     const results: Record<string, { status: string; url?: string; error?: string }> = {};
 
     for (const key of keysToGenerate) {
-      const promptBuilder = CARD_PROMPT_BUILDERS[key];
-      if (!promptBuilder) {
+      const subject = CARD_SUBJECTS[key];
+      if (!subject) {
         results[key] = { status: "skipped", error: "No prompt defined for key" };
         continue;
       }
 
-      // Use custom prompt override if set, otherwise build from default
-      const prompt = brandData.card_image_prompts?.[key] || promptBuilder(brandData);
+      // Use custom prompt override if set, otherwise combine subject + selected style
+      const prompt = brandData.card_image_prompts?.[key] || (subject + styleSuffix(brandData));
 
       console.log(`Generating card image for ${brandData.name} / ${key}...`);
       const startTime = Date.now();
@@ -234,6 +230,7 @@ serve(async (req) => {
             original_prompt: `Brand card: ${brandData.name} / ${key}`,
             aspectRatio: ASPECT_RATIO,
             cardKey: key,
+            promptStyle: styleKey,
           },
           output_urls: [publicUrl],
           status: "completed",

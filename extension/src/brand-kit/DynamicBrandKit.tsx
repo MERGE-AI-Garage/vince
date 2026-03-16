@@ -161,6 +161,26 @@ function HeroSection({ data }: DynamicBrandKitProps) {
       textAlign: 'center',
       color: getContrastText(primaryColor),
     }}>
+      {/* Brand logo in white box */}
+      {brand.logo_url && (
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '10px 16px',
+          background: '#ffffff',
+          borderRadius: '10px',
+          marginBottom: '16px',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+        }}>
+          <img
+            src={brand.logo_url}
+            alt={brand.name}
+            style={{ maxHeight: '36px', maxWidth: '120px', objectFit: 'contain', display: 'block' }}
+          />
+        </div>
+      )}
+
       {/* Tagline — split on period+space for two-line display */}
       {identity?.tagline && (
         <div style={{
@@ -1279,7 +1299,7 @@ function ProductCategoryCard({ name, description, items, primaryColor }: {
   );
 }
 
-/** Compact 2-column grid for categories with many products (e.g., 25 Subway Series sandwiches) */
+/** Compact 2-column grid for categories with many products (e.g., 25 product variants) */
 function CompactProductGrid({ items, primaryColor }: { items: Array<Record<string, unknown>>; primaryColor: string }) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const selectedItem = selectedIdx !== null ? items[selectedIdx] : null;

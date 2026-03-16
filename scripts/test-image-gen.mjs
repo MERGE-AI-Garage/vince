@@ -1,13 +1,14 @@
 // Quick test: authenticate and generate an image via the edge function
-const SUPABASE_URL = 'https://foolpmhiedplyftbiocb.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvb2xwbWhpZWRwbHlmdGJpb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTA0NzcsImV4cCI6MjA4ODMyNjQ3N30.HuAbOrT5cdTb_zc1eyAj5KjAYL44HVs1vDSKjmqwL7w';
+// Requires SUPABASE_URL, SUPABASE_ANON_KEY, DEMO_EMAIL, DEMO_PASSWORD in environment
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 async function main() {
   // Authenticate
   const authRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
     method: 'POST',
     headers: { 'apikey': ANON_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'demo@brandlens.dev', password: 'BrandLens2026!' })
+    body: JSON.stringify({ email: process.env.DEMO_EMAIL, password: process.env.DEMO_PASSWORD })
   });
   const auth = await authRes.json();
   if (!auth.access_token) { console.log('Auth failed:', auth); return; }
@@ -23,7 +24,7 @@ async function main() {
     },
     body: JSON.stringify({
       generation_type: 'text_to_image',
-      prompt: 'A professional photo of a fresh Subway sandwich on a wooden cutting board, studio lighting',
+      prompt: 'A professional photo of a product on a wooden cutting board, studio lighting',
       model_id: 'gemini-2.5-flash-image',
       brand_id: 'e9b5bcb5-5de5-4d64-9b82-1c63a2636792',
       aspect_ratio: '16:9',

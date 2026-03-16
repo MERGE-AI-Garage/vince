@@ -46,6 +46,7 @@ function copyBrandAssets() {
 
 export default defineConfig({
   root: __dirname,
+  envDir: path.resolve(__dirname, '..'),
   plugins: [react(), copyBrandAssets()],
   resolve: {
     alias: [

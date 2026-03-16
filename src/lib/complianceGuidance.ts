@@ -1,5 +1,5 @@
 // ABOUTME: Pure functions that translate vendor/product compliance data into plain-language guidance
-// ABOUTME: Shared by MergeGuidelines component and AIGuidelinesDialog for consistent compliance messaging
+// ABOUTME: Shared by AIGuidelinesDialog for consistent compliance messaging
 
 import {
   CheckCircle2,

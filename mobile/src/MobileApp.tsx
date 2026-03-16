@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { BrandAgentApp } from '@/components/creative-studio/BrandAgentApp';
 import { CompactMediaGrid } from '@/components/creative-studio/CompactMediaGrid';
 import { CreationsTab } from '@/components/creative-studio/CreationsTab';
+import { BrandDNATab } from './BrandDNATab';
+import { PromptsTab } from './PromptsTab';
 
 
 const queryClient = new QueryClient({
@@ -111,11 +113,11 @@ function VinceHome() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [loadingBrands, setLoadingBrands] = useState(true);
-  const [activeView, setActiveView] = useState<'chat' | 'gallery' | 'media'>('chat');
+  const [activeView, setActiveView] = useState<'chat' | 'gallery' | 'brand' | 'prompts' | 'media'>('chat');
   const [visitedViews, setVisitedViews] = useState<Set<string>>(new Set(['chat']));
   const [chatKey, setChatKey] = useState(0);
 
-  function navigateTo(view: 'chat' | 'gallery' | 'media') {
+  function navigateTo(view: 'chat' | 'gallery' | 'brand' | 'prompts' | 'media') {
     setVisitedViews(prev => new Set([...prev, view]));
     setActiveView(view);
   }
@@ -303,6 +305,16 @@ function VinceHome() {
             <CompactMediaGrid />
           </div>
         )}
+        {visitedViews.has('brand') && (
+          <div style={{ flex: 1, overflow: 'hidden', display: activeView === 'brand' ? 'flex' : 'none', flexDirection: 'column' }}>
+            <BrandDNATab brandId={selectedBrandId} brandColor={theme.accent} />
+          </div>
+        )}
+        {visitedViews.has('prompts') && (
+          <div style={{ flex: 1, overflow: 'hidden', display: activeView === 'prompts' ? 'flex' : 'none', flexDirection: 'column' }}>
+            <PromptsTab brandId={selectedBrandId} brandName={selectedBrand?.name} brandColor={theme.accent} />
+          </div>
+        )}
       </div>
 
       {/* Bottom tab bar */}
@@ -314,7 +326,7 @@ function VinceHome() {
         minHeight: 49,
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}>
-        {(['chat', 'gallery', 'media'] as const).map(view => (
+        {(['chat', 'brand', 'prompts', 'gallery', 'media'] as const).map(view => (
           <button
             key={view}
             onClick={() => navigateTo(view)}
@@ -341,16 +353,25 @@ function VinceHome() {
               </svg>
             ) : view === 'gallery' ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
               </svg>
+            ) : view === 'brand' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            ) : view === 'prompts' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/>
+              </svg>
             )}
-            {view === 'chat' ? 'Chat' : view === 'gallery' ? 'Gallery' : 'Media'}
+            {view === 'chat' ? 'Chat' : view === 'brand' ? 'Brand' : view === 'prompts' ? 'Prompts' : view === 'gallery' ? 'Campaigns' : 'Media'}
           </button>
         ))}
       </div>

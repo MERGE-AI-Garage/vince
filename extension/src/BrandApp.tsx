@@ -334,7 +334,7 @@ function TabLayout() {
       </div>
 
       {/* Tab content — ChatTab is always mounted to preserve history */}
-      <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0, background: theme.headerBg }}>
+      <div style={{ display: activeTab === 'chat' ? 'flex' : 'none', flex: 1, flexDirection: 'column', minHeight: 0, background: '#f5f4f2' }}>
         <ChatTab
           brandId={selectedBrandId}
           brandColor={theme.accent}
