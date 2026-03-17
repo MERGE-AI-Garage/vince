@@ -4,7 +4,69 @@ Vince is a voice-driven AI creative director for brand teams. Brief a campaign b
 
 The core technical insight: a two-model architecture where Gemini Live API handles real-time voice and tool calling, while a separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']` produces interleaved copy+image output (image models don't support function calling).
 
-[DevPost Submission](https://devpost.com/...)
+[DevPost Submission](https://devpost.com/...) | [Live Demo](https://vince-359575203061.us-central1.run.app/showcase)
+
+---
+
+## Architecture
+
+Three Gemini models, one conversation. The Gemini Live API handles real-time voice and all 26 tool calls. A separate `generateContent` call with `responseModalities: ['TEXT', 'IMAGE']` produces interleaved copy+image output. Image models don't support function calling — that constraint produced a cleaner split than anything designed intentionally.
+
+```mermaid
+graph TB
+    classDef client fill:#0D3B2E,stroke:#00856C,color:#e0e0e0,stroke-width:2px
+    classDef orchestration fill:#00856C,stroke:#1ED75F,color:#ffffff,stroke-width:2px
+    classDef gemini fill:#1a3a5c,stroke:#4285F4,color:#e0e0e0,stroke-width:1px
+    classDef infra fill:#1a2a1a,stroke:#3ECF8E,color:#e0e0e0,stroke-width:1px
+    classDef data fill:#1a2a2a,stroke:#3ECF8E,color:#e0e0e0,stroke-width:1px
+
+    subgraph Clients["Clients"]
+        WEB["Web App\nReact + Vite\nCloud Run"]
+        EXT["Chrome Extension\nManifest V3\nSide Panel"]
+        IOS["iOS App"]
+        AND["Android App"]
+    end
+
+    subgraph GCP["Google Cloud + Gemini"]
+        LIVE["Gemini Live API\ngemini-2.5-flash-native-audio\nVoice · 26 Tools · Orchestration"]
+        FLASH["Gemini 2.0 Flash\nMultimodal Video Analysis\nBeat This Ad"]
+        IMG["Gemini 3.1 Flash Image Preview\nresponseModalities: TEXT + IMAGE\nInterleaved Creative Packages"]
+        VEO["Veo 3\nCampaign Video\nimage-to-video"]
+        EMB["text-embedding-004\nBrand Rule Vectorization"]
+    end
+
+    subgraph Supabase["Supabase Edge + Data"]
+        EDGE["19 Edge Functions\nDeno · AI orchestration"]
+        PG["PostgreSQL + pgvector\nBrand DNA · Campaigns · Generations"]
+        RT["Supabase Realtime\nAsync Job Push"]
+        STG["Storage\nImages · Documents · Brand Assets"]
+    end
+
+    WEB -->|WSS · 16kHz PCM audio| LIVE
+    EXT -->|WSS · 16kHz PCM audio| LIVE
+    IOS -->|WSS · 16kHz PCM audio| LIVE
+    AND -->|WSS · 16kHz PCM audio| LIVE
+
+    LIVE -->|tool_call · fire-and-forget| EDGE
+
+    EDGE -->|Competitor video URL| FLASH
+    EDGE -->|Brand brief + injected DNA| IMG
+    EDGE -->|image-to-video| VEO
+    EDGE -->|Chunk + vectorize| EMB
+
+    EMB -.->|store vectors| PG
+    PG -.->|cosine similarity recall| EDGE
+
+    EDGE <-->|read · write| PG
+    EDGE -->|upload assets| STG
+    RT -->|job complete · push to History| WEB
+
+    class WEB,EXT,IOS,AND client
+    class LIVE orchestration
+    class FLASH,IMG,VEO,EMB gemini
+    class EDGE infra
+    class PG,RT,STG data
+```
 
 ---
 
