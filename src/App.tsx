@@ -1,13 +1,17 @@
 // ABOUTME: Root application component with auth-gated routing.
 // ABOUTME: Wraps routes in AuthProvider, redirects unauthenticated users to login.
 
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { UnifiedThemeProvider } from '@/components/UnifiedThemeProvider';
 import Login from '@/pages/Login';
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
+
+declare global {
+  interface Window { gtag?: (...args: unknown[]) => void; }
+}
 
 const CreativeStudio = lazy(() => import('@/pages/CreativeStudio'));
 const CreativeStudioAdmin = lazy(() => import('@/pages/CreativeStudioAdmin'));
@@ -47,6 +51,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', { page_path: location.pathname });
+    }
+  }, [location.pathname]);
+
   if (loading) return <Spinner />;
 
   return (
